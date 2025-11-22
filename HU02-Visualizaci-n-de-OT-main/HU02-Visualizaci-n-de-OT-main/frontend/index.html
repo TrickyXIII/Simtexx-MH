@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Visualización de OT</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h1>Visualización de Órdenes de Trabajo (OT)</h1>
+
+<div class="controls">
+    <button id="refreshBtn">Refrescar</button>
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Título / Descripción</th>
+            <th>Estado</th>
+            <th>Fecha Inicio</th>
+            <th>Fecha Fin</th>
+            <th>Responsable</th>
+        </tr>
+    </thead>
+    <tbody id="otTableBody">
+        <!-- Aquí se cargan las OT -->
+    </tbody>
+</table>
+
+<script src="app.js"></script>
+</body>
+</html>
