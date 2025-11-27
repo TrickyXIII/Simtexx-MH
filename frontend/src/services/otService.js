@@ -37,3 +37,24 @@ export function getOTs() {
 export function getOTById(id) {
   return getOTs().find((ot) => ot.id === id);
 }
+
+
+const API_URL = "http://localhost:4000/api/ot";
+export async function deleteOTBackend(id) {
+  try {
+    const response = await fetch(`${API_URL}/${id}`, {
+      method: "DELETE",
+    });
+
+    if (!response.ok) {
+      throw new Error("Error al eliminar la OT en el servidor");
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error("Error eliminando OT en backend:", error);
+    
+  }
+}
+
+
