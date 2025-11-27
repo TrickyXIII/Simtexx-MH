@@ -14,6 +14,25 @@ export default function ListaOT() {
   const { id } = useParams();
   const usuario = JSON.parse(localStorage.getItem("usuarioActual"));
 
+ 
+  const handleDelete = async (idOT) => {
+    if (window.confirm("¿Estás seguro de que deseas eliminar esta OT?")) {
+      
+      if (typeof deleteOTBackend === 'function') {
+          try {
+            await deleteOTBackend(idOT); 
+          } catch (error) {
+            console.error("Error en backend, continuando localmente...");
+          }
+      }
+
+      deleteOT(idOT);
+      setOts(getOTs());
+      alert("OT eliminada correctamente");
+    }
+  };
+ 
+
   return (
     <>
       <NavBar />
@@ -77,6 +96,12 @@ export default function ListaOT() {
                       <Link className="btn-ver" to={`/detalle/${ot.id}`}>
                         Ver
                       </Link>
+                      <button 
+                        onClick={() => handleDelete(ot.id)} 
+                        className="btn-eliminar"
+                      >
+                        Eliminar
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -118,3 +143,4 @@ export default function ListaOT() {
     </>
   );
 }
+
