@@ -19,6 +19,7 @@ export default function ModificarOT() {
     responsable: "",
     fechaInicio: "",
     fechaFin: "",
+    estadoOT: true, // ⬅ NUEVO BOOLEANO
   });
 
   // Cargar datos existentes
@@ -33,6 +34,7 @@ export default function ModificarOT() {
         responsable: ot.responsable,
         fechaInicio: ot.fechaInicio,
         fechaFin: ot.fechaFin,
+        estadoOT: ot.estadoOT ?? true, // ⬅ CARGA EL BOOLEANO
       });
     }
   }, [id]);
@@ -69,15 +71,14 @@ export default function ModificarOT() {
   }
 
   function handleDelete() {
-  const seguro = window.confirm("¿Seguro que quieres eliminar esta OT?");
-  if (!seguro) return;
+    const seguro = window.confirm("¿Seguro que quieres eliminar esta OT?");
+    if (!seguro) return;
 
-  deleteOT(id);
-  alert("OT eliminada correctamente");
+    deleteOT(id);
+    alert("OT eliminada correctamente");
 
-  // IMPORTANTE: esta ruta DEBE ser EXACTAMENTE igual a la que tienes en App.jsx
-  navigate("/Listaot"); // o "/listaot" según tu <Route ... />
-}
+    navigate("/Listaot");
+  }
 
   return (
     <>
@@ -118,6 +119,33 @@ export default function ModificarOT() {
             <label>Fecha finalización de contrato</label>
             <input type="date" name="fechaFin" value={form.fechaFin} onChange={handleChange} />
             {errors.fechaFin && <p className="error">{errors.fechaFin}</p>}
+
+            {/* NUEVO INPUT RADIO BOOLEANO */}
+            <label>Estado OT (Activa / Inactiva)</label>
+
+            <div className="radio-group">
+              <label>
+                <input
+                  type="radio"
+                  name="estadoOT"
+                  value="true"
+                  checked={form.estadoOT === true}
+                  onChange={() => setForm({ ...form, estadoOT: true })}
+                />
+                Activa
+              </label>
+
+              <label>
+                <input
+                  type="radio"
+                  name="estadoOT"
+                  value="false"
+                  checked={form.estadoOT === false}
+                  onChange={() => setForm({ ...form, estadoOT: false })}
+                />
+                Inactiva
+              </label>
+            </div>
 
             <div className="btn-row">
               <button type="button" className="btn-eliminar" onClick={handleDelete}>
