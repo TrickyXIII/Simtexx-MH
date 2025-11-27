@@ -9,17 +9,35 @@ const router = Router();
 =============================== */
 router.post("/", async (req, res) => {
   try {
-    const { titulo, descripcion, estado, fecha_inicio_contrato, fecha_fin_contrato, responsable_id } = req.body;
+    const {
+      titulo,
+      descripcion,
+      estado,
+      fecha_inicio_contrato,
+      fecha_fin_contrato,
+      responsable_id,
+    } = req.body;
+
+    // Generar un código nuevo por cada OT
     const codigo = generarCodigoOT();
 
     const result = await pool.query(
-      `INSERT INTO ot (codigo, titulo, descripcion, estado, fecha_inicio_contrato, fecha_fin_contrato, responsable_id)
+      `INSERT INTO ot (
+        codigo,
+        titulo,
+        descripcion,
+        estado,
+        fecha_inicio_contrato,
+        fecha_fin_contrato,
+        responsable_id
+      )
        VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
       [codigo, titulo, descripcion, estado, fecha_inicio_contrato, fecha_fin_contrato, responsable_id]
     );
 
     res.json(result.rows[0]);
   } catch (error) {
+    console.error("Error al crear la OT:", error);
     res.status(500).json({ error: "Error al crear la OT" });
   }
 });
@@ -32,7 +50,27 @@ router.get("/", async (req, res) => {
     const result = await pool.query("SELECT * FROM ot ORDER BY id_ot DESC");
     res.json(result.rows);
   } catch (error) {
+    console.error("Error al obtener las OT:", error);
     res.status(500).json({ error: "Error al obtener las OT" });
+  }
+});
+
+/* ============================
+     LISTAR OT POR USUARIO
+=============================== */
+router.get("/usuario/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await pool.query(
+      "SELECT * FROM ot WHERE responsable_id = $1 ORDER BY id_ot DESC",
+      [id]
+    );
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error("Error al obtener las OT del usuario:", error);
+    res.status(500).json({ error: "Error al obtener las OT del usuario" });
   }
 });
 
@@ -54,25 +92,8 @@ router.get("/:id", async (req, res) => {
 
     res.json(result.rows[0]);
   } catch (error) {
+    console.error("Error al obtener la OT:", error);
     res.status(500).json({ error: "Error al obtener la OT" });
-  }
-});
-
-/* ============================
-     LISTAR OT POR USUARIO
-=============================== */
-router.get("/usuario/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const result = await pool.query(
-      "SELECT * FROM ot WHERE responsable_id = $1 ORDER BY id_ot DESC",
-      [id]
-    );
-
-    res.json(result.rows);
-  } catch (error) {
-    res.status(500).json({ error: "Error al obtener las OT del usuario" });
   }
 });
 
@@ -86,7 +107,10 @@ router.put("/:id", async (req, res) => {
 
     const result = await pool.query(
       `UPDATE ot 
-       SET titulo = $1, descripcion = $2, fecha_inicio_contrato = $3, fecha_fin_contrato = $4
+       SET titulo = $1,
+           descripcion = $2,
+           fecha_inicio_contrato = $3,
+           fecha_fin_contrato = $4
        WHERE id_ot = $5
        RETURNING *`,
       [titulo, descripcion, fecha_inicio_contrato, fecha_fin_contrato, id]
@@ -98,6 +122,7 @@ router.put("/:id", async (req, res) => {
 
     res.json(result.rows[0]);
   } catch (error) {
+    console.error("Error al modificar la OT:", error);
     res.status(500).json({ error: "Error al modificar la OT" });
   }
 });
@@ -121,6 +146,7 @@ router.patch("/:id/estado", async (req, res) => {
 
     res.json(result.rows[0]);
   } catch (error) {
+    console.error("Error al actualizar el estado:", error);
     res.status(500).json({ error: "Error al actualizar el estado" });
   }
 });
