@@ -10,7 +10,18 @@ router.post("/login", async (req, res) => {
   try {
     // 1. Validar usuario por email
     const result = await pool.query(
-      "SELECT * FROM usuarios WHERE correo = $1",
+       `
+      SELECT 
+        u.id_usuarios,
+        u.nombre,
+        u.correo,
+        u.password_hash,
+        u.rol_id,
+        r.nombre AS rol_nombre
+      FROM usuarios u
+      JOIN roles r ON u.rol_id = r.id_roles
+      WHERE u.correo = $1
+      `,
       [correo]
     );
 
@@ -32,7 +43,8 @@ router.post("/login", async (req, res) => {
         id: user.id,
         nombre: user.nombre,
         correo: user.correo,
-        rol_id: user.rol_id
+        rol_id: user.rol_id,
+        rol_nombre: user.rol_nombre
       }
     });
 
@@ -43,4 +55,5 @@ router.post("/login", async (req, res) => {
 });
 
 export default router;
+
 
