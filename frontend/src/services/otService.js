@@ -1,5 +1,32 @@
-// services/otService.js
+// frontend/src/services/otService.js
 
+// URL de backend (Puerto 4000 según el README)
+const API_URL = "http://localhost:4000/api/ot";
+
+// --- NUEVA FUNCIÓN PARA CREAR EN POSTGRESQL ---
+export async function createOT(otData) {
+  try {
+    const response = await fetch(API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(otData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Error al crear la OT");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error en createOT:", error);
+    throw error;
+  }
+}
+
+// --- FUNCIONES ANTIGUAS (Mantén por ahora para no romper la lista mientras se migra el resto) ---
 const KEY = "ot_list";
 
 export function getOTs() {
@@ -9,30 +36,4 @@ export function getOTs() {
 
 export function getOTById(id) {
   return getOTs().find((ot) => ot.id === id);
-}
-
-export function createOT(ot) {
-  const list = getOTs();
-  list.push(ot);
-  localStorage.setItem(KEY, JSON.stringify(list));
-}
-
-export function updateOT(id, data) {
-  const ots = getOTs();
-  const index = ots.findIndex(o => o.id === id);
-
-  if (index !== -1) {
-    ots[index] = { ...ots[index], ...data };
-    localStorage.setItem(KEY, JSON.stringify(ots));
-  }
-}
-
-export function saveOTs(ots) {
-  localStorage.setItem(KEY, JSON.stringify(ots));
-}
-
-export function deleteOT(id) {
-  const ots = getOTs();
-  const nuevas = ots.filter(ot => ot.id !== id);
-  saveOTs(nuevas);
 }
