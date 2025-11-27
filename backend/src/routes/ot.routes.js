@@ -150,4 +150,29 @@ router.patch("/:id/estado", async (req, res) => {
   }
 });
 
+/* ============================
+    ELIMINAR OT 
+=============================== */
+router.delete("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    
+    const result = await pool.query(
+      "UPDATE ot SET activo = false, fecha_actualizacion = NOW() WHERE id_ot = $1 RETURNING *",
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "OT no encontrada" });
+    }
+
+    res.json({ message: "OT eliminada correctamente", ot: result.rows[0] });
+  } catch (error) {
+    console.error("Error al eliminar la OT:", error);
+    res.status(500).json({ error: "Error al eliminar la OT" });
+  }
+});
+
 export default router;
+
