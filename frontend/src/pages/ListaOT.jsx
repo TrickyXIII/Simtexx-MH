@@ -1,4 +1,4 @@
-import { getOTs } from "../services/otService";
+import { getOTs, deleteOT, deleteOTBackend } from "../services/otService"; 
 import { Link, useParams} from "react-router-dom";
 import { useEffect, useState } from "react";
 import NavBar from "../components/NavBar";
@@ -143,4 +143,5 @@ export default function ListaOT() {
     </>
   );
 }
+
 
