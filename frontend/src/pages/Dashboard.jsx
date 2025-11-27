@@ -5,25 +5,35 @@ import "./Dashboard.css"
 import { getOTs } from "../services/otService";
 import { Link, useParams } from "react-router-dom";
 const Dashboard = () => {
-  const ots = getOTs();
+  const [ots, setOts] = useState([]);
 
+  const { id } = useParams();
+  const usuario = JSON.parse(localStorage.getItem("usuarioActual"));
 
+  // Cargar las OT reales desde la BD
+  useEffect(() => {
+    async function cargarOTs() {
+      const data = await getOTs(); // ahora obtiene desde backend
+      setOts(data);
+    }
+    cargarOTs();
+  }, []);
+
+  // Contadores dinámicos
   const totalOT = ots.length;
-
 
   const pendientes = ots.filter(ot => ot.estado === "Pendiente").length;
   const enProceso = ots.filter(ot => ot.estado === "En Proceso").length;
-  const finalizadas = ots.filter(ot => ot.estado === "Finalizada" || ot.estado === "Completada").length;
-
-    const { id } = useParams();
-    const usuario = JSON.parse(localStorage.getItem("usuarioActual"));
+  const finalizadas = ots.filter(
+    ot => ot.estado === "Finalizada" || ot.estado === "Completada"
+  ).length;
   return (
   <><NavBar />
     <div className="container">
   <h1 className="title">Simtexx Inicio</h1>
 
   <div className="subtittle">
-    Usuario: <b>{usuario?.nombre}</b> &nbsp;&nbsp; Rol: <b>{usuario?.rol}</b>
+    Usuario: <b>{usuario?.nombre}</b> &nbsp;&nbsp; Rol: <b>{usuario?.rol_nobmre}</b>
   </div>
 
   <div className="cardContainer">
@@ -90,3 +100,4 @@ const Dashboard = () => {
 
 
 export default Dashboard;
+
