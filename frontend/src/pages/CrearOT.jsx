@@ -3,94 +3,95 @@ import { createOT } from "../services/otService";
 import Footer from "../components/Footer";
 import NavBar from "../components/NavBar";
 import "./CrearOT.css";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 export default function CrearOT() {
   const [errors, setErrors] = useState({});
   const navigate = useNavigate();
+  const { id } = useParams(); // Obtenemos el ID del usuario logueado desde la URL
+
+  // Estado inicial adaptado a la Base de Datos
   const [form, setForm] = useState({
-    nombre: "",
+    titulo: "",
     descripcion: "",
     estado: "",
-    cliente: "",
-    responsable: "",
-    fechaInicio: "",
-    fechaFin: "",
+    fecha_inicio_contrato: "",
+    fecha_fin_contrato: "",
   });
+
   const handleChange = (e) => {
-  setForm({ ...form, [e.target.name]: e.target.value });
-};
-
-  const validateForm = () => {
-  const newErrors = {};
-
-  if (!form.nombre.trim()) newErrors.nombre = "El nombre es obligatorio";
-  if (!form.descripcion.trim()) newErrors.descripcion = "La descripción es obligatoria";
-  if (!form.estado) newErrors.estado = "Debe seleccionar un estado";
-  if (!form.cliente) newErrors.cliente = "Debe seleccionar un cliente";
-  if (!form.responsable) newErrors.responsable = "Debe seleccionar un responsable";
-  if (!form.fechaInicio) newErrors.fechaInicio = "Debe ingresar fecha de inicio";
-  if (!form.fechaFin) newErrors.fechaFin = "Debe ingresar fecha de finalización";
-
-  return newErrors;
-};
-const handleSubmit = (e) => {
-  e.preventDefault();
-
-  const validation = validateForm();
-  if (Object.keys(validation).length > 0) {
-    setErrors(validation);
-    return;
-  }
-
-  setErrors({}); 
-
-  const newOT = {
-    id: Date.now().toString(),
-    ...form,
-    historial: [
-      {
-        fecha: new Date().toLocaleDateString(),
-        msg: "OT creada",
-      },
-    ],
-    imagenes: [],
-    comentarios: [],
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  createOT(newOT);
-  alert("OT creada con éxito");
-  navigate(-1);
-};
+  const validateForm = () => {
+    const newErrors = {};
+    if (!form.titulo.trim()) newErrors.titulo = "El título es obligatorio";
+    if (!form.descripcion.trim()) newErrors.descripcion = "La descripción es obligatoria";
+    if (!form.estado) newErrors.estado = "Debe seleccionar un estado";
+    if (!form.fecha_inicio_contrato) newErrors.fecha_inicio_contrato = "Fecha inicio requerida";
+    if (!form.fecha_fin_contrato) newErrors.fecha_fin_contrato = "Fecha fin requerida";
+    return newErrors;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const validation = validateForm();
+    if (Object.keys(validation).length > 0) {
+      setErrors(validation);
+      return;
+    }
+    setErrors({});
+
+    // Preparamos el objeto para enviar al Backend
+    const nuevaOT = {
+      titulo: form.titulo,
+      descripcion: form.descripcion,
+      estado: form.estado,
+      fecha_inicio_contrato: form.fecha_inicio_contrato,
+      fecha_fin_contrato: form.fecha_fin_contrato,
+      responsable_id: parseInt(id), // Usamos el ID de la URL como responsable
+    };
+
+    try {
+      // Llamamos a la función asíncrona del servicio
+      await createOT(nuevaOT);
+      alert("OT creada exitosamente en Base de Datos");
+      navigate(`/listaOT/${id}`); // Redirigimos a la lista
+    } catch (error) {
+      alert("Error al crear OT: " + error.message);
+    }
+  };
+
   return (
     <>
       <NavBar />
-
       <div className="container-crearot">
         <h2>Crear Orden de Trabajo</h2>
         <h4>Simtexx Spa</h4>
 
         <form className="form-box" onSubmit={handleSubmit}>
-
+          
+          {/* CAMPO TÍTULO */}
           <input
             type="text"
-            name="nombre"
+            name="titulo"
             placeholder="Título"
-            value={form.nombre}
+            value={form.titulo}
             onChange={handleChange}
           />
-          {errors.nombre && <p className="error">{errors.nombre}</p>}
+          {errors.titulo && <p className="error">{errors.titulo}</p>}
 
-
+          {/* CAMPO DESCRIPCIÓN */}
           <textarea
             name="descripcion"
             placeholder="Descripción"
             value={form.descripcion}
             onChange={handleChange}
-        
           />
           {errors.descripcion && <p className="error">{errors.descripcion}</p>}
 
+          {/* CAMPO ESTADO */}
           <select name="estado" value={form.estado} onChange={handleChange}>
             <option value="">Estado</option>
             <option value="Pendiente">Pendiente</option>
@@ -99,41 +100,32 @@ const handleSubmit = (e) => {
           </select>
           {errors.estado && <p className="error">{errors.estado}</p>}
 
-          <select name="cliente" value={form.cliente} onChange={handleChange}>
-            <option value="">Cliente</option>
-            <option value="Juan Perez">Juan Perez</option>
-            <option value="Empresa X">Empresa X</option>
-          </select>
-          {errors.cliente && <p className="error">{errors.cliente}</p>}
-
-          <select
-            name="responsable"
-            value={form.responsable}
-            onChange={handleChange}
-          >
-            <option value="">Responsable</option>
-            <option value="Maria Lopez">Maria Lopez</option>
-            <option value="Pedro Rojas">Pedro Rojas</option>
-          </select>
-          {errors.responsable && <p className="error">{errors.responsable}</p>}
-
+          {/* FECHAS */}
           <label>Fecha inicio de contrato</label>
-          <input type="date" name="fechaInicio" value={form.fechaInicio} onChange={handleChange} />
-          {errors.fechaInicio && <p className="error">{errors.fechaInicio}</p>}
+          <input 
+            type="date" 
+            name="fecha_inicio_contrato" 
+            value={form.fecha_inicio_contrato} 
+            onChange={handleChange} 
+          />
+          {errors.fecha_inicio_contrato && <p className="error">{errors.fecha_inicio_contrato}</p>}
 
           <label>Fecha finalización de contrato</label>
-          <input type="date" name="fechaFin" value={form.fechaFin} onChange={handleChange} />
-          {errors.fechaFin && <p className="error">{errors.fechaFin}</p>}
+          <input 
+            type="date" 
+            name="fecha_fin_contrato" 
+            value={form.fecha_fin_contrato} 
+            onChange={handleChange} 
+          />
+          {errors.fecha_fin_contrato && <p className="error">{errors.fecha_fin_contrato}</p>}
 
-          <button className="btn-rojo" type="submit" >Crear OT</button>
-          <button className="btn-cancelar" type="button" onClick={() => window.history.back()}>
+          <button className="btn-rojo" type="submit">Crear OT</button>
+          <button className="btn-cancelar" type="button" onClick={() => navigate(-1)}>
             Cancelar
           </button>
         </form>
       </div>
-
       <Footer />
     </>
   );
 }
-
