@@ -63,51 +63,34 @@ router.get("/usuario/:id", async (req, res) => {
 /* ============================
       OBTENER TODAS LAS OT
 =============================== */
-// OTs con nombre responsable
+// Listar todas las OTs con nombre del responsable
 router.get("/", async (req, res) => {
   try {
     const result = await pool.query(`
-  SELECT 
-    o.id_ot,
-    o.codigo,
-    o.titulo,
-    o.descripcion,
-    o.estado,
-    o.fecha_inicio_contrato,
-    o.fecha_fin_contrato,
-    o.responsable_id,
-    u.nombre AS responsable_nombre,
-    o.activo,
-    o.fecha_creacion,
-    o.fecha_actualizacion
-  FROM ot o
-  JOIN usuarios u ON o.responsable_id = u.id_usuarios
-  `);
-  const ots = res.json(result.rows)
-    res.json({
-      ots: {
-        id_ot: ots.id_ot,
-        codigo: ots.codigo,
-        titulo: ots.titulo,
-        descripcion: ots.descripcion,
-        estado: ots.estado,
-        fecha_inicio_contrato: ots.fecha_inicio_contrato,
-        fecha_fin_contrato: ots.fecha_fin_contrato,
-        responsable_id: ots.responsable_id,
-        activo: ots.activo,
-        fecha_creacion: ots.fecha_creacion,
-        fecha_actualizacion: ots.fecha_actualizacion,
-        nombre_responable: ots.nombre_responable
-      }
+      SELECT 
+        o.id_ot,
+        o.codigo,
+        o.titulo,
+        o.descripcion,
+        o.estado,
+        o.fecha_inicio_contrato,
+        o.fecha_fin_contrato,
+        o.responsable_id,
+        u.nombre AS responsable_nombre,
+        o.activo,
+        o.fecha_creacion,
+        o.fecha_actualizacion
+      FROM ot o
+      JOIN usuarios u ON o.responsable_id = u.id_usuarios
+    `);
 
-    });
+    return res.json(result.rows); // <-- ÚNICA RESPUESTA
   } catch (error) {
     console.error("Error al obtener las OT:", error);
-    res.status(500).json({ error: "Error al obtener las OT" });
+    return res.status(500).json({ error: "Error al obtener las OT" });
   }
-  
-  
 });
+
 
 /* ============================
       OBTENER OT POR ID
@@ -214,4 +197,5 @@ router.delete("/:id", async (req, res) => {
 });
 
 export default router;
+
 
