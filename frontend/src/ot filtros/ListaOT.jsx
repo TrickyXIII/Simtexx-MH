@@ -20,7 +20,7 @@ const ListaOT = () => {
     const usuarioString = localStorage.getItem("usuarioActual");
     const usuario = usuarioString ? JSON.parse(usuarioString) : { id: null, rol: 'User', nombre: '' };
     const isAdmin = usuario.rol === 'Admin';
-    
+
     const uniqueResponsables = [...new Set(ots.map(ot => ot.responsable))].sort();
 
     useEffect(() => {
@@ -28,7 +28,7 @@ const ListaOT = () => {
             try {
                 const allData = await getOTs();
                 setOts(allData);
-            } catch (error) {
+            } catch {
                 setMessage('Error al cargar datos. Verifique la conexión con el backend.');
             } finally {
                 setLoading(false);
@@ -42,7 +42,7 @@ const ListaOT = () => {
         let messageText = '';
 
         if (!isAdmin) {
-            results = results.filter(ot => ot.responsable === usuario.nombre); 
+            results = results.filter(ot => ot.responsable === usuario.nombre);
         }
 
         if (filter.estado) {
@@ -56,18 +56,18 @@ const ListaOT = () => {
         if (filter.fechaInicio && filter.fechaFin) {
             const start = new Date(filter.fechaInicio);
             const end = new Date(filter.fechaFin);
-            
+
             results = results.filter(ot => {
                 const otStart = new Date(ot.fechaInicio);
                 const otEnd = new Date(ot.fechaFin);
 
                 const startsAfterFilter = otStart >= start;
-                const endsBeforeFilter = otEnd <= end; 
+                const endsBeforeFilter = otEnd <= end;
 
                 return startsAfterFilter && endsBeforeFilter;
             });
         }
-        
+
         if (ots.length > 0 && results.length === 0 && !loading) {
             messageText = 'No se encontraron Órdenes de Trabajo con los filtros seleccionados.';
         }
@@ -75,7 +75,7 @@ const ListaOT = () => {
         setFilteredOts(results);
         setMessage(messageText);
 
-    }, [ots, filter, isAdmin, loading, usuario.nombre]); 
+    }, [ots, filter, isAdmin, loading, usuario.nombre]);
 
     const handleFilterChange = (e) => {
         setFilter({ ...filter, [e.target.name]: e.target.value });
@@ -109,13 +109,13 @@ const ListaOT = () => {
                 <div className="filter-panel p-4 bg-gray-100 rounded-lg shadow-md mb-6">
                     <h2 className="text-xl font-semibold mb-3">Filtros de Búsqueda</h2>
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        
+
                         {/* Filtro por Estado */}
                         <div>
                             <label className="block text-sm font-medium mb-1">Estado</label>
-                            <select 
-                                name="estado" 
-                                value={filter.estado} 
+                            <select
+                                name="estado"
+                                value={filter.estado}
                                 onChange={handleFilterChange}
                                 className="w-full p-2 border rounded"
                             >
@@ -125,13 +125,13 @@ const ListaOT = () => {
                                 <option value="Finalizada">Finalizada</option>
                             </select>
                         </div>
-                        
+
                         {/* Filtro por Responsable */}
                         <div>
                             <label className="block text-sm font-medium mb-1">Responsable</label>
-                            <select 
-                                name="responsable" 
-                                value={filter.responsable} 
+                            <select
+                                name="responsable"
+                                value={filter.responsable}
                                 onChange={handleFilterChange}
                                 className="w-full p-2 border rounded"
                             >
@@ -141,14 +141,14 @@ const ListaOT = () => {
                                 ))}
                             </select>
                         </div>
-                        
+
                         {/* Filtro por Fecha de Inicio */}
                         <div>
                             <label className="block text-sm font-medium mb-1">Fecha Contrato (Desde)</label>
-                            <input 
-                                type="date" 
-                                name="fechaInicio" 
-                                value={filter.fechaInicio} 
+                            <input
+                                type="date"
+                                name="fechaInicio"
+                                value={filter.fechaInicio}
                                 onChange={handleFilterChange}
                                 className="w-full p-2 border rounded"
                             />
@@ -157,18 +157,18 @@ const ListaOT = () => {
                         {/* Filtro por Fecha de Fin */}
                         <div>
                             <label className="block text-sm font-medium mb-1">Fecha Contrato (Hasta)</label>
-                            <input 
-                                type="date" 
-                                name="fechaFin" 
-                                value={filter.fechaFin} 
+                            <input
+                                type="date"
+                                name="fechaFin"
+                                value={filter.fechaFin}
                                 onChange={handleFilterChange}
                                 className="w-full p-2 border rounded"
                             />
                         </div>
                     </div>
                     <div className="mt-4 flex justify-end">
-                         <button 
-                            onClick={resetFilters} 
+                         <button
+                            onClick={resetFilters}
                             className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition"
                         >
                             Limpiar Filtros

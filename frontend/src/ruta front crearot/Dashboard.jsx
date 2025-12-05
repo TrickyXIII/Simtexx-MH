@@ -3,30 +3,30 @@ import React, { useState, useEffect } from "react";
 import NavBar from "../components/NavBar";
 import Footer from "../components/Footer";
 import "./Dashboard.css"
-import { getOTs } from "../services/otService"; 
-import { Link, useParams } from "react-router-dom";
+import { getOTs } from "../services/otService";
+import { Link } from "react-router-dom";
 
 const Dashboard = () => {
     // 1. Usamos estado para guardar la lista de OTs y el estado de carga
     const [ots, setOts] = useState([]);
     const [loading, setLoading] = useState(true);
-    
+
     // 2. Usamos useEffect para cargar datos ASÍNCRONOS
     useEffect(() => {
         const loadOTs = async () => {
             try {
                 // Esperamos la lista de la API
-                const data = await getOTs(); 
+                const data = await getOTs();
                 setOts(data);
-            } catch (error) {
-                console.error("Error al cargar las OTs:", error);
+            } catch {
+                console.error("Error al cargar las OTs");
             } finally {
                 setLoading(false);
             }
         };
         loadOTs();
-        
-    }, []); 
+
+    }, []);
 
     // Los cálculos se basan en el estado 'ots'
     const totalOT = ots.length;
@@ -34,10 +34,9 @@ const Dashboard = () => {
     const enProceso = ots.filter(ot => ot.estado === "En Proceso").length;
     const finalizadas = ots.filter(ot => ot.estado === "Finalizada" || ot.estado === "Completada").length;
 
-    const { id } = useParams();
     // Manejar posible error si el usuario no existe en localStorage
     const usuarioString = localStorage.getItem("usuarioActual");
-    const usuario = usuarioString ? JSON.parse(usuarioString) : null; 
+    const usuario = usuarioString ? JSON.parse(usuarioString) : null;
 
     // Muestra un indicador de carga mientras se esperan los datos
     if (loading) {
@@ -52,7 +51,7 @@ const Dashboard = () => {
             </>
         );
     }
-    
+
     return (
         <>
             <NavBar />

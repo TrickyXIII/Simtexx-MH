@@ -1,13 +1,13 @@
 import { getOTs } from "../services/otService";
-import { Link, useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import NavBar from "../components/NavBar";
 import Footer from "../components/Footer";
 import "./ListaOT.css";
 
 export default function ListaOT() {
   const [ots, setOts] = useState([]);
-  
+
   // PROTECCIÓN 1: Valores por defecto en los filtros
   const [filtros, setFiltros] = useState({
     busqueda: "",
@@ -19,12 +19,13 @@ export default function ListaOT() {
   // PROTECCIÓN 2: Evitar que la página explote si no hay usuario en localStorage
   // Si devuelve null, usamos un usuario "fantasma" para que la UI cargue igual
   const userStr = localStorage.getItem("usuarioActual");
-  const usuario = userStr ? JSON.parse(userStr) : { nombre: "Sin Usuario", rol: "Invitado", id: 0 };
-  
-  const { id } = useParams();
+  const usuario = useMemo(() =>
+    userStr ? JSON.parse(userStr) : { nombre: "Sin Usuario", rol: "Invitado", id: 0 },
+    [userStr]
+  );
 
-  // Función para cargar datos
-  const cargarDatos = async () => {
+  // Función para cargar datos - memorizada con useCallback
+  const cargarDatos = useCallback(async () => {
     try {
       const data = await getOTs(filtros, usuario);
       // PROTECCIÓN 3: Asegurar que data sea un array antes de guardarlo
@@ -34,15 +35,17 @@ export default function ListaOT() {
         console.error("La API no devolvió un array:", data);
         setOts([]); // Array vacío para no romper el .map
       }
-    } catch (error) {
-      console.error("Error cargando OTs:", error);
+    } catch {
+      console.error("Error cargando OTs");
       setOts([]);
     }
-  };
+  }, [filtros, usuario]);
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     cargarDatos();
-  }, [filtros]);
+  }, [cargarDatos, filtros, usuario]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const handleFiltro = (e) => {
     setFiltros({ ...filtros, [e.target.name]: e.target.value });
@@ -66,7 +69,7 @@ export default function ListaOT() {
           {/* Usamos ?. para acceso seguro */}
           <div>Usuario: <b>{usuario?.nombre}</b> &nbsp;&nbsp; Rol: <b>{usuario?.rol}</b></div>
         </div>
-        
+
         <div className="btn-bar">
           {/* Enlaces protegidos con ID por defecto (0) si no existe */}
           <Link to={`/crearot/${usuario?.id || 0}`} className="btn-opcion">Crear OT</Link>
@@ -76,9 +79,9 @@ export default function ListaOT() {
         </div>
 
         <div className="layout-grid">
-          
+
           <div className="tabla-box">
-            
+
             {/* Inputs de Filtro */}
             <div className="tabla-header" style={{gap:'10px', flexWrap:'wrap'}}>
               <input
@@ -115,9 +118,9 @@ export default function ListaOT() {
                     </tr>
                 </thead>
                 <tbody>
-                    {listaSegura.map((ot) => (
+                    {listaSegura.map((ot, index) => (
                     // Usamos ot?.id por seguridad
-                    <tr key={ot.id_ot || ot.id || Math.random()}> 
+                    <tr key={ot.id_ot || ot.id || index}>
                         <td>{ot.codigo}</td>
                         <td>{ot.titulo}</td>
                         <td>{ot.estado}</td>

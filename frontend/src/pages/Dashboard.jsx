@@ -1,13 +1,11 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import NavBar from "../components/NavBar";
 import Footer from "../components/Footer";
 import "./Dashboard.css"
 import { getOTs } from "../services/otService";
-import { Link, useParams } from "react-router-dom";
+import { Link } from "react-router-dom";
 const Dashboard = () => {
   const [ots, setOts] = useState([]);
-
-  const { id } = useParams();
   const usuario = JSON.parse(localStorage.getItem("usuarioActual"));
 
   // Cargar las OT reales desde la BD

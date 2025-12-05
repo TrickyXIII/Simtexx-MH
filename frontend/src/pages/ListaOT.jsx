@@ -1,27 +1,26 @@
-import { getOTs, deleteOT, deleteOTBackend } from "../services/otService"; 
-import { Link, useParams} from "react-router-dom";
+import { getOTs, deleteOT, deleteOTBackend } from "../services/otService";
+import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import NavBar from "../components/NavBar";
 import Footer from "../components/Footer";
 import "./ListaOT.css";
 
 export default function ListaOT() {
-  const [ots, setOts] = useState([]);
+  const [ots, setOts] = useState(() => getOTs());
 
   useEffect(() => {
-    setOts(getOTs());
+    // Este efecto no hace nada, solo marcamos que los datos se inicializan en useState
   }, []);
-  const { id } = useParams();
   const usuario = JSON.parse(localStorage.getItem("usuarioActual")); //usuario
 
- 
+
   const handleDelete = async (idOT) => {
     if (window.confirm("¿Estás seguro de que deseas eliminar esta OT?")) {
-      
+
       if (typeof deleteOTBackend === 'function') {
           try {
-            await deleteOTBackend(idOT); 
-          } catch (error) {
+            await deleteOTBackend(idOT);
+          } catch {
             console.error("Error en backend, continuando localmente...");
           }
       }
@@ -31,7 +30,7 @@ export default function ListaOT() {
       alert("OT eliminada correctamente");
     }
   };
- 
+
 
   return (
     <>
@@ -46,19 +45,19 @@ export default function ListaOT() {
           <div>Usuario: <b>{usuario?.nombre}</b> &nbsp;&nbsp; Rol: <b>{usuario?.rol_nombre}</b></div>
         </div>
 
-        
+
         <div className="btn-bar">
           <Link to="/crearot/${usuario?.id}" className="btn-opcion">Crear OT</Link>
           <button className="btn-opcion">Exportar PDF</button>
           <button className="btn-opcion">Exportar CSV</button>
           <Link to="/dashboard/${usuario?.id}" className="btn-opcion">inicio</Link>
-          
-          
+
+
         </div>
 
         <div className="layout-grid">
 
-          
+
           <div className="tabla-box">
 
             <div className="tabla-header">
@@ -97,8 +96,8 @@ export default function ListaOT() {
                       <Link className="btn-ver" to={`/detalle/${ot.id}`}>
                         Ver
                       </Link>
-                      <button 
-                        onClick={() => handleDelete(ot.id)} 
+                      <button
+                        onClick={() => handleDelete(ot.id)}
                         className="btn-eliminar"
                       >
                         Eliminar
@@ -111,7 +110,7 @@ export default function ListaOT() {
 
           </div>
 
-          
+
           <div className="panel-registros">
             <h3>Registros</h3>
 

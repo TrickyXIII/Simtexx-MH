@@ -5,11 +5,20 @@ import Footer from "../components/Footer";
 
 export default function Usuarios() {
   const navigate = useNavigate();
-  const [usuarios, setUsuarios] = useState([]);
+  const [usuarios, setUsuarios] = useState(() => {
+    const data = JSON.parse(localStorage.getItem("usuarios")) || [];
+    return data;
+  });
 
   useEffect(() => {
-    const data = JSON.parse(localStorage.getItem("usuarios")) || [];
-    setUsuarios(data);
+    // Solo sincronizar cambios externos del localStorage
+    const handleStorageChange = () => {
+      const data = JSON.parse(localStorage.getItem("usuarios")) || [];
+      setUsuarios(data);
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
   function eliminarUsuario(id) {

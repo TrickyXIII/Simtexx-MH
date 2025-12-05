@@ -23,6 +23,7 @@ export default function ModificarOT() {
   });
 
   // Cargar datos existentes
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     const ot = getOTById(id);
     if (ot) {
@@ -34,10 +35,11 @@ export default function ModificarOT() {
         responsable: ot.responsable,
         fechaInicio: ot.fechaInicio,
         fechaFin: ot.fechaFin,
-        estadoOT: ot.estadoOT ?? true, // ⬅ CARGA EL BOOLEANO
+        estadoOT: ot.estadoOT ?? true,
       });
     }
   }, [id]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   // Validaciones
   const validateForm = () => {

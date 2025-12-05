@@ -38,8 +38,24 @@ export function getOTById(id) {
   return getOTs().find((ot) => ot.id === id);
 }
 
+export function deleteOT(id) {
+  const data = getOTs();
+  const filtered = data.filter((ot) => ot.id !== id);
+  localStorage.setItem(KEY, JSON.stringify(filtered));
+  return filtered;
+}
 
-const API_URL = "http://localhost:4000/api/ot";
+export function updateOT(id, updatedOT) {
+  const data = getOTs();
+  const index = data.findIndex((ot) => ot.id === id);
+  if (index !== -1) {
+    data[index] = { ...data[index], ...updatedOT };
+    localStorage.setItem(KEY, JSON.stringify(data));
+    return data[index];
+  }
+  return null;
+}
+
 export async function deleteOTBackend(id) {
   try {
     const response = await fetch(`${API_URL}/${id}`, {
@@ -49,11 +65,11 @@ export async function deleteOTBackend(id) {
     if (!response.ok) {
       throw new Error("Error al eliminar la OT en el servidor");
     }
-    
+
     return await response.json();
   } catch (error) {
     console.error("Error eliminando OT en backend:", error);
-    
+
   }
 }
 

@@ -16,7 +16,7 @@ const generarCodigoOT = () => {
 router.post("/", async (req, res) => {
   try {
     const { titulo, descripcion, estado, fecha_inicio_contrato, fecha_fin_contrato, responsable_id } = req.body;
-    
+
     console.log("📥 Creando OT:", req.body);
     const codigo = generarCodigoOT();
 
@@ -39,7 +39,7 @@ router.post("/", async (req, res) => {
 // 2. LISTAR TODAS (GET) - Con filtros
 router.get("/", async (req, res) => {
   try {
-    const { estado, fechaInicio, fechaFin, busqueda } = req.query;
+    const { estado } = req.query;
     const { role, userid } = req.headers;
 
     let query = "SELECT * FROM ot WHERE 1=1";

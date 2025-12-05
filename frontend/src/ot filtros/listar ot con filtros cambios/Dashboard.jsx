@@ -1,19 +1,20 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import NavBar from "../components/NavBar";
 import Footer from "../components/Footer";
 import "./Dashboard.css"
 import { getOTs } from "../services/otService";
-import { Link, useParams } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 const Dashboard = () => {
   // 1. Usamos useState porque los datos tardan en llegar de la DB
   const [ots, setOts] = useState([]);
-  
+
   // 2. Recuperación segura del usuario para evitar errores
   const userStr = localStorage.getItem("usuarioActual");
-  const usuario = userStr ? JSON.parse(userStr) : { nombre: "Invitado", rol: "Invitado", id: 0 };
-  
-  const { id } = useParams();
+  const usuario = useMemo(() =>
+    userStr ? JSON.parse(userStr) : { nombre: "Invitado", rol: "Invitado", id: 0 },
+    [userStr]
+  );
 
   // 3. useEffect para cargar los datos ASÍNCRONAMENTE
   useEffect(() => {
@@ -27,13 +28,13 @@ const Dashboard = () => {
         } else {
             setOts([]);
         }
-      } catch (error) {
-        console.error("Error cargando dashboard:", error);
+      } catch {
+        console.error("Error cargando dashboard");
         setOts([]);
       }
     };
     cargarDatos();
-  }, []); // Se ejecuta una sola vez al entrar
+  }, [usuario]); // Se ejecuta una sola vez al entrar
 
   // 4. Cálculos seguros (si ots está vacío, no pasa nada)
   const totalOT = ots.length;

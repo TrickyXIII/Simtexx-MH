@@ -6,13 +6,13 @@ export async function getOTs(filtros = {}, usuario = {}) {
   const params = new URLSearchParams();
   if (filtros.estado) params.append("estado", filtros.estado);
   // ... resto de filtros ...
-  
+
   try {
     const response = await fetch(`${API_URL}?${params.toString()}`, {
       headers: { "role": usuario.rol || "user", "userid": usuario.id || "" }
     });
     return response.ok ? await response.json() : [];
-  } catch (error) {
+  } catch {
     return [];
   }
 }
@@ -35,7 +35,9 @@ export async function createOT(nuevaOT) {
       body: JSON.stringify(datos)
     });
     return response.ok ? await response.json() : null;
-  } catch (e) { return null; }
+  } catch {
+    return null;
+  }
 }
 
 // 3. ¡ACTUALIZADO! OBTENER POR ID DESDE BACKEND
@@ -45,12 +47,12 @@ export async function getOTById(id) {
     const response = await fetch(`${API_URL}/${id}`);
     if (!response.ok) return null;
     return await response.json();
-  } catch (error) {
-    console.error("Error al buscar OT:", error);
+  } catch {
+    console.error("Error al buscar OT");
     return null;
   }
 }
 
 // Funciones viejas (puedes dejarlas vacías o borrarlas si no se usan)
-export function updateOT(id, data) { console.log("Update pendiente de implementar en backend"); }
-export function deleteOT(id) { console.log("Delete pendiente"); }
+export function updateOT() { console.log("Update pendiente de implementar en backend"); }
+export function deleteOT() { console.log("Delete pendiente"); }
