@@ -1,0 +1,119 @@
+
+.container {
+  padding: 20px;
+  margin-top: 80px;
+  text-align: center;
+}
+
+
+.title {
+  font-size: 40px;
+  font-weight: bold;
+  color: #2d2d2d;
+  margin-bottom: 20px;
+}
+
+
+.subtittle {
+  font-size: 20px;
+  background: rgba(255,255,255,0.6);
+  width: 60%;
+  margin: 0 auto;
+  padding: 12px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+
+.cardContainer {
+  margin-top: 30px;
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+.card {
+  background: #444;
+  color: white;
+  padding: 10px 25px;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: 0.2s ease;
+  font-weight: 600;
+}
+
+.card:hover {
+  background: #222;
+}
+
+
+.panel-resumen {
+  margin: 40px auto;
+  width: 60%;
+  background: white;
+  padding: 25px;
+  border-radius: 20px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.panel-title {
+  font-size: 22px;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+.panel-items {
+  display: flex;
+  justify-content: space-around;
+}
+
+.panel-item {
+  background: white;
+  border-radius: 15px;
+  padding: 20px;
+  width: 120px;
+  text-align: center;
+  font-size: 18px;
+  border: 2px solid #ddd;
+}
+
+.panel-item strong {
+  display: block;
+  margin-top: 5px;
+  font-size: 26px;
+}
+
+
+.table-container {
+  width: 75%;
+  margin: 30px auto;
+  background: #c80000;
+  padding: 20px;
+  border-radius: 25px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+.table-title {
+  color: white;
+  font-size: 28px;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+table {
+  width: 100%;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  border-collapse: collapse;
+}
+
+table th, table td {
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+table th {
+  background: #eee;
+  font-weight: bold;
+}

@@ -1,0 +1,9 @@
+se hicieron todos estos cambios en ot routes para poder recibir los datos de la base 
+
+lista ot: se creo los selectores de fecha y estado
+
+ot.services toma lo que el usuario seleccione en la pantalla y lo enviara al back
+
+usuario route.js y login.jsx: para que pueda detectar el user el sistema aplica automatico el filtro
+
+el triger del sql: se cambio poco mas que nada para probar que los filtros funcionan bien 
