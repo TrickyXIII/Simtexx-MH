@@ -1,54 +1,66 @@
 import { Router } from "express";
 import { pool } from "../db.js";
+import bcrypt from "bcryptjs";
+
+// Importar controladores (asegúrate de haber creado este archivo)
+import {
+  crearUsuario,
+  listarUsuarios,
+  obtenerUsuario,
+  editarUsuario,
+  desactivarUsuario
+} from "../controllers/usuarios.controller.js";
 
 const router = Router();
-//filtro para mantenedores en crearot select responsable
+
+// filtro para mantenedores en crear OT: devuelve usuarios con rol_id = 3
 router.get("/mantenedores", async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT id_usuarios, nombre
       FROM usuarios
-      WHERE rol_id = 3 AND activo = true
+      WHERE rol_id = 3 AND activo = TRUE
       ORDER BY nombre ASC
     `);
     res.json(result.rows);
   } catch (error) {
-    console.error(error);
+    console.error("Error en /mantenedores:", error);
     res.status(500).json({ error: "Error al obtener responsables" });
   }
 });
 
-// filtro cliente Para CREARot
+// filtro clientes para CREAR OT: devuelve usuarios con rol_id = 2
 router.get("/clientes", async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT id_usuarios, nombre
       FROM usuarios
-      WHERE rol_id = 2 And Activo = true
+      WHERE rol_id = 2 AND activo = TRUE
       ORDER BY nombre ASC
     `);
     res.json(result.rows);
   } catch (error) {
-    console.error(error);
+    console.error("Error en /clientes:", error);
     res.status(500).json({ error: "Error al obtener clientes" });
   }
 });
 
-// LOGIN DESDE BD
+/* =========================
+   LOGIN (mejorado: bcrypt + activo)
+   ========================= */
 router.post("/login", async (req, res) => {
-  const { correo, password_hash } = req.body;
-
+  const { correo, password } = req.body;
   try {
-    // 1. Validar usuario por email
     const result = await pool.query(
-       `
+      `
       SELECT 
         u.id_usuarios,
         u.nombre,
         u.correo,
         u.password_hash,
         u.rol_id,
-        r.nombre AS rol_nombre
+        r.nombre AS rol_nombre,
+        u.activo
       FROM usuarios u
       JOIN roles r ON u.rol_id = r.id_roles
       WHERE u.correo = $1
@@ -62,16 +74,22 @@ router.post("/login", async (req, res) => {
 
     const user = result.rows[0];
 
-    // 2. Comparar contraseña (versión simple para desarrollo)
-    if (password_hash !== user.password_hash) {
+    // Verificar si cuenta activa
+    if (!user.activo) {
+      return res.status(403).json({ error: "Cuenta desactivada. Contacte al administrador." });
+    }
+
+    // Comparar usando bcrypt
+    const match = await bcrypt.compare(password, user.password_hash);
+    if (!match) {
       return res.status(401).json({ error: "Contraseña incorrecta" });
     }
 
-    // 3. Responder datos al frontend
+    // Responder (si usan JWT deberán emitir token aquí; por ahora devolvemos datos)
     res.json({
       message: "Login exitoso",
       user: {
-        id: user.id,
+        id_usuarios: user.id_usuarios,
         nombre: user.nombre,
         correo: user.correo,
         rol_id: user.rol_id,
@@ -80,25 +98,26 @@ router.post("/login", async (req, res) => {
     });
 
   } catch (error) {
-    console.error(error);
+    console.error("Error en /login:", error);
     res.status(500).json({ error: "Error en el servidor" });
   }
 });
 
-//MOSTRAR TODOS LOS USUARIOS
-router.get("/", async (req, res) => {
-  try {
-    const result = await pool.query(`
-      SELECT *from usuarios
-    `);
 
-    return res.json(result.rows);
-  } catch (error) {
-    console.error("Error al obtener las usuarios:", error);
-    return res.status(500).json({ error: "Error al obtener las usuarios" });
-  }
-});
+
+// Crear usuario (Admin)
+router.post("/", crearUsuario);
+
+// Listar usuarios (Admin)
+router.get("/", listarUsuarios);
+
+// Obtener usuario por id
+router.get("/:id", obtenerUsuario);
+
+// Editar usuario (Admin)
+router.put("/:id", editarUsuario);
+
+// Desactivar usuario (soft delete) (Admin)
+router.patch("/:id/desactivar", desactivarUsuario);
 
 export default router;
-
-
