@@ -29,7 +29,7 @@ export async function crearUsuario(req, res) {
 
     const nuevo = result.rows[0];
 
-    // Registrar auditoría (si tienes la tabla auditorias)
+    // Registrar auditoría
     await pool.query(
       `INSERT INTO auditorias (usuario_id, ot_id, accion, descripcion, ip_address)
        VALUES ($1, NULL, $2, $3, $4)`,
@@ -149,5 +149,50 @@ export async function desactivarUsuario(req, res) {
   } catch (err) {
     console.error("desactivarUsuario:", err);
     return res.status(500).json({ error: "Error desactivando usuario" });
+  }
+}
+
+/**
+ * LOGIN DE USUARIO (Nuevo Agregado)
+ */
+export async function loginUsuario(req, res) {
+  const { correo, password } = req.body;
+  try {
+    const result = await pool.query(
+      `SELECT u.id_usuarios, u.nombre, u.correo, u.password_hash, u.rol_id, r.nombre AS rol_nombre, u.activo
+       FROM usuarios u
+       JOIN roles r ON u.rol_id = r.id_roles
+       WHERE u.correo = $1`,
+      [correo]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(401).json({ error: "Usuario no encontrado" });
+    }
+
+    const user = result.rows[0];
+
+    // Verificar si cuenta activa
+    if (!user.activo) {
+      return res.status(403).json({ error: "Cuenta desactivada. Contacte al administrador." });
+    }
+
+    // Comparar usando bcrypt
+    const match = await bcrypt.compare(password, user.password_hash);
+    if (!match) {
+      return res.status(401).json({ error: "Contraseña incorrecta" });
+    }
+
+    // Responder (Excluyendo el hash de la contraseña)
+    const { password_hash, ...userSafe } = user;
+    
+    res.json({
+      message: "Login exitoso",
+      user: userSafe
+    });
+
+  } catch (error) {
+    console.error("Error en login:", error);
+    res.status(500).json({ error: "Error en el servidor" });
   }
 }

@@ -1,7 +1,8 @@
 // frontend/src/services/otService.js
 
 // URL de backend (Puerto 4000 según el README)
-const API_URL = "http://localhost:4000/api/ot";
+const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
+const API_URL = `${BASE_URL}/api/ot`; // En tu app.js definiste /api/ot
 
 // --- NUEVA FUNCIÓN PARA CREAR EN POSTGRESQL ---
 export async function createOT(otData) {

@@ -1,19 +1,21 @@
 import { Router } from "express";
 import { pool } from "../db.js";
-import bcrypt from "bcryptjs";
-
-// Importar controladores (asegúrate de haber creado este archivo)
 import {
   crearUsuario,
   listarUsuarios,
   obtenerUsuario,
   editarUsuario,
-  desactivarUsuario
+  desactivarUsuario,
+  loginUsuario // Importamos la nueva función del controlador
 } from "../controllers/usuarios.controller.js";
 
 const router = Router();
 
-// filtro para mantenedores en crear OT: devuelve usuarios con rol_id = 3
+/* =======================================
+   RUTAS AUXILIARES (Para Selectores)
+   ======================================= */
+
+// Filtro para mantenedores en crear OT: devuelve usuarios con rol_id = 3
 router.get("/mantenedores", async (req, res) => {
   try {
     const result = await pool.query(`
@@ -29,7 +31,7 @@ router.get("/mantenedores", async (req, res) => {
   }
 });
 
-// filtro clientes para CREAR OT: devuelve usuarios con rol_id = 2
+// Filtro clientes para CREAR OT: devuelve usuarios con rol_id = 2
 router.get("/clientes", async (req, res) => {
   try {
     const result = await pool.query(`
@@ -45,79 +47,28 @@ router.get("/clientes", async (req, res) => {
   }
 });
 
-/* =========================
-   LOGIN (mejorado: bcrypt + activo)
-   ========================= */
-router.post("/login", async (req, res) => {
-  const { correo, password } = req.body;
-  try {
-    const result = await pool.query(
-      `
-      SELECT 
-        u.id_usuarios,
-        u.nombre,
-        u.correo,
-        u.password_hash,
-        u.rol_id,
-        r.nombre AS rol_nombre,
-        u.activo
-      FROM usuarios u
-      JOIN roles r ON u.rol_id = r.id_roles
-      WHERE u.correo = $1
-      `,
-      [correo]
-    );
+/* =======================================
+   RUTA DE LOGIN
+   ======================================= */
+router.post("/login", loginUsuario);
 
-    if (result.rows.length === 0) {
-      return res.status(401).json({ error: "Usuario no encontrado" });
-    }
+/* =======================================
+   RUTAS CRUD DE USUARIOS (Admin)
+   ======================================= */
 
-    const user = result.rows[0];
-
-    // Verificar si cuenta activa
-    if (!user.activo) {
-      return res.status(403).json({ error: "Cuenta desactivada. Contacte al administrador." });
-    }
-
-    // Comparar usando bcrypt
-    const match = await bcrypt.compare(password, user.password_hash);
-    if (!match) {
-      return res.status(401).json({ error: "Contraseña incorrecta" });
-    }
-
-    // Responder (si usan JWT deberán emitir token aquí; por ahora devolvemos datos)
-    res.json({
-      message: "Login exitoso",
-      user: {
-        id_usuarios: user.id_usuarios,
-        nombre: user.nombre,
-        correo: user.correo,
-        rol_id: user.rol_id,
-        rol_nombre: user.rol_nombre
-      }
-    });
-
-  } catch (error) {
-    console.error("Error en /login:", error);
-    res.status(500).json({ error: "Error en el servidor" });
-  }
-});
-
-
-
-// Crear usuario (Admin)
+// Crear usuario
 router.post("/", crearUsuario);
 
-// Listar usuarios (Admin)
+// Listar todos los usuarios
 router.get("/", listarUsuarios);
 
-// Obtener usuario por id
+// Obtener un usuario por ID
 router.get("/:id", obtenerUsuario);
 
-// Editar usuario (Admin)
+// Editar usuario
 router.put("/:id", editarUsuario);
 
-// Desactivar usuario (soft delete) (Admin)
+// Desactivar usuario
 router.patch("/:id/desactivar", desactivarUsuario);
 
 export default router;
