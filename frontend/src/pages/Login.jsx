@@ -6,7 +6,7 @@ import "./Login.css";
 export default function Login() {
   const navigate = useNavigate();
   const [correo, setCorreo] = useState("");
-  const [password_hash, setPassword] = useState("");
+  const [password, setPassword] = useState(""); 
 
   async function handleLogin(e) {
     e.preventDefault();
@@ -17,7 +17,7 @@ export default function Login() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           correo: correo,
-          password_hash: password_hash,
+          password: password, 
         }),
       });
 
@@ -30,21 +30,17 @@ export default function Login() {
 
       const user = data.user;
 
-      // validar estado activo (si tu BD tiene columna "activo")
-      if (user.activo && user.activo !== "activo") {
+      if (user.activo === false) {
         alert("Este usuario está inactivo y no puede iniciar sesión");
         return;
       }
 
-      // guardar en localStorage tal como ya lo usas
       localStorage.setItem("usuarioActual", JSON.stringify(user));
-
-      // navegación misma que ya tenías
       navigate(`/dashboard`);
 
     } catch (error) {
       console.error(error);
-      alert("Error al conectar con el servidor");
+      alert("Error al conectar con el servidor. Revisa que el backend esté encendido.");
     }
   }
 
@@ -67,7 +63,7 @@ export default function Login() {
           <input
             type="password"
             placeholder="******"
-            value={password_hash}
+            value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
           />

@@ -1,11 +1,17 @@
-import pg from "pg";  // la comunicacion de node.js a postgresql
-import "dotenv/config"; //cargar variables desde unENV para no exponerlo
+import pg from "pg";
+import "dotenv/config";
 
 const { Pool } = pg;
 
-export const pool = new Pool({
+// Detectamos si la URL incluye "localhost" o "127.0.0.1"
+const isLocal = process.env.DATA_BASEURL?.includes("localhost") || process.env.DATA_BASEURL?.includes("127.0.0.1");
+
+// Configuración dinámica:
+// - Si es local: ssl = false
+// - Si es nube: ssl = { rejectUnauthorized: false }
+const config = {
   connectionString: process.env.DATA_BASEURL,
-  ssl: {
-    rejectUnauthorized: false // Se puede necesitar para conexiones en Render
-  }
-});
+  ssl: isLocal ? false : { rejectUnauthorized: false }
+};
+
+export const pool = new Pool(config);
