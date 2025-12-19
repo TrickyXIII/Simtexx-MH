@@ -1,4 +1,4 @@
-import { getOTs, deleteOTBackend, exportCSV, exportPDF, importCSV } from "../services/otService"; 
+import { getOTs, deleteOTBackend, exportCSV, importCSV } from "../services/otService"; 
 import { Link, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import NavBar from "../components/NavBar";
@@ -8,7 +8,6 @@ import "./ListaOT.css";
 export default function ListaOT() {
   const [ots, setOts] = useState([]);
   
-  // Filtros
   const [filtros, setFiltros] = useState({
     busqueda: "",
     estado: "Todos",
@@ -21,7 +20,6 @@ export default function ListaOT() {
   
   const { id } = useParams();
 
-  // Función para cargar datos
   const cargarDatos = async () => {
     try {
       const data = await getOTs(filtros, usuario);
@@ -44,7 +42,6 @@ export default function ListaOT() {
     setFiltros({ ...filtros, [e.target.name]: e.target.value });
   };
 
-  // --- LÓGICA DE IMPORTACIÓN ---
   const handleImportar = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -54,14 +51,13 @@ export default function ListaOT() {
     try {
         const resultado = await importCSV(file);
         alert(`Importación Finalizada:\n- Creadas: ${resultado.creadas}\n- Errores: ${resultado.errores.length}\n\n${resultado.errores.join('\n')}`);
-        cargarDatos(); // Recargar la tabla
+        cargarDatos();
     } catch (error) {
         alert("Error al importar: " + error.message);
     }
-    e.target.value = null; // Limpiar input
+    e.target.value = null;
   };
 
-  // --- LÓGICA DE ELIMINAR ---
   const handleDelete = async (idOT) => {
     if (window.confirm("¿Estás seguro de eliminar esta OT?")) {
         try {
@@ -92,10 +88,9 @@ export default function ListaOT() {
         
         <div className="btn-bar">
           <Link to={`/crearot/${usuario?.id || 0}`} className="btn-opcion">Crear OT</Link>
-          <button className="btn-opcion" onClick={exportPDF}>Exportar PDF</button>
+          
           <button className="btn-opcion" onClick={exportCSV}>Exportar CSV</button>
           
-          {/* BOTÓN IMPORTAR */}
           <input 
             type="file" 
             id="input-csv" 
@@ -107,13 +102,12 @@ export default function ListaOT() {
             Importar CSV
           </label>
 
-          <Link to={`/dashboard/${usuario?.id || 0}`} className="btn-opcion">Inicio</Link>
+          {/* CORRECCIÓN: Ruta directa a /dashboard sin ID */}
+          <Link to="/dashboard" className="btn-opcion">Inicio</Link>
         </div>
 
         <div className="layout-grid">
-          
           <div className="tabla-box">
-            
             <div className="tabla-header" style={{gap:'10px', flexWrap:'wrap'}}>
               <input
                 className="input-buscar"
@@ -187,7 +181,6 @@ export default function ListaOT() {
               <b>{finalizadas}</b>
             </div>
           </div>
-
         </div>
       </div>
       <Footer />

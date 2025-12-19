@@ -17,7 +17,6 @@ export default function Usuarios() {
       const res = await fetch("http://localhost:4000/api/usuarios");
       const data = await res.json();
       
-      // El backend devuelve un objeto { usuarios: [...] }
       if (data.usuarios && Array.isArray(data.usuarios)) {
         setUsuarios(data.usuarios);
       }
@@ -26,7 +25,7 @@ export default function Usuarios() {
     }
   };
 
-  // Función para desactivar usuario (en lugar de borrarlo físicamente)
+  // Función para desactivar usuario
   async function desactivarUsuario(id) {
     if (!confirm("¿Seguro que deseas desactivar este usuario?")) return;
 
@@ -51,7 +50,33 @@ export default function Usuarios() {
     <>
       <NavBar />
       <div style={{ maxWidth: "1000px", margin: "80px auto", padding: "20px" }}>
-        <h2 style={{ textAlign: "center", marginBottom: "20px" }}>Gestión de Usuarios</h2>
+        
+        {/* ENCABEZADO CON BOTÓN VOLVER */}
+        <div style={{ 
+            display: 'flex', 
+            justifyContent: 'center', 
+            alignItems: 'center', 
+            position: 'relative', 
+            marginBottom: '30px' 
+        }}>
+            <button 
+                onClick={() => navigate(-1)}
+                style={{
+                    position: 'absolute',
+                    left: 0,
+                    padding: '8px 16px',
+                    background: 'transparent',
+                    border: '2px solid #333',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontWeight: 'bold',
+                    color: '#333'
+                }}
+            >
+                ⬅ Volver
+            </button>
+            <h2 style={{ margin: 0 }}>Gestión de Usuarios</h2>
+        </div>
 
         <button 
           onClick={() => navigate("/CrearUser")}

@@ -2,12 +2,45 @@
   width: 90%;
   margin: 0 auto;
   text-align: center;
+  padding-bottom: 40px; /* Espacio extra abajo */
+}
+
+/* --- NUEVO: Estilos para el encabezado con botón Volver --- */
+.titulo-header {
+  position: relative; /* Permite posicionar elementos absolutos dentro */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 30px;
+  margin-bottom: 20px;
 }
 
 .titulo {
-  margin-top: 20px;
+  margin: 0;
   font-size: 32px;
 }
+
+.btn-volver {
+  position: absolute;
+  left: 0; /* Pegado a la izquierda del contenedor */
+  background: #720000;
+  border: 2px solid #444;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.btn-volver:hover {
+  background: #720000;
+  color: white;
+}
+/* --------------------------------------------------------- */
 
 .detalle-header {
   display: grid;
@@ -45,7 +78,6 @@
   gap: 20px;
 }
 
-
 .datos-box {
   background: white;
   padding: 20px;
@@ -63,7 +95,6 @@
 .datos-grid label {
   font-weight: bold;
 }
-
 
 .recursos-box {
   background: white;
@@ -88,23 +119,31 @@
 
 .rcard b {
   font-size: 28px;
+  display: block;
 }
 
-
 .botonera {
-  margin-top: 20px;
+  margin-top: 30px;
   display: flex;
   justify-content: center;
   gap: 20px;
 }
 
 .botonera button {
-  padding: 10px 20px;
+  padding: 12px 24px;
   background: #333;
   color: white;
-  border-radius: 10px;
+  border-radius: 8px;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  transition: 0.2s;
 }
 
+.botonera button:hover {
+  background: #000;
+  transform: translateY(-2px);
+}
 
 .historial-box {
   margin-top: 30px;
@@ -129,12 +168,12 @@
   border-bottom: 1px solid #ccc;
 }
 
-
 .comentarios-box {
   margin-top: 30px;
   background: white;
   padding: 20px;
   border-radius: 15px;
+  margin-bottom: 40px;
 }
 
 .btn-add {
@@ -145,4 +184,6 @@
   color: white;
   border-radius: 50%;
   font-size: 22px;
+  border: none;
+  cursor: pointer;
 }

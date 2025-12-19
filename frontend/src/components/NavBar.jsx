@@ -12,7 +12,13 @@ export default function NavBar() {
   return (
     <nav className="navbar">
       <div className="nav-left">
-        <img src="/logo.png" alt="Logo" className="logo" />
+        <img 
+          src="/logo.png" 
+          alt="Logo" 
+          className="logo" 
+          onClick={() => navigate("/dashboard")}
+          style={{ cursor: "pointer" }}
+        />
       </div>
 
       <div className="nav-right">
