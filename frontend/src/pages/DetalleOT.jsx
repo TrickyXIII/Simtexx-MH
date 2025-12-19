@@ -1,6 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-// AGREGAMOS getHistorial A LOS IMPORTS
 import { getOTById, exportPDFById, getComentarios, crearComentario, getHistorial } from "../services/otService"; 
 import Footer from "../components/Footer";
 import NavBar from "../components/NavBar";
@@ -12,12 +11,17 @@ export default function DetalleOT() {
   
   const [ot, setOt] = useState(null);
   const [comentarios, setComentarios] = useState([]);
-  const [historial, setHistorial] = useState([]); // NUEVO ESTADO
+  const [historial, setHistorial] = useState([]);
   const [nuevoComentario, setNuevoComentario] = useState("");
   const [mostrarInput, setMostrarInput] = useState(false);
 
   const userStr = localStorage.getItem("usuarioActual");
   const usuario = userStr ? JSON.parse(userStr) : { nombre: "Invitado", rol: "Invitado", id: 0, id_usuarios: 0 };
+  
+  // --- VALIDACIÓN DE ROL ROBUSTA ---
+  // Convierte a minúsculas y quita espacios para evitar errores de tipeo en BD
+  const rolNormalizado = (usuario.rol || usuario.rol_nombre || "").toLowerCase().trim();
+  const isAdmin = rolNormalizado === 'admin' || rolNormalizado === 'administrador';
 
   useEffect(() => {
     async function loadData() {
@@ -25,17 +29,18 @@ export default function DetalleOT() {
       setOt(otData);
 
       if (otData) {
-        // Cargar Comentarios
         const commentsData = await getComentarios(id);
         setComentarios(commentsData);
 
-        // Cargar Historial (NUEVO)
-        const historialData = await getHistorial(id);
-        setHistorial(historialData);
+        // Solo cargamos el historial si es Admin
+        if (isAdmin) {
+            const historialData = await getHistorial(id);
+            setHistorial(historialData);
+        }
       }
     }
     loadData();
-  }, [id]);
+  }, [id, isAdmin]);
 
   const handleExportPDF = () => {
     if (ot) exportPDFById(ot.id_ot, ot.codigo, usuario);
@@ -139,37 +144,39 @@ export default function DetalleOT() {
           <button onClick={handleExportPDF}>Exportar PDF</button>
         </div>
         
-        {/* SECCIÓN HISTORIAL ACTUALIZADA */}
-        <div className="historial-box">
-          <h3>Historial de Actualizaciones ({historial.length})</h3>
-          {historial.length === 0 ? (
-            <p style={{textAlign:'center', color:'#888', padding:'10px'}}>No hay registros de cambios.</p>
-          ) : (
-            <table>
-              <thead>
-                <tr>
-                  <th>Fecha</th>
-                  <th>Acción / Detalles</th>
-                  <th>Responsable</th>
-                </tr>
-              </thead>
-              <tbody>
-                {historial.map((h) => (
-                  <tr key={h.id_auditoria || Math.random()}>
-                    <td>{new Date(h.fecha_cambio).toLocaleString()}</td>
-                    <td>
-                      <strong>{h.accion}</strong>
-                      {h.detalles && <span style={{display:'block', fontSize:'12px', color:'#555'}}>{h.detalles}</span>}
-                    </td>
-                    <td>{h.responsable_nombre || "Sistema"}</td>
+        {/* SECCIÓN HISTORIAL (SOLO ADMIN) */}
+        {isAdmin && (
+          <div className="historial-box">
+            <h3>Historial de Auditoría (Admin)</h3>
+            {historial.length === 0 ? (
+              <p style={{textAlign:'center', color:'#888', padding:'10px'}}>No hay registros de cambios.</p>
+            ) : (
+              <table>
+                <thead>
+                  <tr>
+                    <th>Fecha</th>
+                    <th>Acción / Detalles</th>
+                    <th>Responsable</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
+                </thead>
+                <tbody>
+                  {historial.map((h) => (
+                    <tr key={h.id_auditoria || Math.random()}>
+                      <td>{new Date(h.fecha_cambio).toLocaleString()}</td>
+                      <td>
+                        <strong>{h.accion}</strong>
+                        {h.detalles && <span style={{display:'block', fontSize:'12px', color:'#555'}}>{h.detalles}</span>}
+                      </td>
+                      <td>{h.responsable_nombre || "Sistema"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        )}
         
-        {/* SECCIÓN COMENTARIOS (Ya implementada) */}
+        {/* SECCIÓN COMENTARIOS */}
         <div className="comentarios-box">
           <h3>Comentarios ({comentarios.length})</h3>
 
