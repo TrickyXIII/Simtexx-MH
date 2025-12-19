@@ -99,14 +99,28 @@ export async function getOTById(id) {
   }
 }
 
-// --- ACTUALIZAR OT ---
-export async function updateOT(id, data) {
+// --- ACTUALIZAR OT (CON AUDITORÍA) ---
+export async function updateOT(id, data, usuario = {}) {
+  // Intentar obtener usuario del localStorage si no viene como parámetro
+  if (!usuario.id && !usuario.id_usuarios) {
+      const userStr = localStorage.getItem("usuarioActual");
+      if (userStr) usuario = JSON.parse(userStr);
+  }
+
+  const role = usuario.rol_nombre || usuario.rol || "user";
+  const userId = usuario.id_usuarios || usuario.id || "";
+
   try {
     const res = await fetch(`${API_URL}/${id}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        "role": role,
+        "userid": userId // IMPORTANTE: Enviamos el ID para la auditoría
+      },
       body: JSON.stringify(data),
     });
+    
     if (!res.ok) throw new Error("Error al actualizar la OT");
     return await res.json();
   } catch (err) {
@@ -230,5 +244,18 @@ export async function importCSV(file) {
   } catch (error) {
     console.error("Error importando CSV:", error);
     throw error;
+  }
+}
+
+// --- HISTORIAL / AUDITORÍA ---
+
+export async function getHistorial(otId) {
+  try {
+    const res = await fetch(`${BASE_URL}/api/auditorias/${otId}`);
+    if (!res.ok) throw new Error("Error cargando historial");
+    return await res.json();
+  } catch (error) {
+    console.error(error);
+    return [];
   }
 }

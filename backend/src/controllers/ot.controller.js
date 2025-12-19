@@ -3,14 +3,14 @@ import { generarCodigoOT } from "../utils/generarCodigoOT.js";
 import ExcelJS from "exceljs";
 import fs from "fs";
 
-// --- NUEVO: ESTADÍSTICAS DASHBOARD ---
+// --- ESTADÍSTICAS DASHBOARD ---
 export const getDashboardStats = async (req, res) => {
   try {
     const { role, userid } = req.headers;
     const values = [];
     let whereClause = "WHERE 1=1"; 
 
-    // Validación de Rol (Soporta "admin" y "administrador")
+    // Validación de Rol
     const userRole = role ? role.toLowerCase() : "";
     
     // Si no es admin, solo cuenta sus OTs
@@ -61,7 +61,6 @@ export const getOTs = async (req, res) => {
     const values = [];
     let counter = 1;
 
-    // Validación de Rol (Soporta "admin" y "administrador")
     const userRole = role ? role.toLowerCase() : "";
 
     if (userRole !== 'admin' && userRole !== 'administrador' && userid) {
@@ -143,12 +142,19 @@ export const createOT = async (req, res) => {
   }
 };
 
-// --- ACTUALIZAR OT ---
+// --- ACTUALIZAR OT CON AUDITORÍA INTELIGENTE ---
 export const updateOT = async (req, res) => {
   const { id } = req.params;
   const { titulo, descripcion, estado, cliente_id, responsable_id, fecha_inicio_contrato, fecha_fin_contrato, activo } = req.body;
+  const { userid } = req.headers;
 
   try {
+    // 1. OBTENER LA VERSIÓN ANTIGUA (Para comparar)
+    const oldRes = await pool.query("SELECT * FROM ot WHERE id_ot = $1", [id]);
+    if (oldRes.rows.length === 0) return res.status(404).json({ error: "OT no encontrada" });
+    const oldOT = oldRes.rows[0];
+
+    // 2. ACTUALIZAR
     const result = await pool.query(`
       UPDATE ot SET
         titulo = $1, descripcion = $2, estado = $3, cliente_id = $4,
@@ -157,10 +163,47 @@ export const updateOT = async (req, res) => {
       WHERE id_ot = $9 RETURNING *;
     `, [titulo, descripcion, estado, cliente_id, responsable_id, fecha_inicio_contrato, fecha_fin_contrato, activo, id]);
 
-    if (result.rowCount === 0) return res.status(404).json({ error: "OT no encontrada" });
+    // 3. AUDITORÍA: COMPARAR VALORES
+    const usuarioIdInt = parseInt(userid);
+    if (!isNaN(usuarioIdInt) && usuarioIdInt > 0) {
+        
+        const camposCambiados = [];
+
+        // Comparar valores (evitando falsos positivos por tipos de datos)
+        if (titulo && titulo !== oldOT.titulo) camposCambiados.push("título");
+        if (descripcion && descripcion !== oldOT.descripcion) camposCambiados.push("descripción");
+        if (estado && estado !== oldOT.estado) camposCambiados.push("estado");
+        
+        // Comparar IDs (convertir a string o int para asegurar igualdad)
+        if (responsable_id && String(responsable_id) !== String(oldOT.responsable_id)) camposCambiados.push("responsable");
+        if (cliente_id && String(cliente_id) !== String(oldOT.cliente_id)) camposCambiados.push("cliente");
+
+        // Comparar Fechas (solo la parte de la fecha YYYY-MM-DD)
+        const nuevaFechaInicio = fecha_inicio_contrato ? new Date(fecha_inicio_contrato).toISOString().split('T')[0] : null;
+        const viejaFechaInicio = oldOT.fecha_inicio_contrato ? new Date(oldOT.fecha_inicio_contrato).toISOString().split('T')[0] : null;
+        if (nuevaFechaInicio !== viejaFechaInicio) camposCambiados.push("fecha inicio");
+
+        const nuevaFechaFin = fecha_fin_contrato ? new Date(fecha_fin_contrato).toISOString().split('T')[0] : null;
+        const viejaFechaFin = oldOT.fecha_fin_contrato ? new Date(oldOT.fecha_fin_contrato).toISOString().split('T')[0] : null;
+        if (nuevaFechaFin !== viejaFechaFin) camposCambiados.push("fecha fin");
+
+        // Solo insertar si hubo cambios reales
+        if (camposCambiados.length > 0) {
+            const detalleCambio = `Cambios en: ${camposCambiados.join(", ")}`;
+            
+            await pool.query(
+                `INSERT INTO auditorias (ot_id, usuario_id, accion, descripcion, fecha_creacion)
+                 VALUES ($1, $2, 'Modificación', $3, NOW())`,
+                [id, usuarioIdInt, detalleCambio]
+            );
+        }
+    }
+
     res.json({ message: "OT actualizada", data: result.rows[0] });
+
   } catch (error) {
-    res.status(500).json({ error: "Error al actualizar la OT" });
+    console.error("Error actualizando OT:", error);
+    res.status(500).json({ error: "Error al actualizar la OT: " + error.message });
   }
 };
 
@@ -176,16 +219,14 @@ export const deleteOT = async (req, res) => {
   }
 };
 
-// --- EXPORTAR CSV (CON FILTROS Y SEGURIDAD) ---
+// --- EXPORTAR CSV ---
 export const exportOTsCSV = async (req, res) => {
   try {
-    // 1. Validar Seguridad
     const { role, userid } = req.headers;
     if (!role || !userid) {
       return res.status(401).json({ error: "Acceso denegado. Faltan credenciales." });
     }
 
-    // 2. Obtener Filtros del Query String
     const { busqueda, estado, fechaInicio, fechaFin } = req.query;
 
     let query = `
@@ -203,7 +244,6 @@ export const exportOTsCSV = async (req, res) => {
     const values = [];
     let counter = 1;
 
-    // Validación de Rol en Exportación
     const userRole = role ? role.toLowerCase() : "";
     if (userRole !== 'admin' && userRole !== 'administrador' && userid) {
       query += ` AND o.responsable_id = $${counter}`;
@@ -211,7 +251,6 @@ export const exportOTsCSV = async (req, res) => {
       counter++;
     }
 
-    // Aplicar Filtros (Misma lógica que getOTs)
     if (estado && estado !== "Todos") {
       query += ` AND o.estado = $${counter}`;
       values.push(estado);
@@ -240,7 +279,6 @@ export const exportOTsCSV = async (req, res) => {
 
     if (ots.length === 0) return res.status(404).send("No hay datos para exportar con los filtros seleccionados");
 
-    // 3. Generar CSV
     const headers = ["ID", "Codigo", "Titulo", "Descripcion", "Estado", "Inicio", "Fin", "Responsable", "Cliente"];
     const csvRows = ots.map(row => {
       return [

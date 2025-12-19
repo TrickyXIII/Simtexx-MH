@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { getOTById, exportPDFById, getComentarios, crearComentario } from "../services/otService"; // Importamos los nuevos servicios
+// AGREGAMOS getHistorial A LOS IMPORTS
+import { getOTById, exportPDFById, getComentarios, crearComentario, getHistorial } from "../services/otService"; 
 import Footer from "../components/Footer";
 import NavBar from "../components/NavBar";
 import "./DetalleOT.css";
@@ -10,22 +11,27 @@ export default function DetalleOT() {
   const navigate = useNavigate();
   
   const [ot, setOt] = useState(null);
-  const [comentarios, setComentarios] = useState([]); // Estado para comentarios
-  const [nuevoComentario, setNuevoComentario] = useState(""); // Input de texto
-  const [mostrarInput, setMostrarInput] = useState(false); // Para mostrar/ocultar el input
+  const [comentarios, setComentarios] = useState([]);
+  const [historial, setHistorial] = useState([]); // NUEVO ESTADO
+  const [nuevoComentario, setNuevoComentario] = useState("");
+  const [mostrarInput, setMostrarInput] = useState(false);
 
   const userStr = localStorage.getItem("usuarioActual");
   const usuario = userStr ? JSON.parse(userStr) : { nombre: "Invitado", rol: "Invitado", id: 0, id_usuarios: 0 };
 
-  // Cargar OT y Comentarios
   useEffect(() => {
     async function loadData() {
       const otData = await getOTById(id);
       setOt(otData);
 
       if (otData) {
+        // Cargar Comentarios
         const commentsData = await getComentarios(id);
         setComentarios(commentsData);
+
+        // Cargar Historial (NUEVO)
+        const historialData = await getHistorial(id);
+        setHistorial(historialData);
       }
     }
     loadData();
@@ -37,15 +43,11 @@ export default function DetalleOT() {
 
   const handleEnviarComentario = async () => {
     if (!nuevoComentario.trim()) return;
-    
-    // Usamos usuario.id_usuarios o usuario.id según cómo lo guarde tu login
     const userId = usuario.id_usuarios || usuario.id; 
-    
     const res = await crearComentario(id, userId, nuevoComentario);
     if (res) {
       setNuevoComentario("");
       setMostrarInput(false);
-      // Recargar comentarios
       const updatedComments = await getComentarios(id);
       setComentarios(updatedComments);
     } else {
@@ -137,21 +139,37 @@ export default function DetalleOT() {
           <button onClick={handleExportPDF}>Exportar PDF</button>
         </div>
         
+        {/* SECCIÓN HISTORIAL ACTUALIZADA */}
         <div className="historial-box">
-          <h3>Historial de Actualizaciones</h3>
-          <table>
-            <thead>
-              <tr>
-                <th>Fecha</th>
-                <th>Descripción</th>
-                <th>Responsable</th>
-              </tr>
-            </thead>
-            {/* Pendiente implementar Historial */}
-          </table>
+          <h3>Historial de Actualizaciones ({historial.length})</h3>
+          {historial.length === 0 ? (
+            <p style={{textAlign:'center', color:'#888', padding:'10px'}}>No hay registros de cambios.</p>
+          ) : (
+            <table>
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Acción / Detalles</th>
+                  <th>Responsable</th>
+                </tr>
+              </thead>
+              <tbody>
+                {historial.map((h) => (
+                  <tr key={h.id_auditoria || Math.random()}>
+                    <td>{new Date(h.fecha_cambio).toLocaleString()}</td>
+                    <td>
+                      <strong>{h.accion}</strong>
+                      {h.detalles && <span style={{display:'block', fontSize:'12px', color:'#555'}}>{h.detalles}</span>}
+                    </td>
+                    <td>{h.responsable_nombre || "Sistema"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
         
-        {/* SECCIÓN COMENTARIOS */}
+        {/* SECCIÓN COMENTARIOS (Ya implementada) */}
         <div className="comentarios-box">
           <h3>Comentarios ({comentarios.length})</h3>
 
