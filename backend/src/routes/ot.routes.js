@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { verifyToken } from "../middlewares/auth.middleware.js"; // <--- Importar
 import multer from "multer";
 import { 
     getOTs, 
@@ -13,6 +14,14 @@ import {
 
 const router = Router();
 const upload = multer({ dest: 'uploads/' });
+
+// Aplica verifyToken a las rutas que quieras proteger
+router.get("/stats", verifyToken, getDashboardStats);
+router.post("/", verifyToken, createOT);
+router.get("/", verifyToken, getOTs);
+router.get("/:id", verifyToken, getOTById);
+router.put("/:id", verifyToken, updateOT);
+router.delete("/:id", verifyToken, deleteOT);
 
 // --- RUTA ESTADÍSTICAS (¡OJO: Debe ir antes de /:id!) ---
 router.get("/stats", getDashboardStats);

@@ -2,6 +2,24 @@ const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
 const API_URL = `${BASE_URL}/api/ot`;
 const PDF_URL = `${BASE_URL}/api/pdf`; 
 
+// --- AUXILIAR: HEADERS CON TOKEN ---
+const getAuthHeaders = () => {
+  const token = localStorage.getItem("token");
+  return {
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${token}`
+  };
+};
+
+// --- AUXILIAR: HEADERS PARA BLOB (PDF/CSV) ---
+// (Fetch de blobs no suele llevar Content-Type json en la petición GET, pero sí el token)
+const getAuthHeadersBlob = () => {
+  const token = localStorage.getItem("token");
+  return {
+    "Authorization": `Bearer ${token}`
+  };
+};
+
 // --- AUXILIAR BLOB ---
 const downloadBlob = (blob, filename) => {
   const url = window.URL.createObjectURL(blob);
@@ -14,21 +32,30 @@ const downloadBlob = (blob, filename) => {
   window.URL.revokeObjectURL(url);
 };
 
-// --- ESTADÍSTICAS ---
-export async function getDashboardStats(usuario = {}) {
-  const role = usuario.rol_nombre || usuario.rol || "user";
-  const userId = usuario.id_usuarios || usuario.id || "";
+// --- MANEJO DE ERRORES DE SESIÓN ---
+const handleResponse = async (response) => {
+  if (response.status === 401 || response.status === 403) {
+    alert("Sesión expirada o inválida. Por favor inicie sesión nuevamente.");
+    localStorage.removeItem("token");
+    localStorage.removeItem("usuarioActual");
+    window.location.href = "/"; // Redirigir al login
+    throw new Error("Sesión expirada");
+  }
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || "Error en la petición");
+  }
+  return response;
+};
 
+// --- ESTADÍSTICAS ---
+export async function getDashboardStats() {
   try {
     const response = await fetch(`${API_URL}/stats`, {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        "role": role, 
-        "userid": userId
-      },
+      headers: getAuthHeaders(),
     });
-    if (!response.ok) throw new Error("Error obteniendo estadísticas");
+    await handleResponse(response);
     return await response.json();
   } catch (error) {
     console.error(error);
@@ -37,11 +64,8 @@ export async function getDashboardStats(usuario = {}) {
 }
 
 // --- OBTENER OTs ---
-export async function getOTs(filtros = {}, usuario = {}) {
+export async function getOTs(filtros = {}) {
   const params = new URLSearchParams();
-  const role = usuario.rol_nombre || usuario.rol || "user";
-  const userId = usuario.id_usuarios || usuario.id || "";
-
   if (filtros.estado && filtros.estado !== "Todos") params.append("estado", filtros.estado);
   if (filtros.busqueda) params.append("busqueda", filtros.busqueda);
   if (filtros.fechaInicio) params.append("fechaInicio", filtros.fechaInicio);
@@ -50,13 +74,9 @@ export async function getOTs(filtros = {}, usuario = {}) {
   try {
     const response = await fetch(`${API_URL}?${params.toString()}`, {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        "role": role, 
-        "userid": userId
-      },
+      headers: getAuthHeaders(),
     });
-    if (!response.ok) throw new Error("Error al obtener las OT");
+    await handleResponse(response);
     return await response.json();
   } catch (error) {
     console.error(error);
@@ -69,13 +89,10 @@ export async function createOT(otData) {
   try {
     const response = await fetch(API_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: getAuthHeaders(),
       body: JSON.stringify(otData),
     });
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || "Error al crear la OT");
-    }
+    await handleResponse(response);
     return await response.json();
   } catch (error) {
     console.error(error);
@@ -83,29 +100,19 @@ export async function createOT(otData) {
   }
 }
 
-// --- OBTENER POR ID (SEGURIDAD AÑADIDA) ---
+// --- OBTENER POR ID ---
 export async function getOTById(id) {
-  // Leemos usuario del storage para tener las credenciales
-  const userStr = localStorage.getItem("usuarioActual");
-  const usuario = userStr ? JSON.parse(userStr) : {};
-  const role = usuario.rol_nombre || usuario.rol || "user";
-  const userId = usuario.id_usuarios || usuario.id || "";
-
   try {
     const response = await fetch(`${API_URL}/${id}`, {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        "role": role, 
-        "userid": userId
-      }
+      headers: getAuthHeaders()
     });
 
     if (response.status === 403) {
       alert("Acceso Denegado: No tienes permiso para ver esta OT.");
       return null;
     }
-    if (!response.ok) throw new Error("No se encontró la OT");
+    await handleResponse(response);
     return await response.json();
   } catch (error) {
     console.error("Error desde getOTById:", error);
@@ -114,27 +121,15 @@ export async function getOTById(id) {
 }
 
 // --- ACTUALIZAR OT ---
-export async function updateOT(id, data, usuario = {}) {
-  if (!usuario.id && !usuario.id_usuarios) {
-      const userStr = localStorage.getItem("usuarioActual");
-      if (userStr) usuario = JSON.parse(userStr);
-  }
-
-  const role = usuario.rol_nombre || usuario.rol || "user";
-  const userId = usuario.id_usuarios || usuario.id || "";
-
+export async function updateOT(id, data) {
   try {
-    const res = await fetch(`${API_URL}/${id}`, {
+    const response = await fetch(`${API_URL}/${id}`, {
       method: "PUT",
-      headers: { 
-        "Content-Type": "application/json",
-        "role": role,
-        "userid": userId 
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify(data),
     });
-    if (!res.ok) throw new Error("Error al actualizar la OT");
-    return await res.json();
+    await handleResponse(response);
+    return await response.json();
   } catch (err) {
     console.error("Error en updateOT:", err);
     throw err;
@@ -146,20 +141,19 @@ export async function deleteOTBackend(id) {
   try {
     const response = await fetch(`${API_URL}/${id}`, {
       method: "DELETE",
+      headers: getAuthHeaders()
     });
-    if (!response.ok) throw new Error("Error al eliminar la OT en el servidor");
+    await handleResponse(response);
     return await response.json();
   } catch (error) {
     console.error("Error eliminando OT en backend:", error);
+    throw error;
   }
 }
 
 // --- EXPORTAR CSV ---
-export async function exportCSV(filtros = {}, usuario = {}) {
+export async function exportCSV(filtros = {}) {
   const params = new URLSearchParams();
-  const role = usuario.rol_nombre || usuario.rol || "user";
-  const userId = usuario.id_usuarios || usuario.id || "";
-
   if (filtros.estado && filtros.estado !== "Todos") params.append("estado", filtros.estado);
   if (filtros.busqueda) params.append("busqueda", filtros.busqueda);
   if (filtros.fechaInicio) params.append("fechaInicio", filtros.fechaInicio);
@@ -168,10 +162,7 @@ export async function exportCSV(filtros = {}, usuario = {}) {
   try {
     const response = await fetch(`${API_URL}/export/csv?${params.toString()}`, {
         method: 'GET',
-        headers: {
-            "role": role,
-            "userid": userId
-        }
+        headers: getAuthHeadersBlob()
     });
     if (!response.ok) throw new Error("Error al exportar CSV");
     const blob = await response.blob();
@@ -183,17 +174,11 @@ export async function exportCSV(filtros = {}, usuario = {}) {
 }
 
 // --- EXPORTAR PDF ---
-export async function exportPDFById(id, codigo, usuario = {}) {
-  const role = usuario.rol_nombre || usuario.rol || "user";
-  const userId = usuario.id_usuarios || usuario.id || "";
-
+export async function exportPDFById(id, codigo) {
   try {
     const response = await fetch(`${PDF_URL}/ot/${id}/export`, {
         method: 'GET',
-        headers: {
-            "role": role,
-            "userid": userId
-        }
+        headers: getAuthHeadersBlob()
     });
     if (!response.ok) throw new Error("Error al exportar PDF");
     const blob = await response.blob();
@@ -208,12 +193,23 @@ export async function exportPDFById(id, codigo, usuario = {}) {
 export async function importCSV(file) {
   const formData = new FormData();
   formData.append("file", file);
+  // Nota: Al enviar FormData, no seteamos Content-Type manualmente, el navegador lo hace.
+  // Pero sí necesitamos el token.
+  const token = localStorage.getItem("token");
+  
   try {
     const response = await fetch(`${API_URL}/import/csv`, {
       method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`
+      },
       body: formData,
     });
-    if (!response.ok) throw new Error("Error en la subida");
+    
+    if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || "Error en la subida");
+    }
     return await response.json();
   } catch (error) {
     console.error(error);
@@ -248,7 +244,6 @@ export async function crearComentario(otId, usuarioId, texto) {
   }
 }
 
-// NUEVA FUNCIÓN DE EDICIÓN
 export async function updateComentario(comentarioId, usuarioId, texto) {
   try {
     const res = await fetch(`${BASE_URL}/api/comentarios/${comentarioId}`, {
@@ -267,6 +262,7 @@ export async function updateComentario(comentarioId, usuarioId, texto) {
 // --- HISTORIAL ---
 export async function getHistorial(otId) {
   try {
+    // Si quieres proteger historial también, añade headers aquí
     const res = await fetch(`${BASE_URL}/api/auditorias/${otId}`);
     if (!res.ok) throw new Error("Error cargando historial");
     return await res.json();

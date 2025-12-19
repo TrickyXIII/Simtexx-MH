@@ -6,11 +6,13 @@ import fs from "fs";
 // --- ESTADÍSTICAS DASHBOARD ---
 export const getDashboardStats = async (req, res) => {
   try {
-    const { role, userid } = req.headers;
+    // Usamos datos del Token (req.user)
+    const { rol, id } = req.user || {};
+    const userid = id;
+    const userRole = rol ? rol.toLowerCase() : "";
+
     const values = [];
     let whereClause = "WHERE 1=1"; 
-
-    const userRole = role ? role.toLowerCase() : "";
     
     if (userRole !== 'admin' && userRole !== 'administrador' && userid) {
       whereClause += " AND responsable_id = $1";
@@ -47,7 +49,11 @@ export const getDashboardStats = async (req, res) => {
 export const getOTs = async (req, res) => {
   try {
     const { busqueda, estado, fechaInicio, fechaFin } = req.query;
-    const { role, userid } = req.headers;
+    
+    // Usamos datos del Token (req.user)
+    const { rol, id } = req.user || {};
+    const userid = id;
+    const userRole = rol ? rol.toLowerCase() : "";
 
     let query = `
       SELECT o.*, u.nombre AS responsable_nombre, uc.nombre AS cliente_nombre
@@ -58,8 +64,6 @@ export const getOTs = async (req, res) => {
     `;
     const values = [];
     let counter = 1;
-
-    const userRole = role ? role.toLowerCase() : "";
 
     if (userRole !== 'admin' && userRole !== 'administrador' && userid) {
       query += ` AND o.responsable_id = $${counter}`;
@@ -101,7 +105,10 @@ export const getOTs = async (req, res) => {
 export const getOTById = async (req, res) => {
   try {
     const { id } = req.params;
-    const { role, userid } = req.headers; 
+    
+    // Usamos datos del Token (req.user)
+    const { rol, id: userIdToken } = req.user || {};
+    const userRole = rol ? rol.toLowerCase() : "";
 
     const result = await pool.query(`
       SELECT o.*, r.nombre AS responsable_nombre, c.nombre AS cliente_nombre
@@ -114,12 +121,10 @@ export const getOTById = async (req, res) => {
     if (result.rows.length === 0) return res.status(404).json({ error: "OT no encontrada" });
     
     const ot = result.rows[0];
-
-    const userRole = role ? role.toLowerCase() : "";
     
     if (userRole !== 'admin' && userRole !== 'administrador') {
-        const esResponsable = String(ot.responsable_id) === String(userid);
-        const esCliente = String(ot.cliente_id) === String(userid);
+        const esResponsable = String(ot.responsable_id) === String(userIdToken);
+        const esCliente = String(ot.cliente_id) === String(userIdToken);
 
         if (!esResponsable && !esCliente) {
             return res.status(403).json({ error: "Acceso denegado. No tienes permiso para ver esta OT." });
@@ -157,11 +162,13 @@ export const createOT = async (req, res) => {
   }
 };
 
-// --- ACTUALIZAR OT CON AUDITORÍA DETALLADA (Valor Anterior -> Nuevo) ---
+// --- ACTUALIZAR OT CON AUDITORÍA DETALLADA ---
 export const updateOT = async (req, res) => {
   const { id } = req.params;
   const { titulo, descripcion, estado, cliente_id, responsable_id, fecha_inicio_contrato, fecha_fin_contrato, activo } = req.body;
-  const { userid } = req.headers;
+  
+  // Usamos datos del Token (req.user)
+  const { id: userIdToken } = req.user || {};
 
   try {
     // 1. OBTENER ANTIGUA
@@ -179,17 +186,16 @@ export const updateOT = async (req, res) => {
     `, [titulo, descripcion, estado, cliente_id, responsable_id, fecha_inicio_contrato, fecha_fin_contrato, activo, id]);
 
     // 3. AUDITORÍA DETALLADA
-    const usuarioIdInt = parseInt(userid);
+    const usuarioIdInt = parseInt(userIdToken);
     if (!isNaN(usuarioIdInt) && usuarioIdInt > 0) {
         
         const cambios = [];
 
-        // Comparar valores y registrar "Antes -> Ahora"
+        // Comparar valores
         if (titulo && titulo !== oldOT.titulo) {
             cambios.push(`Título: '${oldOT.titulo}' -> '${titulo}'`);
         }
         if (descripcion && descripcion !== oldOT.descripcion) {
-             // Descripción puede ser muy larga, a veces mejor solo indicar que cambió
             cambios.push(`Descripción modificada`);
         }
         if (estado && estado !== oldOT.estado) {
@@ -202,7 +208,6 @@ export const updateOT = async (req, res) => {
             cambios.push(`Cliente ID: ${oldOT.cliente_id || 'N/A'} -> ${cliente_id}`);
         }
 
-        // Fechas
         const nuevaFechaInicio = fecha_inicio_contrato ? new Date(fecha_inicio_contrato).toISOString().split('T')[0] : null;
         const viejaFechaInicio = oldOT.fecha_inicio_contrato ? new Date(oldOT.fecha_inicio_contrato).toISOString().split('T')[0] : null;
         if (nuevaFechaInicio !== viejaFechaInicio) {
@@ -248,10 +253,10 @@ export const deleteOT = async (req, res) => {
 // --- EXPORTAR CSV ---
 export const exportOTsCSV = async (req, res) => {
   try {
-    const { role, userid } = req.headers;
-    if (!role || !userid) {
-      return res.status(401).json({ error: "Acceso denegado. Faltan credenciales." });
-    }
+    // Usamos datos del Token (req.user)
+    const { rol, id } = req.user || {};
+    const userid = id;
+    const userRole = rol ? rol.toLowerCase() : "";
 
     const { busqueda, estado, fechaInicio, fechaFin } = req.query;
 
@@ -270,7 +275,6 @@ export const exportOTsCSV = async (req, res) => {
     const values = [];
     let counter = 1;
 
-    const userRole = role ? role.toLowerCase() : "";
     if (userRole !== 'admin' && userRole !== 'administrador' && userid) {
       query += ` AND o.responsable_id = $${counter}`;
       values.push(userid);

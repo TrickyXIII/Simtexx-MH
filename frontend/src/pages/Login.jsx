@@ -28,14 +28,10 @@ export default function Login() {
         return;
       }
 
-      const user = data.user;
-
-      if (user.activo === false) {
-        alert("Este usuario está inactivo y no puede iniciar sesión");
-        return;
-      }
-
-      localStorage.setItem("usuarioActual", JSON.stringify(user));
+      // Guardamos el token y el usuario en localStorage
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("usuarioActual", JSON.stringify(data.user));
+      
       navigate(`/dashboard`);
 
     } catch (error) {

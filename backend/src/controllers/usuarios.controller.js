@@ -1,6 +1,6 @@
 import { pool } from "../db.js";
 import bcrypt from "bcryptjs";
-
+import jwt from "jsonwebtoken"; // <--- Importar esto
 /**
  * Crear usuario (Admin)
  * body: { nombre, correo, password, rol_id }
@@ -172,22 +172,31 @@ export async function loginUsuario(req, res) {
 
     const user = result.rows[0];
 
-    // Verificar si cuenta activa
     if (!user.activo) {
       return res.status(403).json({ error: "Cuenta desactivada. Contacte al administrador." });
     }
 
-    // Comparar usando bcrypt
     const match = await bcrypt.compare(password, user.password_hash);
     if (!match) {
       return res.status(401).json({ error: "Contraseña incorrecta" });
     }
 
-    // Responder (Excluyendo el hash de la contraseña)
+    // --- GENERACIÓN DEL TOKEN JWT ---
+    const token = jwt.sign(
+      { 
+        id: user.id_usuarios, 
+        rol: user.rol_nombre,
+        rol_id: user.rol_id 
+      },
+      process.env.JWT_SECRET || "secreto_super_seguro", // Debe coincidir con el middleware
+      { expiresIn: "8h" } // El token expira en 8 horas
+    );
+
     const { password_hash, ...userSafe } = user;
     
     res.json({
       message: "Login exitoso",
+      token: token, // Enviamos el token al frontend
       user: userSafe
     });
 

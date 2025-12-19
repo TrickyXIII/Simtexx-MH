@@ -5,7 +5,9 @@ export default function NavBar() {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    localStorage.removeItem("usuarioLogueado");
+    // Eliminamos todo rastro de la sesión
+    localStorage.removeItem("usuarioActual");
+    localStorage.removeItem("token");
     navigate("/");
   };
 
