@@ -186,6 +186,34 @@ export async function exportPDFById(id, codigo, usuario = {}) {
   }
 }
 
+// --- COMENTARIOS ---
+
+export async function getComentarios(otId) {
+  try {
+    const res = await fetch(`${BASE_URL}/api/comentarios/${otId}`);
+    if (!res.ok) throw new Error("Error cargando comentarios");
+    return await res.json();
+  } catch (error) {
+    console.error(error);
+    return [];
+  }
+}
+
+export async function crearComentario(otId, usuarioId, texto) {
+  try {
+    const res = await fetch(`${BASE_URL}/api/comentarios`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ot_id: otId, usuarios_id: usuarioId, texto }),
+    });
+    if (!res.ok) throw new Error("Error guardando comentario");
+    return await res.json();
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+}
+
 // --- IMPORTAR ---
 export async function importCSV(file) {
   const formData = new FormData();
