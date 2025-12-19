@@ -44,7 +44,6 @@ export default function ListaOT() {
     setFiltros({ ...filtros, [e.target.name]: e.target.value });
   };
 
-  // --- LÓGICA DE IMPORTACIÓN ---
   const handleImportar = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -54,14 +53,13 @@ export default function ListaOT() {
     try {
         const resultado = await importCSV(file);
         alert(`Importación Finalizada:\n- Creadas: ${resultado.creadas}\n- Errores: ${resultado.errores.length}\n\n${resultado.errores.join('\n')}`);
-        cargarDatos(); // Recargar la tabla
+        cargarDatos(); 
     } catch (error) {
         alert("Error al importar: " + error.message);
     }
-    e.target.value = null; // Limpiar input
+    e.target.value = null; 
   };
 
-  // --- LÓGICA DE ELIMINAR ---
   const handleDelete = async (idOT) => {
     if (window.confirm("¿Estás seguro de eliminar esta OT?")) {
         try {
@@ -92,11 +90,8 @@ export default function ListaOT() {
         
         <div className="btn-bar">
           <Link to={`/crearot/${usuario?.id || 0}`} className="btn-opcion">Crear OT</Link>
-          
-          {/* BOTÓN CSV: Ahora pasa los filtros actuales y el usuario */}
           <button className="btn-opcion" onClick={() => exportCSV(filtros, usuario)}>Exportar CSV</button>
           
-          {/* BOTÓN IMPORTAR */}
           <input 
             type="file" 
             id="input-csv" 
@@ -120,7 +115,7 @@ export default function ListaOT() {
                 className="input-buscar"
                 type="text"
                 name="busqueda"
-                placeholder="Título / Código..."
+                placeholder="Buscar por Título, Código o Responsable..."
                 value={filtros.busqueda}
                 onChange={handleFiltro}
               />
@@ -144,6 +139,9 @@ export default function ListaOT() {
                     <tr>
                     <th>Código</th>
                     <th>Título</th>
+                    <th>Inicio</th>
+                    <th>Fin</th>
+                    <th>Responsable</th>
                     <th>Estado</th>
                     <th>Acciones</th>
                     </tr>
@@ -153,6 +151,9 @@ export default function ListaOT() {
                     <tr key={ot.id_ot || Math.random()}> 
                         <td>{ot.codigo}</td>
                         <td>{ot.titulo}</td>
+                        <td>{ot.fecha_inicio_contrato ? ot.fecha_inicio_contrato.slice(0,10) : '-'}</td>
+                        <td>{ot.fecha_fin_contrato ? ot.fecha_fin_contrato.slice(0,10) : '-'}</td>
+                        <td>{ot.responsable_nombre || 'Sin asignar'}</td>
                         <td>{ot.estado}</td>
                         <td className="acciones-ot">
                         <Link className="btn-ver" to={`/detalle/${ot.id_ot}`}>

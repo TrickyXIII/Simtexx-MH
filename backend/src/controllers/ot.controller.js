@@ -43,7 +43,7 @@ export const getDashboardStats = async (req, res) => {
   }
 };
 
-// --- OBTENER TODAS ---
+// --- OBTENER TODAS (CON BUSQUEDA POR RESPONSABLE) ---
 export const getOTs = async (req, res) => {
   try {
     const { busqueda, estado, fechaInicio, fechaFin } = req.query;
@@ -72,8 +72,9 @@ export const getOTs = async (req, res) => {
       values.push(estado);
       counter++;
     }
+    // MEJORA: Búsqueda incluye ahora u.nombre (Responsable)
     if (busqueda) {
-      query += ` AND (o.titulo ILIKE $${counter} OR o.codigo ILIKE $${counter} OR uc.nombre ILIKE $${counter})`;
+      query += ` AND (o.titulo ILIKE $${counter} OR o.codigo ILIKE $${counter} OR uc.nombre ILIKE $${counter} OR u.nombre ILIKE $${counter})`;
       values.push(`%${busqueda}%`);
       counter++;
     }
@@ -101,7 +102,7 @@ export const getOTs = async (req, res) => {
 export const getOTById = async (req, res) => {
   try {
     const { id } = req.params;
-    const { role, userid } = req.headers; // Leer credenciales
+    const { role, userid } = req.headers; 
 
     const result = await pool.query(`
       SELECT o.*, r.nombre AS responsable_nombre, c.nombre AS cliente_nombre
@@ -115,15 +116,12 @@ export const getOTById = async (req, res) => {
     
     const ot = result.rows[0];
 
-    // --- VALIDACIÓN DE PERMISOS ---
     const userRole = role ? role.toLowerCase() : "";
     
-    // Si NO es admin, verificamos que sea Responsable o Cliente
     if (userRole !== 'admin' && userRole !== 'administrador') {
         const esResponsable = String(ot.responsable_id) === String(userid);
         const esCliente = String(ot.cliente_id) === String(userid);
 
-        // Si no es ninguno de los dos, denegar
         if (!esResponsable && !esCliente) {
             return res.status(403).json({ error: "Acceso denegado. No tienes permiso para ver esta OT." });
         }
@@ -167,12 +165,10 @@ export const updateOT = async (req, res) => {
   const { userid } = req.headers;
 
   try {
-    // 1. OBTENER ANTIGUA
     const oldRes = await pool.query("SELECT * FROM ot WHERE id_ot = $1", [id]);
     if (oldRes.rows.length === 0) return res.status(404).json({ error: "OT no encontrada" });
     const oldOT = oldRes.rows[0];
 
-    // 2. ACTUALIZAR
     const result = await pool.query(`
       UPDATE ot SET
         titulo = $1, descripcion = $2, estado = $3, cliente_id = $4,
@@ -181,7 +177,6 @@ export const updateOT = async (req, res) => {
       WHERE id_ot = $9 RETURNING *;
     `, [titulo, descripcion, estado, cliente_id, responsable_id, fecha_inicio_contrato, fecha_fin_contrato, activo, id]);
 
-    // 3. AUDITORÍA
     const usuarioIdInt = parseInt(userid);
     if (!isNaN(usuarioIdInt) && usuarioIdInt > 0) {
         
@@ -230,7 +225,7 @@ export const deleteOT = async (req, res) => {
   }
 };
 
-// --- EXPORTAR CSV ---
+// --- EXPORTAR CSV (CON BUSQUEDA POR RESPONSABLE) ---
 export const exportOTsCSV = async (req, res) => {
   try {
     const { role, userid } = req.headers;
@@ -267,8 +262,9 @@ export const exportOTsCSV = async (req, res) => {
       values.push(estado);
       counter++;
     }
+    // MEJORA: Búsqueda incluye ahora u.nombre (Responsable)
     if (busqueda) {
-      query += ` AND (o.titulo ILIKE $${counter} OR o.codigo ILIKE $${counter} OR c.nombre ILIKE $${counter})`;
+      query += ` AND (o.titulo ILIKE $${counter} OR o.codigo ILIKE $${counter} OR c.nombre ILIKE $${counter} OR u.nombre ILIKE $${counter})`;
       values.push(`%${busqueda}%`);
       counter++;
     }
