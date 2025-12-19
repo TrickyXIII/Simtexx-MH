@@ -3,7 +3,46 @@ import { generarCodigoOT } from "../utils/generarCodigoOT.js";
 import ExcelJS from "exceljs";
 import fs from "fs";
 
-// --- OBTENER TODAS (Con filtros) ---
+// --- NUEVO: ESTADÍSTICAS DASHBOARD ---
+export const getDashboardStats = async (req, res) => {
+  try {
+    const { role, userid } = req.headers;
+    const values = [];
+    let whereClause = "WHERE 1=1"; 
+
+    // Si no es admin, solo cuenta sus OTs
+    if (role && role.toLowerCase() !== 'admin' && userid) {
+      whereClause += " AND responsable_id = $1";
+      values.push(userid);
+    }
+
+    const query = `
+      SELECT 
+        COUNT(*) AS total,
+        SUM(CASE WHEN estado = 'Pendiente' THEN 1 ELSE 0 END) AS pendientes,
+        SUM(CASE WHEN estado = 'En Proceso' THEN 1 ELSE 0 END) AS en_proceso,
+        SUM(CASE WHEN estado = 'Finalizada' THEN 1 ELSE 0 END) AS finalizadas
+      FROM ot
+      ${whereClause}
+    `;
+
+    const result = await pool.query(query, values);
+    const stats = result.rows[0];
+    
+    res.json({
+      total: parseInt(stats.total) || 0,
+      pendientes: parseInt(stats.pendientes) || 0,
+      en_proceso: parseInt(stats.en_proceso) || 0,
+      finalizadas: parseInt(stats.finalizadas) || 0
+    });
+
+  } catch (error) {
+    console.error("Error obteniendo estadísticas:", error);
+    res.status(500).json({ error: "Error al cargar el dashboard" });
+  }
+};
+
+// --- OBTENER TODAS ---
 export const getOTs = async (req, res) => {
   try {
     const { busqueda, estado, fechaInicio, fechaFin } = req.query;
@@ -19,7 +58,6 @@ export const getOTs = async (req, res) => {
     const values = [];
     let counter = 1;
 
-    // Filtros
     if (role && role.toLowerCase() !== 'admin' && userid) {
       query += ` AND o.responsable_id = $${counter}`;
       values.push(userid);
@@ -47,7 +85,6 @@ export const getOTs = async (req, res) => {
     }
 
     query += " ORDER BY o.id_ot DESC";
-    
     const result = await pool.query(query, values);
     res.json(result.rows);
   } catch (error) {
@@ -177,7 +214,7 @@ export const exportOTsCSV = async (req, res) => {
   }
 };
 
-// --- IMPORTAR OTs DESDE CSV ---
+// --- IMPORTAR OTs ---
 export const importOTs = async (req, res) => {
   try {
     if (!req.file) {
@@ -200,7 +237,6 @@ export const importOTs = async (req, res) => {
 
     for (const row of rows) {
       const data = row.values;
-      // Ajuste de índices: ExcelJS a veces pone un elemento vacío en index 0
       const titulo = data[1];
       const descripcion = data[2];
       const estado = data[3] || "Pendiente";
@@ -214,7 +250,6 @@ export const importOTs = async (req, res) => {
         continue;
       }
 
-      // Buscar IDs por correo
       const userRes = await pool.query(
         "SELECT id_usuarios, correo FROM usuarios WHERE correo = $1 OR correo = $2",
         [emailResp, emailCli]
@@ -242,7 +277,7 @@ export const importOTs = async (req, res) => {
       otsCreadas++;
     }
 
-    fs.unlinkSync(filePath); // Limpiar
+    fs.unlinkSync(filePath);
 
     res.json({ 
       message: "Proceso finalizado", 

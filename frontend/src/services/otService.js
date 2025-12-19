@@ -1,9 +1,27 @@
-// frontend/src/services/otService.js
-
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
 const API_URL = `${BASE_URL}/api/ot`;
 
-// --- 1. OBTENER OTs CON FILTROS ---
+// --- NUEVO: OBTENER ESTADÍSTICAS ---
+export async function getDashboardStats(usuario = {}) {
+  try {
+    const response = await fetch(`${API_URL}/stats`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "role": usuario.rol || "user", 
+        "userid": usuario.id || ""
+      },
+    });
+
+    if (!response.ok) throw new Error("Error obteniendo estadísticas");
+    return await response.json();
+  } catch (error) {
+    console.error("Error en getDashboardStats:", error);
+    return { total: 0, pendientes: 0, en_proceso: 0, finalizadas: 0 };
+  }
+}
+
+// --- OBTENER OTs ---
 export async function getOTs(filtros = {}, usuario = {}) {
   const params = new URLSearchParams();
 
@@ -30,7 +48,7 @@ export async function getOTs(filtros = {}, usuario = {}) {
   }
 }
 
-// --- 2. CREAR OT ---
+// --- CREAR OT ---
 export async function createOT(otData) {
   try {
     const response = await fetch(API_URL, {
@@ -50,7 +68,7 @@ export async function createOT(otData) {
   }
 }
 
-// --- 3. OBTENER POR ID ---
+// --- OBTENER POR ID ---
 export async function getOTById(id) {
   try {
     const response = await fetch(`${API_URL}/${id}`);
@@ -62,7 +80,7 @@ export async function getOTById(id) {
   }
 }
 
-// --- 4. ACTUALIZAR OT ---
+// --- ACTUALIZAR OT ---
 export async function updateOT(id, data) {
   try {
     const res = await fetch(`${API_URL}/${id}`, {
@@ -78,7 +96,7 @@ export async function updateOT(id, data) {
   }
 }
 
-// --- 5. ELIMINAR OT ---
+// --- ELIMINAR OT ---
 export async function deleteOTBackend(id) {
   try {
     const response = await fetch(`${API_URL}/${id}`, {
@@ -91,17 +109,16 @@ export async function deleteOTBackend(id) {
   }
 }
 
-// --- 6. EXPORTACIONES ---
+// --- EXPORTAR ---
 export async function exportCSV() {
   window.open(`${API_URL}/export/csv`, "_blank");
 }
 
 export async function exportPDF() {
-  // Asegúrate que tu ruta de PDF en app.js coincida, aquí asumo la estándar
   window.open(`${BASE_URL}/api/pdf/ot/export`, "_blank"); 
 }
 
-// --- 7. IMPORTAR CSV ---
+// --- IMPORTAR ---
 export async function importCSV(file) {
   const formData = new FormData();
   formData.append("file", file);

@@ -7,11 +7,15 @@ import {
     updateOT, 
     deleteOT, 
     exportOTsCSV,
-    importOTs 
+    importOTs,
+    getDashboardStats // Importamos la nueva función
 } from "../controllers/ot.controller.js";
 
 const router = Router();
 const upload = multer({ dest: 'uploads/' });
+
+// --- RUTA ESTADÍSTICAS (¡OJO: Debe ir antes de /:id!) ---
+router.get("/stats", getDashboardStats);
 
 // --- RUTAS DE EXPORTACIÓN / IMPORTACIÓN ---
 router.get("/export/csv", exportOTsCSV);
