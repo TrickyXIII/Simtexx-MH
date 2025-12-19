@@ -2,7 +2,7 @@ const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
 const API_URL = `${BASE_URL}/api/ot`;
 const PDF_URL = `${BASE_URL}/api/pdf`; 
 
-// --- FUNCION AUXILIAR PARA DESCARGAR BLOB ---
+// --- AUXILIAR BLOB ---
 const downloadBlob = (blob, filename) => {
   const url = window.URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -14,9 +14,8 @@ const downloadBlob = (blob, filename) => {
   window.URL.revokeObjectURL(url);
 };
 
-// --- NUEVO: OBTENER ESTADÍSTICAS ---
+// --- ESTADÍSTICAS ---
 export async function getDashboardStats(usuario = {}) {
-  // Aseguramos leer las propiedades correctas
   const role = usuario.rol_nombre || usuario.rol || "user";
   const userId = usuario.id_usuarios || usuario.id || "";
 
@@ -29,11 +28,10 @@ export async function getDashboardStats(usuario = {}) {
         "userid": userId
       },
     });
-
     if (!response.ok) throw new Error("Error obteniendo estadísticas");
     return await response.json();
   } catch (error) {
-    console.error("Error en getDashboardStats:", error);
+    console.error(error);
     return { total: 0, pendientes: 0, en_proceso: 0, finalizadas: 0 };
   }
 }
@@ -58,11 +56,10 @@ export async function getOTs(filtros = {}, usuario = {}) {
         "userid": userId
       },
     });
-
     if (!response.ok) throw new Error("Error al obtener las OT");
     return await response.json();
   } catch (error) {
-    console.error("Error desde getOTs:", error);
+    console.error(error);
     return [];
   }
 }
@@ -75,22 +72,39 @@ export async function createOT(otData) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(otData),
     });
-
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(errorData.error || "Error al crear la OT");
     }
     return await response.json();
   } catch (error) {
-    console.error("Error en createOT:", error);
+    console.error(error);
     throw error;
   }
 }
 
-// --- OBTENER POR ID ---
+// --- OBTENER POR ID (SEGURIDAD AÑADIDA) ---
 export async function getOTById(id) {
+  // Leemos usuario del storage para tener las credenciales
+  const userStr = localStorage.getItem("usuarioActual");
+  const usuario = userStr ? JSON.parse(userStr) : {};
+  const role = usuario.rol_nombre || usuario.rol || "user";
+  const userId = usuario.id_usuarios || usuario.id || "";
+
   try {
-    const response = await fetch(`${API_URL}/${id}`);
+    const response = await fetch(`${API_URL}/${id}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "role": role, 
+        "userid": userId
+      }
+    });
+
+    if (response.status === 403) {
+      alert("Acceso Denegado: No tienes permiso para ver esta OT.");
+      return null;
+    }
     if (!response.ok) throw new Error("No se encontró la OT");
     return await response.json();
   } catch (error) {
@@ -99,9 +113,8 @@ export async function getOTById(id) {
   }
 }
 
-// --- ACTUALIZAR OT (CON AUDITORÍA) ---
+// --- ACTUALIZAR OT ---
 export async function updateOT(id, data, usuario = {}) {
-  // Intentar obtener usuario del localStorage si no viene como parámetro
   if (!usuario.id && !usuario.id_usuarios) {
       const userStr = localStorage.getItem("usuarioActual");
       if (userStr) usuario = JSON.parse(userStr);
@@ -116,11 +129,10 @@ export async function updateOT(id, data, usuario = {}) {
       headers: { 
         "Content-Type": "application/json",
         "role": role,
-        "userid": userId // IMPORTANTE: Enviamos el ID para la auditoría
+        "userid": userId 
       },
       body: JSON.stringify(data),
     });
-    
     if (!res.ok) throw new Error("Error al actualizar la OT");
     return await res.json();
   } catch (err) {
@@ -142,11 +154,9 @@ export async function deleteOTBackend(id) {
   }
 }
 
-// --- EXPORTAR CSV (CORREGIDO) ---
+// --- EXPORTAR CSV ---
 export async function exportCSV(filtros = {}, usuario = {}) {
   const params = new URLSearchParams();
-  
-  // CORRECCIÓN PRINCIPAL: Mapeo correcto de propiedades
   const role = usuario.rol_nombre || usuario.rol || "user";
   const userId = usuario.id_usuarios || usuario.id || "";
 
@@ -163,19 +173,16 @@ export async function exportCSV(filtros = {}, usuario = {}) {
             "userid": userId
         }
     });
-
-    if (!response.ok) throw new Error("Error al exportar CSV (Verifica permisos)");
-    
+    if (!response.ok) throw new Error("Error al exportar CSV");
     const blob = await response.blob();
     downloadBlob(blob, "reporte_ots.csv");
-
   } catch (error) {
     console.error(error);
-    alert("No se pudo descargar el reporte. Intente nuevamente.");
+    alert("No se pudo descargar el reporte.");
   }
 }
 
-// --- EXPORTAR PDF (CORREGIDO) ---
+// --- EXPORTAR PDF ---
 export async function exportPDFById(id, codigo, usuario = {}) {
   const role = usuario.rol_nombre || usuario.rol || "user";
   const userId = usuario.id_usuarios || usuario.id || "";
@@ -188,20 +195,33 @@ export async function exportPDFById(id, codigo, usuario = {}) {
             "userid": userId
         }
     });
-
     if (!response.ok) throw new Error("Error al exportar PDF");
-
     const blob = await response.blob();
     downloadBlob(blob, `OT-${codigo}.pdf`);
-
   } catch (error) {
     console.error(error);
     alert("Error al descargar PDF.");
   }
 }
 
-// --- COMENTARIOS ---
+// --- IMPORTAR ---
+export async function importCSV(file) {
+  const formData = new FormData();
+  formData.append("file", file);
+  try {
+    const response = await fetch(`${API_URL}/import/csv`, {
+      method: "POST",
+      body: formData,
+    });
+    if (!response.ok) throw new Error("Error en la subida");
+    return await response.json();
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+}
 
+// --- COMENTARIOS ---
 export async function getComentarios(otId) {
   try {
     const res = await fetch(`${BASE_URL}/api/comentarios/${otId}`);
@@ -228,27 +248,7 @@ export async function crearComentario(otId, usuarioId, texto) {
   }
 }
 
-// --- IMPORTAR ---
-export async function importCSV(file) {
-  const formData = new FormData();
-  formData.append("file", file);
-
-  try {
-    const response = await fetch(`${API_URL}/import/csv`, {
-      method: "POST",
-      body: formData,
-    });
-
-    if (!response.ok) throw new Error("Error en la subida del archivo");
-    return await response.json();
-  } catch (error) {
-    console.error("Error importando CSV:", error);
-    throw error;
-  }
-}
-
-// --- HISTORIAL / AUDITORÍA ---
-
+// --- HISTORIAL ---
 export async function getHistorial(otId) {
   try {
     const res = await fetch(`${BASE_URL}/api/auditorias/${otId}`);

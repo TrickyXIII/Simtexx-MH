@@ -10,10 +10,8 @@ export const getDashboardStats = async (req, res) => {
     const values = [];
     let whereClause = "WHERE 1=1"; 
 
-    // Validación de Rol
     const userRole = role ? role.toLowerCase() : "";
     
-    // Si no es admin, solo cuenta sus OTs
     if (userRole !== 'admin' && userRole !== 'administrador' && userid) {
       whereClause += " AND responsable_id = $1";
       values.push(userid);
@@ -99,10 +97,12 @@ export const getOTs = async (req, res) => {
   }
 };
 
-// --- OBTENER POR ID ---
+// --- OBTENER POR ID (CON SEGURIDAD) ---
 export const getOTById = async (req, res) => {
   try {
     const { id } = req.params;
+    const { role, userid } = req.headers; // Leer credenciales
+
     const result = await pool.query(`
       SELECT o.*, r.nombre AS responsable_nombre, c.nombre AS cliente_nombre
       FROM ot o
@@ -112,8 +112,26 @@ export const getOTById = async (req, res) => {
     `, [id]);
 
     if (result.rows.length === 0) return res.status(404).json({ error: "OT no encontrada" });
-    res.json(result.rows[0]);
+    
+    const ot = result.rows[0];
+
+    // --- VALIDACIÓN DE PERMISOS ---
+    const userRole = role ? role.toLowerCase() : "";
+    
+    // Si NO es admin, verificamos que sea Responsable o Cliente
+    if (userRole !== 'admin' && userRole !== 'administrador') {
+        const esResponsable = String(ot.responsable_id) === String(userid);
+        const esCliente = String(ot.cliente_id) === String(userid);
+
+        // Si no es ninguno de los dos, denegar
+        if (!esResponsable && !esCliente) {
+            return res.status(403).json({ error: "Acceso denegado. No tienes permiso para ver esta OT." });
+        }
+    }
+
+    res.json(ot);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Error interno" });
   }
 };
@@ -132,7 +150,7 @@ export const createOT = async (req, res) => {
 
     const result = await pool.query(
       `INSERT INTO ot (codigo, titulo, descripcion, estado, fecha_inicio_contrato, fecha_fin_contrato, cliente_id, responsable_id, activo)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8,$9) RETURNING *`,
       [codigo, titulo, descripcion, estado, fecha_inicio_contrato, fecha_fin_contrato, cliente_id, responsable_id, activo !== undefined ? activo : true]
     );
     res.json(result.rows[0]);
@@ -149,7 +167,7 @@ export const updateOT = async (req, res) => {
   const { userid } = req.headers;
 
   try {
-    // 1. OBTENER LA VERSIÓN ANTIGUA (Para comparar)
+    // 1. OBTENER ANTIGUA
     const oldRes = await pool.query("SELECT * FROM ot WHERE id_ot = $1", [id]);
     if (oldRes.rows.length === 0) return res.status(404).json({ error: "OT no encontrada" });
     const oldOT = oldRes.rows[0];
@@ -163,22 +181,17 @@ export const updateOT = async (req, res) => {
       WHERE id_ot = $9 RETURNING *;
     `, [titulo, descripcion, estado, cliente_id, responsable_id, fecha_inicio_contrato, fecha_fin_contrato, activo, id]);
 
-    // 3. AUDITORÍA: COMPARAR VALORES
+    // 3. AUDITORÍA
     const usuarioIdInt = parseInt(userid);
     if (!isNaN(usuarioIdInt) && usuarioIdInt > 0) {
         
         const camposCambiados = [];
-
-        // Comparar valores (evitando falsos positivos por tipos de datos)
         if (titulo && titulo !== oldOT.titulo) camposCambiados.push("título");
         if (descripcion && descripcion !== oldOT.descripcion) camposCambiados.push("descripción");
         if (estado && estado !== oldOT.estado) camposCambiados.push("estado");
-        
-        // Comparar IDs (convertir a string o int para asegurar igualdad)
         if (responsable_id && String(responsable_id) !== String(oldOT.responsable_id)) camposCambiados.push("responsable");
         if (cliente_id && String(cliente_id) !== String(oldOT.cliente_id)) camposCambiados.push("cliente");
 
-        // Comparar Fechas (solo la parte de la fecha YYYY-MM-DD)
         const nuevaFechaInicio = fecha_inicio_contrato ? new Date(fecha_inicio_contrato).toISOString().split('T')[0] : null;
         const viejaFechaInicio = oldOT.fecha_inicio_contrato ? new Date(oldOT.fecha_inicio_contrato).toISOString().split('T')[0] : null;
         if (nuevaFechaInicio !== viejaFechaInicio) camposCambiados.push("fecha inicio");
@@ -187,10 +200,8 @@ export const updateOT = async (req, res) => {
         const viejaFechaFin = oldOT.fecha_fin_contrato ? new Date(oldOT.fecha_fin_contrato).toISOString().split('T')[0] : null;
         if (nuevaFechaFin !== viejaFechaFin) camposCambiados.push("fecha fin");
 
-        // Solo insertar si hubo cambios reales
         if (camposCambiados.length > 0) {
             const detalleCambio = `Cambios en: ${camposCambiados.join(", ")}`;
-            
             await pool.query(
                 `INSERT INTO auditorias (ot_id, usuario_id, accion, descripcion, fecha_creacion)
                  VALUES ($1, $2, 'Modificación', $3, NOW())`,
