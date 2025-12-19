@@ -10,8 +10,11 @@ export const getDashboardStats = async (req, res) => {
     const values = [];
     let whereClause = "WHERE 1=1"; 
 
+    // Validación de Rol (Soporta "admin" y "administrador")
+    const userRole = role ? role.toLowerCase() : "";
+    
     // Si no es admin, solo cuenta sus OTs
-    if (role && role.toLowerCase() !== 'admin' && userid) {
+    if (userRole !== 'admin' && userRole !== 'administrador' && userid) {
       whereClause += " AND responsable_id = $1";
       values.push(userid);
     }
@@ -58,11 +61,15 @@ export const getOTs = async (req, res) => {
     const values = [];
     let counter = 1;
 
-    if (role && role.toLowerCase() !== 'admin' && userid) {
+    // Validación de Rol (Soporta "admin" y "administrador")
+    const userRole = role ? role.toLowerCase() : "";
+
+    if (userRole !== 'admin' && userRole !== 'administrador' && userid) {
       query += ` AND o.responsable_id = $${counter}`;
       values.push(userid);
       counter++;
     }
+    
     if (estado && estado !== "Todos") {
       query += ` AND o.estado = $${counter}`;
       values.push(estado);
@@ -169,10 +176,19 @@ export const deleteOT = async (req, res) => {
   }
 };
 
-// --- EXPORTAR CSV ---
+// --- EXPORTAR CSV (CON FILTROS Y SEGURIDAD) ---
 export const exportOTsCSV = async (req, res) => {
   try {
-    const result = await pool.query(`
+    // 1. Validar Seguridad
+    const { role, userid } = req.headers;
+    if (!role || !userid) {
+      return res.status(401).json({ error: "Acceso denegado. Faltan credenciales." });
+    }
+
+    // 2. Obtener Filtros del Query String
+    const { busqueda, estado, fechaInicio, fechaFin } = req.query;
+
+    let query = `
       SELECT 
         o.id_ot, o.codigo, o.titulo, o.descripcion, o.estado, 
         to_char(o.fecha_inicio_contrato, 'YYYY-MM-DD') as fecha_inicio,
@@ -182,12 +198,49 @@ export const exportOTsCSV = async (req, res) => {
       FROM ot o
       LEFT JOIN usuarios u ON o.responsable_id = u.id_usuarios
       LEFT JOIN usuarios c ON o.cliente_id = c.id_usuarios
-      ORDER BY o.id_ot DESC
-    `);
+      WHERE 1=1
+    `;
+    const values = [];
+    let counter = 1;
 
+    // Validación de Rol en Exportación
+    const userRole = role ? role.toLowerCase() : "";
+    if (userRole !== 'admin' && userRole !== 'administrador' && userid) {
+      query += ` AND o.responsable_id = $${counter}`;
+      values.push(userid);
+      counter++;
+    }
+
+    // Aplicar Filtros (Misma lógica que getOTs)
+    if (estado && estado !== "Todos") {
+      query += ` AND o.estado = $${counter}`;
+      values.push(estado);
+      counter++;
+    }
+    if (busqueda) {
+      query += ` AND (o.titulo ILIKE $${counter} OR o.codigo ILIKE $${counter} OR c.nombre ILIKE $${counter})`;
+      values.push(`%${busqueda}%`);
+      counter++;
+    }
+    if (fechaInicio) {
+        query += ` AND o.fecha_inicio_contrato >= $${counter}`;
+        values.push(fechaInicio);
+        counter++;
+    }
+    if (fechaFin) {
+        query += ` AND o.fecha_fin_contrato <= $${counter}`;
+        values.push(fechaFin);
+        counter++;
+    }
+
+    query += " ORDER BY o.id_ot DESC";
+
+    const result = await pool.query(query, values);
     const ots = result.rows;
-    if (ots.length === 0) return res.status(404).send("No hay datos para exportar");
 
+    if (ots.length === 0) return res.status(404).send("No hay datos para exportar con los filtros seleccionados");
+
+    // 3. Generar CSV
     const headers = ["ID", "Codigo", "Titulo", "Descripcion", "Estado", "Inicio", "Fin", "Responsable", "Cliente"];
     const csvRows = ots.map(row => {
       return [

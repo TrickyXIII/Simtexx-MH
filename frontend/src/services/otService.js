@@ -1,15 +1,32 @@
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
 const API_URL = `${BASE_URL}/api/ot`;
+const PDF_URL = `${BASE_URL}/api/pdf`; 
+
+// --- FUNCION AUXILIAR PARA DESCARGAR BLOB ---
+const downloadBlob = (blob, filename) => {
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.URL.revokeObjectURL(url);
+};
 
 // --- NUEVO: OBTENER ESTADÍSTICAS ---
 export async function getDashboardStats(usuario = {}) {
+  // Aseguramos leer las propiedades correctas
+  const role = usuario.rol_nombre || usuario.rol || "user";
+  const userId = usuario.id_usuarios || usuario.id || "";
+
   try {
     const response = await fetch(`${API_URL}/stats`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        "role": usuario.rol || "user", 
-        "userid": usuario.id || ""
+        "role": role, 
+        "userid": userId
       },
     });
 
@@ -24,6 +41,8 @@ export async function getDashboardStats(usuario = {}) {
 // --- OBTENER OTs ---
 export async function getOTs(filtros = {}, usuario = {}) {
   const params = new URLSearchParams();
+  const role = usuario.rol_nombre || usuario.rol || "user";
+  const userId = usuario.id_usuarios || usuario.id || "";
 
   if (filtros.estado && filtros.estado !== "Todos") params.append("estado", filtros.estado);
   if (filtros.busqueda) params.append("busqueda", filtros.busqueda);
@@ -35,8 +54,8 @@ export async function getOTs(filtros = {}, usuario = {}) {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        "role": usuario.rol || "user", 
-        "userid": usuario.id || ""
+        "role": role, 
+        "userid": userId
       },
     });
 
@@ -109,13 +128,62 @@ export async function deleteOTBackend(id) {
   }
 }
 
-// --- EXPORTAR ---
-export async function exportCSV() {
-  window.open(`${API_URL}/export/csv`, "_blank");
+// --- EXPORTAR CSV (CORREGIDO) ---
+export async function exportCSV(filtros = {}, usuario = {}) {
+  const params = new URLSearchParams();
+  
+  // CORRECCIÓN PRINCIPAL: Mapeo correcto de propiedades
+  const role = usuario.rol_nombre || usuario.rol || "user";
+  const userId = usuario.id_usuarios || usuario.id || "";
+
+  if (filtros.estado && filtros.estado !== "Todos") params.append("estado", filtros.estado);
+  if (filtros.busqueda) params.append("busqueda", filtros.busqueda);
+  if (filtros.fechaInicio) params.append("fechaInicio", filtros.fechaInicio);
+  if (filtros.fechaFin) params.append("fechaFin", filtros.fechaFin);
+
+  try {
+    const response = await fetch(`${API_URL}/export/csv?${params.toString()}`, {
+        method: 'GET',
+        headers: {
+            "role": role,
+            "userid": userId
+        }
+    });
+
+    if (!response.ok) throw new Error("Error al exportar CSV (Verifica permisos)");
+    
+    const blob = await response.blob();
+    downloadBlob(blob, "reporte_ots.csv");
+
+  } catch (error) {
+    console.error(error);
+    alert("No se pudo descargar el reporte. Intente nuevamente.");
+  }
 }
 
-export async function exportPDF() {
-  window.open(`${BASE_URL}/api/pdf/ot/export`, "_blank"); 
+// --- EXPORTAR PDF (CORREGIDO) ---
+export async function exportPDFById(id, codigo, usuario = {}) {
+  const role = usuario.rol_nombre || usuario.rol || "user";
+  const userId = usuario.id_usuarios || usuario.id || "";
+
+  try {
+    const response = await fetch(`${PDF_URL}/ot/${id}/export`, {
+        method: 'GET',
+        headers: {
+            "role": role,
+            "userid": userId
+        }
+    });
+
+    if (!response.ok) throw new Error("Error al exportar PDF");
+
+    const blob = await response.blob();
+    downloadBlob(blob, `OT-${codigo}.pdf`);
+
+  } catch (error) {
+    console.error(error);
+    alert("Error al descargar PDF.");
+  }
 }
 
 // --- IMPORTAR ---
