@@ -248,6 +248,22 @@ export async function crearComentario(otId, usuarioId, texto) {
   }
 }
 
+// NUEVA FUNCIÓN DE EDICIÓN
+export async function updateComentario(comentarioId, usuarioId, texto) {
+  try {
+    const res = await fetch(`${BASE_URL}/api/comentarios/${comentarioId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ usuarios_id: usuarioId, texto }),
+    });
+    if (!res.ok) throw new Error("Error editando comentario");
+    return await res.json();
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+}
+
 // --- HISTORIAL ---
 export async function getHistorial(otId) {
   try {

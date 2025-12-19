@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { getOTById, exportPDFById, getComentarios, crearComentario, getHistorial } from "../services/otService"; 
+// Asegúrate de que updateComentario esté en tus imports
+import { getOTById, exportPDFById, getComentarios, crearComentario, updateComentario, getHistorial } from "../services/otService"; 
 import Footer from "../components/Footer";
 import NavBar from "../components/NavBar";
 import "./DetalleOT.css";
@@ -15,11 +16,15 @@ export default function DetalleOT() {
   const [nuevoComentario, setNuevoComentario] = useState("");
   const [mostrarInput, setMostrarInput] = useState(false);
 
+  // Estados para EDICIÓN
+  const [editandoId, setEditandoId] = useState(null); 
+  const [textoEditado, setTextoEditado] = useState("");
+
   const userStr = localStorage.getItem("usuarioActual");
   const usuario = userStr ? JSON.parse(userStr) : { nombre: "Invitado", rol: "Invitado", id: 0, id_usuarios: 0 };
-  
+  const userId = usuario.id_usuarios || usuario.id; 
+
   // --- VALIDACIÓN DE ROL ROBUSTA ---
-  // Convierte a minúsculas y quita espacios para evitar errores de tipeo en BD
   const rolNormalizado = (usuario.rol || usuario.rol_nombre || "").toLowerCase().trim();
   const isAdmin = rolNormalizado === 'admin' || rolNormalizado === 'administrador';
 
@@ -32,7 +37,6 @@ export default function DetalleOT() {
         const commentsData = await getComentarios(id);
         setComentarios(commentsData);
 
-        // Solo cargamos el historial si es Admin
         if (isAdmin) {
             const historialData = await getHistorial(id);
             setHistorial(historialData);
@@ -48,7 +52,6 @@ export default function DetalleOT() {
 
   const handleEnviarComentario = async () => {
     if (!nuevoComentario.trim()) return;
-    const userId = usuario.id_usuarios || usuario.id; 
     const res = await crearComentario(id, userId, nuevoComentario);
     if (res) {
       setNuevoComentario("");
@@ -57,6 +60,29 @@ export default function DetalleOT() {
       setComentarios(updatedComments);
     } else {
       alert("No se pudo guardar el comentario");
+    }
+  };
+
+  // --- FUNCIONES DE EDICIÓN ---
+  const iniciarEdicion = (comentario) => {
+    setEditandoId(comentario.id);
+    setTextoEditado(comentario.texto);
+  };
+
+  const cancelarEdicion = () => {
+    setEditandoId(null);
+    setTextoEditado("");
+  };
+
+  const guardarEdicion = async (comentarioId) => {
+    if (!textoEditado.trim()) return;
+    const res = await updateComentario(comentarioId, userId, textoEditado);
+    if (res) {
+        setEditandoId(null);
+        const updatedComments = await getComentarios(id);
+        setComentarios(updatedComments);
+    } else {
+        alert("Error al editar. Verifique permisos.");
     }
   };
 
@@ -176,7 +202,7 @@ export default function DetalleOT() {
           </div>
         )}
         
-        {/* SECCIÓN COMENTARIOS */}
+        {/* SECCIÓN COMENTARIOS CON EDICIÓN */}
         <div className="comentarios-box">
           <h3>Comentarios ({comentarios.length})</h3>
 
@@ -185,20 +211,52 @@ export default function DetalleOT() {
               <p style={{ color: '#888', fontStyle: 'italic' }}>No hay comentarios aún.</p>
             ) : (
               <ul style={{ listStyle: 'none', padding: 0 }}>
-                {comentarios.map((c) => (
-                  <li key={c.id} style={{ 
-                    background: '#f9f9f9', 
-                    marginBottom: '10px', 
-                    padding: '10px', 
-                    borderRadius: '8px',
-                    borderLeft: '4px solid #333'
-                  }}>
-                    <div style={{ fontSize: '13px', color: '#555', marginBottom: '4px' }}>
-                      <b>{c.autor}</b> - {new Date(c.fecha_creacion).toLocaleString()}
-                    </div>
-                    <div style={{ fontSize: '15px' }}>{c.texto}</div>
-                  </li>
-                ))}
+                {comentarios.map((c) => {
+                  const esMio = String(c.usuarios_id) === String(userId);
+                  
+                  return (
+                    <li key={c.id} style={{ 
+                      background: '#f9f9f9', 
+                      marginBottom: '10px', 
+                      padding: '10px', 
+                      borderRadius: '8px',
+                      borderLeft: '4px solid #333',
+                      position: 'relative'
+                    }}>
+                      <div style={{ fontSize: '13px', color: '#555', marginBottom: '4px', display:'flex', justifyContent:'space-between' }}>
+                        <span>
+                          <b>{c.autor}</b> - {new Date(c.fecha_creacion).toLocaleString()}
+                          {c.fecha_edicion && (
+                              <span style={{fontSize:'11px', color:'#999', marginLeft:'8px'}}>
+                                  (Editado: {new Date(c.fecha_edicion).toLocaleDateString()})
+                              </span>
+                          )}
+                        </span>
+                        {/* Botón Editar solo si es mío y no estoy editando este mismo */}
+                        {esMio && editandoId !== c.id && (
+                          <button onClick={() => iniciarEdicion(c)} style={{border:'none', background:'transparent', cursor:'pointer', color:'#007bff'}}>✎ Editar</button>
+                        )}
+                      </div>
+
+                      {/* Modo Edición vs Modo Lectura */}
+                      {editandoId === c.id ? (
+                        <div style={{marginTop:'5px'}}>
+                            <textarea 
+                                value={textoEditado}
+                                onChange={(e) => setTextoEditado(e.target.value)}
+                                style={{width:'100%', padding:'5px'}}
+                            />
+                            <div style={{marginTop:'5px', textAlign:'right'}}>
+                                <button onClick={cancelarEdicion} style={{marginRight:'5px', cursor:'pointer'}}>Cancelar</button>
+                                <button onClick={() => guardarEdicion(c.id)} style={{background:'#2e7d32', color:'white', border:'none', padding:'4px 10px', borderRadius:'4px', cursor:'pointer'}}>Guardar</button>
+                            </div>
+                        </div>
+                      ) : (
+                        <div style={{ fontSize: '15px' }}>{c.texto}</div>
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </div>
