@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { getOTById, updateOT, deleteOTBackend } from "../services/otService";
-import { getClientes, getMantenedores } from "../services/usuariosService";
+import { getClientes, getMantenedores } from "../services/usuariosService"; // Importamos el nuevo servicio
 import { useState, useEffect } from "react";
 import NavBar from "../components/NavBar";
 import Footer from "../components/Footer";
@@ -27,9 +27,25 @@ export default function ModificarOT() {
   
   const [cargando, setCargando] = useState(true);
 
+  // Función auxiliar para formatear fechas de forma segura
+  const formatearFecha = (fecha) => {
+    if (!fecha) return "";
+    // Si ya viene como string YYYY-MM-DD, lo dejamos
+    if (typeof fecha === "string" && fecha.includes("T")) {
+        return fecha.split("T")[0];
+    }
+    // Si es un objeto Date o un string raro, lo convertimos
+    try {
+        return new Date(fecha).toISOString().split("T")[0];
+    } catch (e) {
+        return "";
+    }
+  };
+
   useEffect(() => {
     async function loadData() {
       try {
+        // Cargar todo en paralelo para que sea más rápido
         const [otData, clientesData, responsablesData] = await Promise.all([
           getOTById(id),
           getClientes(),
@@ -41,18 +57,21 @@ export default function ModificarOT() {
             codigo: otData.codigo || "",
             titulo: otData.titulo || "",
             descripcion: otData.descripcion || "",
-            estado: otData.estado || "",
-            cliente_id: otData.cliente_id || "",
-            responsable_id: otData.responsable_id || "",
-            fecha_inicio_contrato: otData.fecha_inicio_contrato ? otData.fecha_inicio_contrato.split("T")[0] : "",
-            fecha_fin_contrato: otData.fecha_fin_contrato ? otData.fecha_fin_contrato.split("T")[0] : "",
+            estado: otData.estado || "Pendiente",
+            // Aseguramos que los IDs sean strings para que el <select> los reconozca
+            cliente_id: otData.cliente_id ? String(otData.cliente_id) : "",
+            responsable_id: otData.responsable_id ? String(otData.responsable_id) : "",
+            // Usamos la función segura para las fechas
+            fecha_inicio_contrato: formatearFecha(otData.fecha_inicio_contrato),
+            fecha_fin_contrato: formatearFecha(otData.fecha_fin_contrato),
             activo: otData.activo
           });
         }
-        setClientes(clientesData);
-        setResponsables(responsablesData);
+        setClientes(clientesData || []);
+        setResponsables(responsablesData || []);
       } catch (error) {
         console.error("Error cargando datos:", error);
+        alert("Error al cargar la información de la OT.");
       } finally {
         setCargando(false);
       }
@@ -70,94 +89,118 @@ export default function ModificarOT() {
     try {
       await updateOT(id, form);
       alert("OT modificada exitosamente ✔");
-      navigate(`/detalle/${id}`);
+      navigate(`/detalle/${id}`); // Volver al detalle para ver los cambios
     } catch (error) {
       console.error("❌ Error al modificar la OT:", error);
-      alert("Hubo un error al intentar modificar la OT");
+      alert("Hubo un error al intentar modificar la OT. Revisa la consola.");
     }
   }
 
   const handleDelete = async () => {
-    if (!window.confirm("¿Eliminar OT permanentemente?")) return;
+    if (!window.confirm("¿Estás seguro de eliminar esta OT permanentemente?")) return;
     try {
         await deleteOTBackend(id);
         alert("OT Eliminada");
         navigate("/dashboard");
     } catch(e) {
-        alert("Error al eliminar");
+        alert("Error al eliminar la OT");
     }
   };
 
-  if (cargando) return <div style={{padding:"20px"}}>Cargando datos...</div>;
+  if (cargando) return <div className="loading-msg">Cargando datos...</div>;
 
   return (
     <>
       <NavBar />
       <div className="modal-container">
         <div className="modal-box">
-          <h2>Editar OT: {form.codigo}</h2>
+          <h2>Editar OT: <span style={{color: '#4caf50'}}>{form.codigo}</span></h2>
 
           <form className="form-box" onSubmit={handleSubmit}>
-            <label>Título</label>
-            <input name="titulo" value={form.titulo} onChange={handleChange} required />
+            <div className="form-group">
+                <label>Título</label>
+                <input name="titulo" value={form.titulo} onChange={handleChange} required />
+            </div>
 
-            <label>Descripción</label>
-            <textarea name="descripcion" value={form.descripcion} onChange={handleChange} />
+            <div className="form-group">
+                <label>Descripción</label>
+                <textarea name="descripcion" value={form.descripcion} onChange={handleChange} />
+            </div>
 
-            <label>Estado</label>
-            <select name="estado" value={form.estado} onChange={handleChange}>
-              <option value="Pendiente">Pendiente</option>
-              <option value="En Proceso">En Proceso</option>
-              <option value="Finalizada">Finalizada</option>
-            </select>
+            <div className="form-row">
+                <div className="form-group">
+                    <label>Estado</label>
+                    <select name="estado" value={form.estado} onChange={handleChange}>
+                    <option value="Pendiente">Pendiente</option>
+                    <option value="En Proceso">En Proceso</option>
+                    <option value="Finalizada">Finalizada</option>
+                    </select>
+                </div>
 
-            <label>Cliente</label>
-            <select name="cliente_id" value={form.cliente_id} onChange={handleChange} required>
-              <option value="">Seleccionar Cliente</option>
-              {clientes.map(c => (
-                <option key={c.id_usuarios} value={c.id_usuarios}>{c.nombre}</option>
-              ))}
-            </select>
+                <div className="form-group">
+                    <label>Estado OT</label>
+                    <div className="radio-group">
+                        <label>
+                            <input 
+                                type="radio" 
+                                name="activo" 
+                                checked={form.activo === true} 
+                                onChange={() => setForm({...form, activo: true})}
+                            /> Activa
+                        </label>
+                        <label>
+                            <input 
+                                type="radio" 
+                                name="activo" 
+                                checked={form.activo === false} 
+                                onChange={() => setForm({...form, activo: false})}
+                            /> Inactiva
+                        </label>
+                    </div>
+                </div>
+            </div>
 
-            <label>Responsable</label>
-            <select name="responsable_id" value={form.responsable_id} onChange={handleChange} required>
-              <option value="">Seleccionar Responsable</option>
-              {responsables.map(r => (
-                <option key={r.id_usuarios} value={r.id_usuarios}>{r.nombre}</option>
-              ))}
-            </select>
+            <div className="form-row">
+                <div className="form-group">
+                    <label>Cliente</label>
+                    <select name="cliente_id" value={form.cliente_id} onChange={handleChange} required>
+                    <option value="">-- Seleccionar --</option>
+                    {clientes.map(c => (
+                        <option key={c.id_usuarios} value={c.id_usuarios}>{c.nombre}</option>
+                    ))}
+                    </select>
+                </div>
 
-            <label>Fecha inicio</label>
-            <input type="date" name="fecha_inicio_contrato" value={form.fecha_inicio_contrato} onChange={handleChange} />
+                <div className="form-group">
+                    <label>Responsable</label>
+                    <select name="responsable_id" value={form.responsable_id} onChange={handleChange} required>
+                    <option value="">-- Seleccionar --</option>
+                    {responsables.map(r => (
+                        <option key={r.id_usuarios} value={r.id_usuarios}>{r.nombre}</option>
+                    ))}
+                    </select>
+                </div>
+            </div>
 
-            <label>Fecha fin</label>
-            <input type="date" name="fecha_fin_contrato" value={form.fecha_fin_contrato} onChange={handleChange} />
+            <div className="form-row">
+                <div className="form-group">
+                    <label>Fecha Inicio</label>
+                    <input type="date" name="fecha_inicio_contrato" value={form.fecha_inicio_contrato} onChange={handleChange} />
+                </div>
 
-            <label>Estado OT (Activo/Inactivo)</label>
-            <div className="radio-group">
-              <label>
-                <input 
-                    type="radio" 
-                    name="activo" 
-                    checked={form.activo === true} 
-                    onChange={() => setForm({...form, activo: true})}
-                /> Activa
-              </label>
-              <label>
-                <input 
-                    type="radio" 
-                    name="activo" 
-                    checked={form.activo === false} 
-                    onChange={() => setForm({...form, activo: false})}
-                /> Inactiva
-              </label>
+                <div className="form-group">
+                    <label>Fecha Fin</label>
+                    <input type="date" name="fecha_fin_contrato" value={form.fecha_fin_contrato} onChange={handleChange} />
+                </div>
             </div>
 
             <div className="btn-row">
-              <button type="button" className="btn-eliminar" onClick={handleDelete}>Eliminar</button>
-              <button type="submit" className="btn-guardar">Guardar Cambios</button>
+              <button type="button" className="btn-eliminar" onClick={handleDelete}>Eliminar OT</button>
+              <div style={{display:'flex', gap:'10px'}}>
+                  <button type="button" className="btn-cancelar" onClick={() => navigate(-1)}>Cancelar</button>
+                  <button type="submit" className="btn-guardar">Guardar Cambios</button>
+              </div>
             </div>
-            <button type="button" className="btn-cancelar" onClick={() => navigate(-1)}>Cancelar</button>
           </form>
         </div>
       </div>
