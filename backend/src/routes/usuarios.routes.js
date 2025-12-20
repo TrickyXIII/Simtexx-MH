@@ -6,8 +6,9 @@ import {
   obtenerUsuario,
   editarUsuario,
   desactivarUsuario,
-  loginUsuario // Importamos la nueva función del controlador
+  loginUsuario
 } from "../controllers/usuarios.controller.js";
+import { verifyToken } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
@@ -15,8 +16,8 @@ const router = Router();
    RUTAS AUXILIARES (Para Selectores)
    ======================================= */
 
-// Filtro para mantenedores en crear OT: devuelve usuarios con rol_id = 3
-router.get("/mantenedores", async (req, res) => {
+// Filtro para mantenedores (Protegido)
+router.get("/mantenedores", verifyToken, async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT id_usuarios, nombre
@@ -31,8 +32,8 @@ router.get("/mantenedores", async (req, res) => {
   }
 });
 
-// Filtro clientes para CREAR OT: devuelve usuarios con rol_id = 2
-router.get("/clientes", async (req, res) => {
+// Filtro clientes (Protegido)
+router.get("/clientes", verifyToken, async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT id_usuarios, nombre
@@ -48,27 +49,27 @@ router.get("/clientes", async (req, res) => {
 });
 
 /* =======================================
-   RUTA DE LOGIN
+   RUTA DE LOGIN (PÚBLICA)
    ======================================= */
 router.post("/login", loginUsuario);
 
 /* =======================================
-   RUTAS CRUD DE USUARIOS (Admin)
+   RUTAS CRUD DE USUARIOS (Protegidas)
    ======================================= */
 
 // Crear usuario
-router.post("/", crearUsuario);
+router.post("/", verifyToken, crearUsuario);
 
 // Listar todos los usuarios
-router.get("/", listarUsuarios);
+router.get("/", verifyToken, listarUsuarios);
 
 // Obtener un usuario por ID
-router.get("/:id", obtenerUsuario);
+router.get("/:id", verifyToken, obtenerUsuario);
 
 // Editar usuario
-router.put("/:id", editarUsuario);
+router.put("/:id", verifyToken, editarUsuario);
 
 // Desactivar usuario
-router.patch("/:id/desactivar", desactivarUsuario);
+router.patch("/:id/desactivar", verifyToken, desactivarUsuario);
 
 export default router;
