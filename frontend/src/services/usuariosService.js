@@ -66,3 +66,28 @@ export async function updateUser(id, userData) {
     throw error;
   }
 }
+
+// Crear nuevo usuario (con Token)
+export async function createUser(userData) {
+  const token = localStorage.getItem("token");
+  try {
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}` // <--- IMPORTANTE: Enviamos el token
+      },
+      body: JSON.stringify(userData),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error || "Error al crear el usuario");
+    }
+    return data;
+  } catch (error) {
+    console.error("Error en createUser:", error);
+    throw error;
+  }
+}

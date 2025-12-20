@@ -1,16 +1,35 @@
 import { pool } from "../db.js";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken"; // <--- Importar esto
+import jwt from "jsonwebtoken";
+
+// Función auxiliar para validar robustez de contraseña
+function validarPassword(password) {
+  const minLength = 8;
+  const hasNumber = /\d/;
+  const hasUpperCase = /[A-Z]/;
+
+  if (password.length < minLength) return "La contraseña debe tener al menos 8 caracteres.";
+  if (!hasNumber.test(password)) return "La contraseña debe contener al menos un número.";
+  if (!hasUpperCase.test(password)) return "La contraseña debe contener al menos una letra mayúscula.";
+  return null;
+}
+
 /**
  * Crear usuario (Admin)
  * body: { nombre, correo, password, rol_id }
  */
 export async function crearUsuario(req, res) {
   try {
-    const { nombre, correo, password, rol_id } = req.body;
+    const { nombre, correo, password, rol_id, activo } = req.body;
 
     if (!nombre || !correo || !password || !rol_id) {
       return res.status(400).json({ error: "Faltan campos obligatorios" });
+    }
+
+    // --- NUEVO: Validación de requisitos de contraseña (Criterio 3) ---
+    const errorPassword = validarPassword(password);
+    if (errorPassword) {
+      return res.status(400).json({ error: errorPassword });
     }
 
     // Validar unicidad correo
@@ -22,9 +41,9 @@ export async function crearUsuario(req, res) {
     const password_hash = await bcrypt.hash(password, 10);
 
     const result = await pool.query(
-      `INSERT INTO usuarios (nombre, correo, password_hash, rol_id)
-       VALUES ($1, $2, $3, $4) RETURNING id_usuarios, nombre, correo, rol_id, activo, fecha_creacion`,
-      [nombre, correo, password_hash, rol_id]
+      `INSERT INTO usuarios (nombre, correo, password_hash, rol_id, activo)
+       VALUES ($1, $2, $3, $4, $5) RETURNING id_usuarios, nombre, correo, rol_id, activo, fecha_creacion`,
+      [nombre, correo, password_hash, rol_id, activo !== undefined ? activo : true]
     );
 
     const nuevo = result.rows[0];
@@ -49,7 +68,7 @@ export async function crearUsuario(req, res) {
 export async function listarUsuarios(req, res) {
   try {
     const result = await pool.query(
-      `SELECT u.id_usuarios, u.nombre, u.correo, u.rol_id, r.nombre as rol_nombre, u.activo, u.fecha_creacion, u.fecha_actualizacion
+      `SELECT u.id_usuarios, u.nombre, u.correo, u.rol_id, r.nombre as rol_nombre, u.activo, u.intentos_fallidos, u.fecha_creacion, u.fecha_actualizacion
        FROM usuarios u
        LEFT JOIN roles r ON u.rol_id = r.id_roles
        ORDER BY u.id_usuarios DESC`
@@ -68,7 +87,7 @@ export async function obtenerUsuario(req, res) {
   try {
     const { id } = req.params;
     const result = await pool.query(
-      `SELECT id_usuarios, nombre, correo, rol_id, activo, fecha_creacion, fecha_actualizacion FROM usuarios WHERE id_usuarios = $1`,
+      `SELECT id_usuarios, nombre, correo, rol_id, activo, intentos_fallidos, fecha_creacion, fecha_actualizacion FROM usuarios WHERE id_usuarios = $1`,
       [id]
     );
     if (!result.rows.length) return res.status(404).json({ error: "Usuario no encontrado" });
@@ -88,12 +107,10 @@ export async function editarUsuario(req, res) {
     const { id } = req.params;
     const { nombre, correo, rol_id } = req.body;
 
-    // Validaciones básicas
     if (!nombre || !correo || !rol_id) {
       return res.status(400).json({ error: "Faltan campos obligatorios" });
     }
 
-    // Verificar si correo ya está en uso por otro usuario
     const existe = await pool.query("SELECT id_usuarios FROM usuarios WHERE correo = $1 AND id_usuarios <> $2", [correo, id]);
     if (existe.rows.length) {
       return res.status(409).json({ error: "El correo ya está en uso" });
@@ -131,6 +148,8 @@ export async function desactivarUsuario(req, res) {
   try {
     const { id } = req.params;
 
+    // Al desactivar, también podríamos querer desbloquear (resetear intentos) si fuera necesario, 
+    // pero aquí solo desactivamos.
     const result = await pool.query(
       `UPDATE usuarios SET activo = FALSE, fecha_actualizacion = NOW() WHERE id_usuarios = $1 RETURNING id_usuarios, nombre, correo, activo`,
       [id]
@@ -153,13 +172,14 @@ export async function desactivarUsuario(req, res) {
 }
 
 /**
- * LOGIN DE USUARIO (Nuevo Agregado)
+ * LOGIN DE USUARIO
  */
 export async function loginUsuario(req, res) {
   const { correo, password } = req.body;
   try {
+    // 1. Buscar usuario
     const result = await pool.query(
-      `SELECT u.id_usuarios, u.nombre, u.correo, u.password_hash, u.rol_id, r.nombre AS rol_nombre, u.activo
+      `SELECT u.id_usuarios, u.nombre, u.correo, u.password_hash, u.rol_id, r.nombre AS rol_nombre, u.activo, u.intentos_fallidos
        FROM usuarios u
        JOIN roles r ON u.rol_id = r.id_roles
        WHERE u.correo = $1`,
@@ -172,31 +192,58 @@ export async function loginUsuario(req, res) {
 
     const user = result.rows[0];
 
+    // 2. Verificar si está inactivo
     if (!user.activo) {
       return res.status(403).json({ error: "Cuenta desactivada. Contacte al administrador." });
     }
 
-    const match = await bcrypt.compare(password, user.password_hash);
-    if (!match) {
-      return res.status(401).json({ error: "Contraseña incorrecta" });
+    // --- NUEVO: Verificar bloqueo por intentos fallidos (Criterio 2) ---
+    if (user.intentos_fallidos >= 5) {
+      return res.status(403).json({ error: "Cuenta bloqueada por múltiples intentos fallidos. Contacte al administrador." });
     }
 
-    // --- GENERACIÓN DEL TOKEN JWT ---
+    // 3. Verificar contraseña
+    const match = await bcrypt.compare(password, user.password_hash);
+    
+    if (!match) {
+      // --- NUEVO: Incrementar intentos fallidos ---
+      await pool.query(
+        "UPDATE usuarios SET intentos_fallidos = intentos_fallidos + 1 WHERE id_usuarios = $1",
+        [user.id_usuarios]
+      );
+      
+      const intentosRestantes = 5 - (user.intentos_fallidos + 1);
+      if (intentosRestantes <= 0) {
+         return res.status(403).json({ error: "Cuenta bloqueada. Ha excedido el número de intentos." });
+      }
+
+      return res.status(401).json({ error: `Contraseña incorrecta. Le quedan ${intentosRestantes} intentos.` });
+    }
+
+    // --- NUEVO: Login exitoso -> Resetear intentos fallidos ---
+    if (user.intentos_fallidos > 0) {
+      await pool.query(
+        "UPDATE usuarios SET intentos_fallidos = 0 WHERE id_usuarios = $1",
+        [user.id_usuarios]
+      );
+    }
+
+    // 4. Generar Token
     const token = jwt.sign(
       { 
         id: user.id_usuarios, 
         rol: user.rol_nombre,
         rol_id: user.rol_id 
       },
-      process.env.JWT_SECRET || "secreto_super_seguro", // Debe coincidir con el middleware
-      { expiresIn: "8h" } // El token expira en 8 horas
+      process.env.JWT_SECRET || "secreto_super_seguro",
+      { expiresIn: "8h" }
     );
 
     const { password_hash, ...userSafe } = user;
     
     res.json({
       message: "Login exitoso",
-      token: token, // Enviamos el token al frontend
+      token: token,
       user: userSafe
     });
 

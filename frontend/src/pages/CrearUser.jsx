@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { createUser } from "../services/usuariosService"; // <--- Importamos el servicio
 import Footer from "../components/Footer";
 import NavBar from "../components/NavBar";
 
@@ -11,8 +12,8 @@ export default function CrearUsuario() {
     correo: "",
     password: "",
     repetirPassword: "",
-    rol_id: "", // Cambiado de 'rol' a 'rol_id' para la BD
-    activo: true, // Booleano para la BD
+    rol_id: "",
+    activo: true,
   });
 
   function handleChange(e) {
@@ -37,30 +38,21 @@ export default function CrearUsuario() {
     }
 
     try {
-      const res = await fetch("http://localhost:4000/api/usuarios", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            nombre: form.nombre,
-            correo: form.correo,
-            password: form.password,
-            rol_id: parseInt(form.rol_id), // Convertir a número
-            activo: form.activo
-        }),
+      // Usamos el servicio que ya incluye el token
+      await createUser({
+        nombre: form.nombre,
+        correo: form.correo,
+        password: form.password,
+        rol_id: parseInt(form.rol_id),
+        activo: form.activo
       });
 
-      const data = await res.json();
-
-      if (res.ok) {
-        alert("Usuario creado exitosamente en la Base de Datos ✔");
-        navigate("/GestionUser"); // O volver al dashboard
-      } else {
-        alert("Error: " + (data.error || "No se pudo crear"));
-      }
+      alert("Usuario creado exitosamente ✔");
+      navigate("/GestionUser");
 
     } catch (error) {
-      console.error(error);
-      alert("Error de conexión con el servidor");
+      // Aquí capturamos el error (ej: contraseña débil o falta de permisos)
+      alert("Error: " + error.message);
     }
   }
 
@@ -111,7 +103,7 @@ export default function CrearUsuario() {
           value={form.password}
           onChange={handleChange}
           required
-          placeholder="******"
+          placeholder="Min 8 caracteres, 1 num, 1 mayús"
           style={{padding: '8px', borderRadius: '5px', border: '1px solid #ccc'}}
         />
 
