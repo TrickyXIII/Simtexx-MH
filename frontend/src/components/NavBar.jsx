@@ -1,4 +1,4 @@
-import "./NavBar.css";
+import "./Navbar.css"; // <--- CAMBIO AQUÍ: 'b' minúscula para coincidir con el archivo
 import { useNavigate } from "react-router-dom";
 
 export default function NavBar() {
