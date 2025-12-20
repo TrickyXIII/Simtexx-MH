@@ -45,9 +45,14 @@ export default function NavBar() {
 
       {/* SECCIÓN DERECHA: Usuario + Salir */}
       <div className="nav-right">
-        <span className="user-name">
-            Hola, {usuario.nombre || "Usuario"}
-        </span>
+        <div style={{display: 'flex', flexDirection: 'column', alignItems: 'flex-end', marginRight: '15px'}}>
+            <span className="user-name">Hola, {usuario.nombre || "Usuario"}</span>
+            
+            {/* Enlace MI PERFIL */}
+            <Link to="/mi-perfil" style={{fontSize: '12px', color: '#007bff', textDecoration: 'none'}}>
+                Editar mi perfil
+            </Link>
+        </div>
         
         <button className="btn-logout" onClick={handleLogout}>
           Cerrar sesión

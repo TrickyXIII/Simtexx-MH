@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import NavBar from "../components/NavBar";
 import Footer from "../components/Footer";
+import { activateUser, desactivarUser } from "../services/usuariosService"; // Importamos nuevas funciones
 
 // Definimos la URL correcta (Local o Nube)
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
@@ -17,7 +18,6 @@ export default function Usuarios() {
   const cargarUsuarios = async () => {
     const token = localStorage.getItem("token");
     try {
-      // USAMOS BASE_URL
       const res = await fetch(`${BASE_URL}/api/usuarios`, {
         headers: {
           "Content-Type": "application/json",
@@ -34,28 +34,24 @@ export default function Usuarios() {
     }
   };
 
-  async function desactivarUsuario(id) {
-    if (!confirm("¿Seguro que deseas desactivar este usuario?")) return;
-
-    const token = localStorage.getItem("token");
-    try {
-      // USAMOS BASE_URL
-      const res = await fetch(`${BASE_URL}/api/usuarios/${id}/desactivar`, {
-        method: "PATCH",
-        headers: {
-          "Authorization": `Bearer ${token}`
+  // Función toggle para Activar/Desactivar
+  async function toggleEstadoUsuario(id, estadoActual) {
+    if (estadoActual) {
+        // Si está activo -> Desactivar
+        if (!confirm("¿Seguro que deseas desactivar este usuario?")) return;
+        const success = await desactivarUser(id);
+        if (success) {
+            alert("Usuario desactivado");
+            cargarUsuarios();
         }
-      });
-
-      if (res.ok) {
-        alert("Usuario desactivado correctamente");
-        cargarUsuarios(); 
-      } else {
-        alert("No se pudo desactivar el usuario");
-      }
-    } catch (error) {
-      console.error(error);
-      alert("Error de conexión");
+    } else {
+        // Si está inactivo -> Activar
+        if (!confirm("¿Deseas REACTIVAR este usuario?")) return;
+        const success = await activateUser(id);
+        if (success) {
+            alert("Usuario reactivado exitosamente");
+            cargarUsuarios();
+        }
     }
   }
 
@@ -160,18 +156,19 @@ export default function Usuarios() {
                       </button>
 
                       <button
-                        onClick={() => desactivarUsuario(u.id_usuarios)}
+                        onClick={() => toggleEstadoUsuario(u.id_usuarios, u.activo)}
                         style={{
                           padding: "6px 12px",
-                          background: "#c62828",
+                          background: u.activo ? "#c62828" : "#28a745",
                           color: "white",
                           border: "none",
                           borderRadius: "4px",
                           cursor: "pointer",
-                          fontSize: "13px"
+                          fontSize: "13px",
+                          width: "90px"
                         }}
                       >
-                        Desactivar
+                        {u.activo ? "Desactivar" : "Activar"}
                       </button>
                     </td>
                   </tr>

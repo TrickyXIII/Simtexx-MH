@@ -2,7 +2,7 @@
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
 const API_URL = `${BASE_URL}/api/usuarios`;
 
-// --- CORRECCIÓN AQUÍ: Agregamos el Token a getClientes ---
+// --- Selectores ---
 export async function getClientes() {
   const token = localStorage.getItem("token");
   try {
@@ -31,6 +31,7 @@ export async function getMantenedores() {
   }
 }
 
+// --- CRUD Usuarios ---
 export async function getUserById(id) {
   const token = localStorage.getItem("token");
   try {
@@ -91,4 +92,58 @@ export async function createUser(userData) {
     console.error("Error en createUser:", error);
     throw error;
   }
+}
+
+// --- NUEVAS FUNCIONES ---
+
+export async function updateProfile(data) {
+  const token = localStorage.getItem("token");
+  try {
+    const res = await fetch(`${API_URL}/perfil`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify(data),
+    });
+
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || "Error al actualizar perfil");
+    
+    return json;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+}
+
+export async function activateUser(id) {
+  const token = localStorage.getItem("token");
+  try {
+    const res = await fetch(`${API_URL}/${id}/activar`, {
+      method: "PATCH",
+      headers: { "Authorization": `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error("Error al activar usuario");
+    return true;
+  } catch (error) {
+    console.error(error);
+    return false;
+  }
+}
+
+export async function desactivarUser(id) {
+    const token = localStorage.getItem("token");
+    try {
+        const res = await fetch(`${API_URL}/${id}/desactivar`, {
+            method: "PATCH",
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error("Error al desactivar");
+        return true;
+    } catch (e) {
+        console.error(e);
+        return false;
+    }
 }

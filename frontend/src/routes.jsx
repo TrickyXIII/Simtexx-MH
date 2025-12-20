@@ -8,7 +8,8 @@ import ModificarOT from "./pages/ModificarOT";
 import CrearUsuario from "./pages/CrearUser";
 import Usuarios from "./pages/GestionUser";
 import ModificarUser from "./pages/ModificarUser";
-import AuditoriaGlobal from "./pages/AuditoriaGlobal"; // <--- IMPORTAR
+import AuditoriaGlobal from "./pages/AuditoriaGlobal";
+import MiPerfil from "./pages/MiPerfil"; // <--- IMPORTAR
 
 export default function AppRoutes() {
   return (
@@ -29,8 +30,9 @@ export default function AppRoutes() {
         <Route path="/GestionUser/" element={<Usuarios />} />
         <Route path="/ModificarUser/:id" element={<ModificarUser />} />
         
-        {/* Ruta de Auditoría */}
-        <Route path="/auditoria" element={<AuditoriaGlobal />} /> {/* <--- NUEVA RUTA */}
+        {/* Perfil y Auditoría */}
+        <Route path="/auditoria" element={<AuditoriaGlobal />} />
+        <Route path="/mi-perfil" element={<MiPerfil />} /> {/* <--- NUEVA RUTA */}
         
       </Routes>
     </BrowserRouter>
