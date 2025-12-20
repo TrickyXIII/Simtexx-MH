@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { verifyToken } from "../middlewares/auth.middleware.js"; // <--- Importar
+import { verifyToken } from "../middlewares/auth.middleware.js";
 import multer from "multer";
 import { 
     getOTs, 
@@ -9,24 +9,20 @@ import {
     deleteOT, 
     exportOTsCSV,
     importOTs,
-    getDashboardStats // Importamos la nueva función
+    getDashboardStats 
 } from "../controllers/ot.controller.js";
 
 const router = Router();
 const upload = multer({ dest: 'uploads/' });
 
-// Aplica verifyToken a las rutas que quieras proteger
-router.get("/stats", verifyToken, getDashboardStats);
-router.post("/", verifyToken, createOT);
-router.get("/", verifyToken, getOTs);
-router.get("/:id", verifyToken, getOTById);
-router.put("/:id", verifyToken, updateOT);
-router.delete("/:id", verifyToken, deleteOT);
+// --- MIDDLEWARE GLOBAL ---
+// Esto protege TODAS las rutas de abajo, obligando a tener token válido
+router.use(verifyToken);
 
-// --- RUTA ESTADÍSTICAS (¡OJO: Debe ir antes de /:id!) ---
+// --- ESTADÍSTICAS ---
 router.get("/stats", getDashboardStats);
 
-// --- RUTAS DE EXPORTACIÓN / IMPORTACIÓN ---
+// --- IMPORTACIÓN / EXPORTACIÓN (Solo Admin/Mantenedor - validado en controlador) ---
 router.get("/export/csv", exportOTsCSV);
 router.post("/import/csv", upload.single("file"), importOTs);
 
