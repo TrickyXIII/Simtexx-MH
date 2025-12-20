@@ -33,6 +33,10 @@ export default function DetalleOT() {
   const rolNormalizado = (usuario.rol || usuario.rol_nombre || "").toLowerCase().trim();
   const isAdmin = rolNormalizado === 'admin' || rolNormalizado === 'administrador';
   const isCliente = usuario.rol_id === 2; // Cliente
+  const isMantenedor = usuario.rol_id === 3; // Mantenedor (Trabajador)
+
+  // Determinar quién puede ver el historial (Admin + Mantenedor)
+  const canViewHistory = isAdmin || isMantenedor;
 
   useEffect(() => {
     async function loadData() {
@@ -43,14 +47,15 @@ export default function DetalleOT() {
         const commentsData = await getComentarios(id);
         setComentarios(commentsData);
 
-        if (isAdmin) {
+        // Si tiene permisos, cargamos el historial
+        if (canViewHistory) {
           const historialData = await getHistorial(id);
           setHistorial(historialData);
         }
       }
     }
     loadData();
-  }, [id, isAdmin]);
+  }, [id, canViewHistory]);
 
   const handleExportPDF = () => {
     if (ot) exportPDFById(ot.id_ot, ot.codigo, usuario);
@@ -150,10 +155,10 @@ export default function DetalleOT() {
           <button onClick={handleExportPDF}>Exportar PDF</button>
         </div>
 
-        {/* SECCIÓN HISTORIAL (SOLO ADMIN) */}
-        {isAdmin && (
+        {/* SECCIÓN HISTORIAL (ADMIN Y TRABAJADOR) */}
+        {canViewHistory && (
           <div className="historial-box">
-            <h3>Historial de Auditoría (Admin)</h3>
+            <h3>Historial de Auditoría</h3>
             {historial.length === 0 ? (
               <p style={{ textAlign: 'center', color: '#888', padding: '10px' }}>No hay registros de cambios.</p>
             ) : (

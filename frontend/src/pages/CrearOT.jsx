@@ -14,8 +14,6 @@ export default function CrearOT() {
   const isCliente = usuarioActual.rol_id === 2; // 2 = Cliente
 
   // 🔴 CORRECCIÓN CLAVE: Detectar el ID correcto
-  // La base de datos usa 'id_usuarios', pero a veces el login puede devolver 'id'.
-  // Usamos esta lógica para tomar el que exista y evitar errores.
   const userId = usuarioActual.id_usuarios || usuarioActual.id;
 
   // 2. Estado Inicial
@@ -25,25 +23,29 @@ export default function CrearOT() {
     fecha_inicio: isCliente ? new Date().toISOString().split('T')[0] : "",
     fecha_fin: "",
     estado: "Pendiente",
-    // Si es cliente, asignamos SU ID automáticamente. Si no, vacío para elegir.
     cliente_id: isCliente ? userId : "", 
     responsable_id: ""
   });
 
-  // Listas (solo para Admin)
+  // Listas (solo para Admin / Mantenedor)
   const [clientes, setClientes] = useState([]);
   const [mantenedores, setMantenedores] = useState([]);
 
   useEffect(() => {
-    // Si NO es cliente, cargamos las listas para que el Admin elija
+    // Si NO es cliente, cargamos las listas
     if (!isCliente) {
       async function loadData() {
         try {
           const c = await getClientes();
           const m = await getMantenedores();
-          // Aseguramos que sea un array antes de setear para evitar pantallas blancas
-          setClientes(Array.isArray(c.usuarios) ? c.usuarios : []); 
-          setMantenedores(Array.isArray(m.usuarios) ? m.usuarios : []);
+          
+          // CORRECCIÓN: La API devuelve un array directo, no un objeto { usuarios: [...] }
+          // Pero dejamos un fallback por seguridad
+          const listaClientes = Array.isArray(c) ? c : (c.usuarios || []);
+          const listaMantenedores = Array.isArray(m) ? m : (m.usuarios || []);
+
+          setClientes(listaClientes); 
+          setMantenedores(listaMantenedores);
         } catch (e) {
           console.error("Error cargando listas", e);
         }
@@ -59,7 +61,6 @@ export default function CrearOT() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Validación de seguridad antes de enviar
       if (isCliente && !userId) {
         alert("Error de sesión: No se pudo identificar tu usuario. Por favor cierra sesión y vuelve a entrar.");
         return;
@@ -68,14 +69,10 @@ export default function CrearOT() {
       await createOT({
         titulo: form.titulo,
         descripcion: form.descripcion,
-        // Lógica de Envío:
         estado: isCliente ? "Pendiente" : form.estado,
         fecha_inicio_contrato: isCliente ? new Date() : form.fecha_inicio,
         fecha_fin_contrato: isCliente ? null : form.fecha_fin,
-        
-        // 🔴 USAMOS LA VARIABLE userId CORREGIDA
         cliente_id: isCliente ? userId : parseInt(form.cliente_id),
-        
         responsable_id: isCliente ? null : (form.responsable_id ? parseInt(form.responsable_id) : null)
       });
       

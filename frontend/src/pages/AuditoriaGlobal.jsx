@@ -46,18 +46,17 @@ export default function AuditoriaGlobal() {
         ) : (
           <div style={{ overflowX: "auto", boxShadow: "0 0 10px rgba(0,0,0,0.1)", borderRadius: "8px", background: "white" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "800px" }}>
-              <thead style={{ background: "#007bff", color: "white" }}>
+              <thead style={{ background: "#333", color: "white" }}>
                 <tr>
                   <th style={{ padding: "12px", textAlign: "left" }}>Fecha</th>
                   <th style={{ padding: "12px", textAlign: "left" }}>Usuario (Autor)</th>
                   <th style={{ padding: "12px", textAlign: "left" }}>Acción</th>
                   <th style={{ padding: "12px", textAlign: "left" }}>Descripción / Detalle</th>
-                  <th style={{ padding: "12px", textAlign: "left" }}>IP</th>
                 </tr>
               </thead>
               <tbody>
                 {logs.length === 0 ? (
-                  <tr><td colSpan="5" style={{ padding: "20px", textAlign: "center" }}>No hay registros disponibles.</td></tr>
+                  <tr><td colSpan="4" style={{ padding: "20px", textAlign: "center" }}>No hay registros disponibles.</td></tr>
                 ) : (
                   logs.map((log) => (
                     <tr key={log.id_auditoria} style={{ borderBottom: "1px solid #ddd" }}>
@@ -80,9 +79,6 @@ export default function AuditoriaGlobal() {
                       </td>
                       <td style={{ padding: "10px", maxWidth: "400px", fontSize: "14px", color: "#555" }}>
                         {log.descripcion}
-                      </td>
-                      <td style={{ padding: "10px", color: "#888", fontSize: "12px" }}>
-                        {log.ip_address || "-"}
                       </td>
                     </tr>
                   ))
