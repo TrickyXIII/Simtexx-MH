@@ -1,6 +1,8 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
 
 // Importación de rutas
 import usuariosRoutes from "./routes/usuarios.routes.js";
@@ -12,27 +14,32 @@ import excelRoutes from "./routes/excel.routes.js";
 
 dotenv.config();
 
+// Configuración para __dirname en módulos ES
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const app = express();
 
-// Configuración CORS: Permite que el Frontend (en otro dominio) consuma esta API
-app.use(cors()); 
+// Configuración CORS
+app.use(cors());
 
 app.use(express.json());
+
+// --- NUEVO: Servir carpeta uploads de forma estática ---
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 // Rutas
 app.use("/api/usuarios", usuariosRoutes);
 app.use("/api/ot", otRoutes);
 app.use("/api/comentarios", comentariosRoutes);
 app.use("/api/auditorias", auditoriasRoutes);
-app.use("/api/pdf", pdfRoutes); 
+app.use("/api/pdf", pdfRoutes);
 app.use("/api/excel", excelRoutes);
 
-// Ruta base para probar que el server vive
 app.get("/", (req, res) => {
   res.send("API Simtexx funcionando 🚀");
 });
 
-// Manejo de rutas no encontradas
 app.use((req, res) => {
   res.status(404).json({ message: "Ruta no encontrada" });
 });

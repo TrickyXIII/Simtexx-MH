@@ -1,14 +1,14 @@
-// Detecta la URL de la API según el entorno (Local o Nube)
+// Detecta la URL de la API según el entorno
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
 const API_URL = `${BASE_URL}/api/ot`;
-const PDF_URL = `${BASE_URL}/api/pdf`; 
+const PDF_URL = `${BASE_URL}/api/pdf`;
 
 // --- HELPER: HEADERS CON TOKEN ---
 const getAuthHeaders = () => {
   const token = localStorage.getItem("token");
   return {
     "Content-Type": "application/json",
-    "Authorization": `Bearer ${token}` // <--- La clave para que funcione
+    "Authorization": `Bearer ${token}`
   };
 };
 
@@ -161,8 +161,8 @@ export async function exportCSV(filtros = {}) {
 
   try {
     const response = await fetch(`${API_URL}/export/csv?${params.toString()}`, {
-        method: 'GET',
-        headers: getAuthHeadersBlob()
+      method: 'GET',
+      headers: getAuthHeadersBlob()
     });
     if (!response.ok) throw new Error("Error al exportar CSV");
     const blob = await response.blob();
@@ -177,8 +177,8 @@ export async function exportCSV(filtros = {}) {
 export async function exportPDFById(id, codigo) {
   try {
     const response = await fetch(`${PDF_URL}/ot/${id}/export`, {
-        method: 'GET',
-        headers: getAuthHeadersBlob()
+      method: 'GET',
+      headers: getAuthHeadersBlob()
     });
     if (!response.ok) throw new Error("Error al exportar PDF");
     const blob = await response.blob();
@@ -194,7 +194,7 @@ export async function importCSV(file) {
   const formData = new FormData();
   formData.append("file", file);
   const token = localStorage.getItem("token");
-  
+
   try {
     const response = await fetch(`${API_URL}/import/csv`, {
       method: "POST",
@@ -203,10 +203,10 @@ export async function importCSV(file) {
       },
       body: formData,
     });
-    
+
     if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.error || "Error en la subida");
+      const err = await response.json();
+      throw new Error(err.error || "Error en la subida");
     }
     return await response.json();
   } catch (error) {
@@ -215,12 +215,12 @@ export async function importCSV(file) {
   }
 }
 
-// --- SECCIÓN COMENTARIOS (Corregida) ---
+// --- SECCIÓN COMENTARIOS ---
+
 export async function getComentarios(otId) {
   try {
-    // AHORA SÍ: headers con token
     const res = await fetch(`${BASE_URL}/api/comentarios/${otId}`, {
-        headers: getAuthHeaders() 
+      headers: getAuthHeaders()
     });
     if (!res.ok) throw new Error("Error cargando comentarios");
     return await res.json();
@@ -230,13 +230,26 @@ export async function getComentarios(otId) {
   }
 }
 
-export async function crearComentario(otId, usuarioId, texto) {
+// --- MODIFICADO: Soporte para imagen ---
+export async function crearComentario(otId, usuarioId, texto, archivoImagen) {
+  const token = localStorage.getItem("token");
+  const formData = new FormData();
+
+  formData.append("ot_id", otId);
+  formData.append("texto", texto);
+
+  if (archivoImagen) {
+    formData.append("imagen", archivoImagen);
+  }
+
   try {
-    // AHORA SÍ: headers con token (getAuthHeaders incluye content-type y auth)
     const res = await fetch(`${BASE_URL}/api/comentarios`, {
       method: "POST",
-      headers: getAuthHeaders(), 
-      body: JSON.stringify({ ot_id: otId, usuarios_id: usuarioId, texto }),
+      headers: {
+        "Authorization": `Bearer ${token}`
+        // IMPORTANTE: No Content-Type, fetch lo pone
+      },
+      body: formData,
     });
     if (!res.ok) throw new Error("Error guardando comentario");
     return await res.json();
@@ -248,7 +261,6 @@ export async function crearComentario(otId, usuarioId, texto) {
 
 export async function updateComentario(comentarioId, usuarioId, texto) {
   try {
-    // AHORA SÍ: headers con token
     const res = await fetch(`${BASE_URL}/api/comentarios/${comentarioId}`, {
       method: "PUT",
       headers: getAuthHeaders(),
@@ -265,9 +277,8 @@ export async function updateComentario(comentarioId, usuarioId, texto) {
 // --- HISTORIAL ---
 export async function getHistorial(otId) {
   try {
-    // AHORA SÍ: headers con token
     const res = await fetch(`${BASE_URL}/api/auditorias/${otId}`, {
-        headers: getAuthHeaders()
+      headers: getAuthHeaders()
     });
     if (!res.ok) throw new Error("Error cargando historial");
     return await res.json();
