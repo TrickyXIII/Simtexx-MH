@@ -26,3 +26,43 @@ export async function getMantenedores() {
     return [];
   }
 }
+
+// Obtener usuario por ID
+export async function getUserById(id) {
+  const token = localStorage.getItem("token");
+  try {
+    const res = await fetch(`${API_URL}/${id}`, {
+      headers: { "Authorization": `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error("Error cargando usuario");
+    const data = await res.json();
+    return data.usuario; // El backend devuelve { usuario: ... }
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+}
+
+// Actualizar usuario
+export async function updateUser(id, userData) {
+  const token = localStorage.getItem("token");
+  try {
+    const res = await fetch(`${API_URL}/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify(userData),
+    });
+    
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Error al actualizar");
+    }
+    return await res.json();
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+}

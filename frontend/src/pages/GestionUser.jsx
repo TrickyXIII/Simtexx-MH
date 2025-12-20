@@ -13,8 +13,15 @@ export default function Usuarios() {
   }, []);
 
   const cargarUsuarios = async () => {
+    // Recuperamos el token para la petición (Si implementaste la seguridad JWT)
+    const token = localStorage.getItem("token");
     try {
-      const res = await fetch("http://localhost:4000/api/usuarios");
+      const res = await fetch("http://localhost:4000/api/usuarios", {
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}` 
+        }
+      });
       const data = await res.json();
       
       if (data.usuarios && Array.isArray(data.usuarios)) {
@@ -29,9 +36,13 @@ export default function Usuarios() {
   async function desactivarUsuario(id) {
     if (!confirm("¿Seguro que deseas desactivar este usuario?")) return;
 
+    const token = localStorage.getItem("token");
     try {
       const res = await fetch(`http://localhost:4000/api/usuarios/${id}/desactivar`, {
         method: "PATCH",
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
       });
 
       if (res.ok) {
@@ -49,7 +60,7 @@ export default function Usuarios() {
   return (
     <>
       <NavBar />
-      <div style={{ maxWidth: "1000px", margin: "80px auto", padding: "20px" }}>
+      <div style={{ maxWidth: "1000px", margin: "80px auto", padding: "20px", minHeight: "calc(100vh - 160px)" }}>
         
         {/* ENCABEZADO CON BOTÓN VOLVER */}
         <div style={{ 
@@ -130,7 +141,25 @@ export default function Usuarios() {
                         {u.activo ? "Activo" : "Inactivo"}
                       </span>
                     </td>
-                    <td style={{ padding: "12px", textAlign: "center" }}>
+                    <td style={{ padding: "12px", textAlign: "center", display: "flex", justifyContent: "center", gap: "10px" }}>
+                      
+                      {/* BOTÓN EDITAR */}
+                      <button
+                        onClick={() => navigate(`/ModificarUser/${u.id_usuarios}`)}
+                        style={{
+                          padding: "6px 12px",
+                          background: "#007bff",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "4px",
+                          cursor: "pointer",
+                          fontSize: "13px"
+                        }}
+                      >
+                        Editar
+                      </button>
+
+                      {/* BOTÓN DESACTIVAR */}
                       <button
                         onClick={() => desactivarUsuario(u.id_usuarios)}
                         style={{
