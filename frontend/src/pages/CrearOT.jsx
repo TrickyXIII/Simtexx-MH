@@ -4,23 +4,29 @@ import { createOT } from "../services/otService";
 import { getClientes, getMantenedores } from "../services/usuariosService";
 import NavBar from "../components/NavBar";
 import Footer from "../components/Footer";
-import "./CrearOT.css";
+import "./CrearOT.css"; // Asegúrate de que este archivo tenga el CSS nuevo que te di
 
 export default function CrearOT() {
   const navigate = useNavigate();
   
-  // 1. Detectar Rol
+  // 1. Detectar Rol y Usuario
+  // Obtenemos el objeto completo que guardamos al hacer Login
   const usuarioActual = JSON.parse(localStorage.getItem("usuarioActual") || "{}");
   const isCliente = usuarioActual.rol_id === 2; // 2 = Cliente
 
-  // 2. Estado Inicial (Si es cliente, pre-rellenamos datos)
+  // 🔴 CORRECCIÓN CLAVE: Usamos 'id_usuarios' en vez de 'id'
+  // Si la propiedad 'id' no existe, intentamos con 'id_usuarios' para asegurar
+  const userId = usuarioActual.id_usuarios || usuarioActual.id;
+
+  // 2. Estado Inicial
   const [form, setForm] = useState({
     titulo: "",
     descripcion: "",
     fecha_inicio: isCliente ? new Date().toISOString().split('T')[0] : "",
     fecha_fin: "",
     estado: "Pendiente",
-    cliente_id: isCliente ? usuarioActual.id : "", 
+    // Si es cliente, asignamos SU ID automáticamente. Si no, vacío para elegir.
+    cliente_id: isCliente ? userId : "", 
     responsable_id: ""
   });
 
@@ -29,14 +35,15 @@ export default function CrearOT() {
   const [mantenedores, setMantenedores] = useState([]);
 
   useEffect(() => {
-    // Si NO es cliente, cargamos las listas para que el Admin elija
+    // Si NO es cliente, cargamos las listas
     if (!isCliente) {
       async function loadData() {
         try {
           const c = await getClientes();
           const m = await getMantenedores();
-          setClientes(c.usuarios || []); 
-          setMantenedores(m.usuarios || []);
+          // Aseguramos que sea un array antes de setear
+          setClientes(Array.isArray(c.usuarios) ? c.usuarios : []); 
+          setMantenedores(Array.isArray(m.usuarios) ? m.usuarios : []);
         } catch (e) {
           console.error("Error cargando listas", e);
         }
@@ -52,22 +59,31 @@ export default function CrearOT() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      // Validar que tengamos un ID de cliente si es rol cliente
+      if (isCliente && !userId) {
+        alert("Error: No se pudo identificar tu usuario. Por favor inicia sesión de nuevo.");
+        return;
+      }
+
       await createOT({
         titulo: form.titulo,
         descripcion: form.descripcion,
-        // Lógica de Envío:
-        // Si es cliente -> Forzamos "Pendiente" y Fecha Hoy. Responsable y Fin van nulos.
-        // Si es admin -> Enviamos lo que haya elegido en el form.
+        
+        // Lógica de asignación automática
         estado: isCliente ? "Pendiente" : form.estado,
         fecha_inicio_contrato: isCliente ? new Date() : form.fecha_inicio,
         fecha_fin_contrato: isCliente ? null : form.fecha_fin,
-        cliente_id: isCliente ? usuarioActual.id : parseInt(form.cliente_id),
+        
+        // CORRECCIÓN: Usamos userId (que ahora es id_usuarios)
+        cliente_id: isCliente ? userId : parseInt(form.cliente_id),
         responsable_id: isCliente ? null : (form.responsable_id ? parseInt(form.responsable_id) : null)
       });
+      
       alert("OT creada exitosamente");
       navigate("/dashboard");
     } catch (error) {
-      alert("Error: " + error.message);
+      console.error(error);
+      alert("Error al crear OT: " + (error.message || "Error desconocido"));
     }
   };
 
@@ -171,8 +187,8 @@ export default function CrearOT() {
               border: "1px solid #b3e5fc"
             }}>
               <p style={{margin: 0}}>
-                <strong>ℹ️ Información:</strong> Su solicitud se creará con estado <em>"Pendiente"</em>. 
-                Nuestro equipo administrativo asignará un responsable y la fecha de término a la brevedad.
+                <strong>ℹ️ Información:</strong> Se registrará a nombre de <strong>{usuarioActual.nombre}</strong>.
+                La solicitud quedará "Pendiente" hasta que un administrador la asigne.
               </p>
             </div>
           )}
