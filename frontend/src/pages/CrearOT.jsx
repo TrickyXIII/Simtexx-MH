@@ -4,18 +4,18 @@ import { createOT } from "../services/otService";
 import { getClientes, getMantenedores } from "../services/usuariosService";
 import NavBar from "../components/NavBar";
 import Footer from "../components/Footer";
-import "./CrearOT.css"; // Asegúrate de que este archivo tenga el CSS nuevo que te di
+import "./CrearOT.css";
 
 export default function CrearOT() {
   const navigate = useNavigate();
   
   // 1. Detectar Rol y Usuario
-  // Obtenemos el objeto completo que guardamos al hacer Login
   const usuarioActual = JSON.parse(localStorage.getItem("usuarioActual") || "{}");
   const isCliente = usuarioActual.rol_id === 2; // 2 = Cliente
 
-  // 🔴 CORRECCIÓN CLAVE: Usamos 'id_usuarios' en vez de 'id'
-  // Si la propiedad 'id' no existe, intentamos con 'id_usuarios' para asegurar
+  // 🔴 CORRECCIÓN CLAVE: Detectar el ID correcto
+  // La base de datos usa 'id_usuarios', pero a veces el login puede devolver 'id'.
+  // Usamos esta lógica para tomar el que exista y evitar errores.
   const userId = usuarioActual.id_usuarios || usuarioActual.id;
 
   // 2. Estado Inicial
@@ -35,13 +35,13 @@ export default function CrearOT() {
   const [mantenedores, setMantenedores] = useState([]);
 
   useEffect(() => {
-    // Si NO es cliente, cargamos las listas
+    // Si NO es cliente, cargamos las listas para que el Admin elija
     if (!isCliente) {
       async function loadData() {
         try {
           const c = await getClientes();
           const m = await getMantenedores();
-          // Aseguramos que sea un array antes de setear
+          // Aseguramos que sea un array antes de setear para evitar pantallas blancas
           setClientes(Array.isArray(c.usuarios) ? c.usuarios : []); 
           setMantenedores(Array.isArray(m.usuarios) ? m.usuarios : []);
         } catch (e) {
@@ -59,23 +59,23 @@ export default function CrearOT() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Validar que tengamos un ID de cliente si es rol cliente
+      // Validación de seguridad antes de enviar
       if (isCliente && !userId) {
-        alert("Error: No se pudo identificar tu usuario. Por favor inicia sesión de nuevo.");
+        alert("Error de sesión: No se pudo identificar tu usuario. Por favor cierra sesión y vuelve a entrar.");
         return;
       }
 
       await createOT({
         titulo: form.titulo,
         descripcion: form.descripcion,
-        
-        // Lógica de asignación automática
+        // Lógica de Envío:
         estado: isCliente ? "Pendiente" : form.estado,
         fecha_inicio_contrato: isCliente ? new Date() : form.fecha_inicio,
         fecha_fin_contrato: isCliente ? null : form.fecha_fin,
         
-        // CORRECCIÓN: Usamos userId (que ahora es id_usuarios)
+        // 🔴 USAMOS LA VARIABLE userId CORREGIDA
         cliente_id: isCliente ? userId : parseInt(form.cliente_id),
+        
         responsable_id: isCliente ? null : (form.responsable_id ? parseInt(form.responsable_id) : null)
       });
       
@@ -83,7 +83,7 @@ export default function CrearOT() {
       navigate("/dashboard");
     } catch (error) {
       console.error(error);
-      alert("Error al crear OT: " + (error.message || "Error desconocido"));
+      alert("Error: " + (error.message || "No se pudo crear la OT"));
     }
   };
 
