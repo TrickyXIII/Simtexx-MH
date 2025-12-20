@@ -6,17 +6,28 @@ import fs from "fs";
 // --- ESTADÍSTICAS DASHBOARD ---
 export const getDashboardStats = async (req, res) => {
   try {
-    const { rol, id } = req.user || {};
+    const { rol, id, rol_id } = req.user || {};
     const userid = id;
     const userRole = rol ? rol.toLowerCase() : "";
 
     const values = [];
     let whereClause = "WHERE 1=1"; 
     
-    if (userRole !== 'admin' && userRole !== 'administrador' && userid) {
+    // Lógica de filtrado según rol
+    if (rol_id === 2) { 
+      // CLIENTE: Filtramos por cliente_id
+      whereClause += " AND cliente_id = $1";
+      values.push(userid);
+    } else if (rol_id === 3) {
+      // MANTENEDOR: Filtramos por responsable_id
+      whereClause += " AND responsable_id = $1";
+      values.push(userid);
+    } else if (userRole !== 'admin' && userRole !== 'administrador') {
+      // Fallback genérico (por si acaso)
       whereClause += " AND responsable_id = $1";
       values.push(userid);
     }
+    // Si es Admin (rol_id 1), no entra en los if y ve todo (WHERE 1=1)
 
     const query = `
       SELECT 
@@ -285,7 +296,7 @@ export const deleteOT = async (req, res) => {
 // --- EXPORTAR CSV (CON SEGURIDAD DE ROL) ---
 export const exportOTsCSV = async (req, res) => {
   try {
-    // 1. VALIDACIÓN DE ROL
+    // 1. VALIDACIÓN DE ROL (1=Admin, 3=Mantenedor)
     const { rol_id } = req.user;
     if (rol_id !== 1 && rol_id !== 3) {
         return res.status(403).json({ error: "Acceso denegado. Solo personal autorizado." });
@@ -365,12 +376,13 @@ export const importOTs = async (req, res) => {
       return res.status(400).json({ error: "No se subió ningún archivo CSV" });
     }
 
-    // 1. VALIDACIÓN DE ROL
+    // 1. VALIDACIÓN DE ROL: Solo Admin (1) puede importar.
+    // El requerimiento dice: "trabajador solo debe poder exportar, no importar".
     const { rol_id } = req.user;
-    if (rol_id !== 1 && rol_id !== 3) {
+    if (rol_id !== 1) {
         // Borrar archivo si no tiene permisos
         fs.unlinkSync(req.file.path);
-        return res.status(403).json({ error: "Acceso denegado. Solo personal autorizado." });
+        return res.status(403).json({ error: "Acceso denegado. Solo administradores pueden importar." });
     }
 
     const filePath = req.file.path;

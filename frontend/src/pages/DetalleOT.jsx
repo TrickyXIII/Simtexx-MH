@@ -17,7 +17,7 @@ export default function DetalleOT() {
   const [comentarios, setComentarios] = useState([]);
   const [historial, setHistorial] = useState([]);
 
-  // --- NUEVO: Estados para imagen ---
+  // Estados para imagen y comentarios
   const [nuevoComentario, setNuevoComentario] = useState("");
   const [imagenSeleccionada, setImagenSeleccionada] = useState(null);
   const [mostrarInput, setMostrarInput] = useState(false);
@@ -32,6 +32,7 @@ export default function DetalleOT() {
 
   const rolNormalizado = (usuario.rol || usuario.rol_nombre || "").toLowerCase().trim();
   const isAdmin = rolNormalizado === 'admin' || rolNormalizado === 'administrador';
+  const isCliente = usuario.rol_id === 2; // Cliente
 
   useEffect(() => {
     async function loadData() {
@@ -58,15 +59,12 @@ export default function DetalleOT() {
   const handleEnviarComentario = async () => {
     if (!nuevoComentario.trim() && !imagenSeleccionada) return;
 
-    // Enviamos texto e imagen al servicio
     const res = await crearComentario(id, userId, nuevoComentario, imagenSeleccionada);
 
     if (res) {
       setNuevoComentario("");
-      setImagenSeleccionada(null); // Limpiar imagen
+      setImagenSeleccionada(null);
       setMostrarInput(false);
-
-      // Recargar comentarios
       const updatedComments = await getComentarios(id);
       setComentarios(updatedComments);
     } else {
@@ -74,7 +72,6 @@ export default function DetalleOT() {
     }
   };
 
-  // --- FUNCIONES DE EDICIÓN ---
   const iniciarEdicion = (comentario) => {
     setEditandoId(comentario.id);
     setTextoEditado(comentario.texto);
@@ -144,7 +141,11 @@ export default function DetalleOT() {
         </div>
 
         <div className="botonera">
-          <button onClick={() => navigate(`/ModificarOT/${ot.id_ot}`)}>Configurar OT</button>
+          {/* BOTÓN CONFIGURAR OT OCULTO PARA CLIENTES */}
+          {!isCliente && (
+            <button onClick={() => navigate(`/ModificarOT/${ot.id_ot}`)}>Configurar OT</button>
+          )}
+          
           <button>Agregar Recursos</button>
           <button onClick={handleExportPDF}>Exportar PDF</button>
         </div>
@@ -211,10 +212,7 @@ export default function DetalleOT() {
                         </div>
                       ) : (
                         <div>
-                          {/* TEXTO */}
                           <div style={{ fontSize: '15px', whiteSpace: 'pre-wrap' }}>{c.texto}</div>
-
-                          {/* IMAGEN (Si existe) */}
                           {c.imagen_url && (
                             <div style={{ marginTop: '10px' }}>
                               <a href={`${BASE_URL}/${c.imagen_url}`} target="_blank" rel="noreferrer">
@@ -243,8 +241,6 @@ export default function DetalleOT() {
                 placeholder="Escribe tu comentario..."
                 style={{ width: '100%', minHeight: '60px', padding: '10px', borderRadius: '6px' }}
               />
-
-              {/* INPUT PARA IMAGEN */}
               <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <label htmlFor="file-upload" style={{ cursor: 'pointer', background: '#ddd', padding: '5px 10px', borderRadius: '5px', fontSize: '13px', display: 'flex', alignItems: 'center' }}>
                   📷 Adjuntar Imagen

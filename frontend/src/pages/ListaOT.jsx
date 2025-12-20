@@ -17,11 +17,14 @@ export default function ListaOT() {
   });
 
   const userStr = localStorage.getItem("usuarioActual");
-  const usuario = userStr ? JSON.parse(userStr) : { nombre: "Sin Usuario", rol: "Invitado", id: 0 };
+  const usuario = userStr ? JSON.parse(userStr) : { nombre: "Sin Usuario", rol: "Invitado", id: 0, rol_id: 0 };
   
+  const isAdmin = usuario.rol_id === 1;
+  const isCliente = usuario.rol_id === 2;
+  const isMantenedor = usuario.rol_id === 3;
+
   const { id } = useParams();
 
-  // Función para cargar datos
   const cargarDatos = async () => {
     try {
       const data = await getOTs(filtros, usuario);
@@ -90,18 +93,27 @@ export default function ListaOT() {
         
         <div className="btn-bar">
           <Link to={`/crearot/${usuario?.id || 0}`} className="btn-opcion">Crear OT</Link>
-          <button className="btn-opcion" onClick={() => exportCSV(filtros, usuario)}>Exportar CSV</button>
           
-          <input 
-            type="file" 
-            id="input-csv" 
-            accept=".csv" 
-            style={{ display: 'none' }} 
-            onChange={handleImportar} 
-          />
-          <label htmlFor="input-csv" className="btn-opcion" style={{cursor: 'pointer', backgroundColor: '#2e7d32'}}>
-            Importar CSV
-          </label>
+          {/* Botón Exportar CSV: Visible para Admin y Mantenedor, NO Cliente */}
+          {!isCliente && (
+            <button className="btn-opcion" onClick={() => exportCSV(filtros, usuario)}>Exportar CSV</button>
+          )}
+          
+          {/* Botón Importar CSV: Solo Visible para Admin (Requiere permisos de rol 1 en backend) */}
+          {isAdmin && (
+            <>
+              <input 
+                type="file" 
+                id="input-csv" 
+                accept=".csv" 
+                style={{ display: 'none' }} 
+                onChange={handleImportar} 
+              />
+              <label htmlFor="input-csv" className="btn-opcion" style={{cursor: 'pointer', backgroundColor: '#2e7d32'}}>
+                Importar CSV
+              </label>
+            </>
+          )}
 
           <Link to="/dashboard" className="btn-opcion">Inicio</Link>
         </div>
@@ -159,9 +171,12 @@ export default function ListaOT() {
                         <Link className="btn-ver" to={`/detalle/${ot.id_ot}`}>
                             Ver
                         </Link>
-                        <button className="btn-eliminar" onClick={() => handleDelete(ot.id_ot)}>
-                            Eliminar
-                        </button>
+                        {/* Botón eliminar (Quizás también quieras ocultarlo para clientes o mantenedores, pero el requerimiento no lo especificó explícitamente, aunque es buena práctica restringirlo si es necesario) */}
+                        {!isCliente && (
+                            <button className="btn-eliminar" onClick={() => handleDelete(ot.id_ot)}>
+                                Eliminar
+                            </button>
+                        )}
                         </td>
                     </tr>
                     ))}

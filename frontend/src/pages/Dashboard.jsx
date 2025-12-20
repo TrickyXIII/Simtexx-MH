@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import NavBar from "../components/NavBar";
 import Footer from "../components/Footer";
 import "./Dashboard.css";
-import { getOTs, getDashboardStats } from "../services/otService"; // Importamos el nuevo servicio
+import { getOTs, getDashboardStats } from "../services/otService"; 
 import { Link } from "react-router-dom";
 
 const Dashboard = () => {
@@ -15,16 +15,19 @@ const Dashboard = () => {
   });
 
   const usuarioString = localStorage.getItem("usuarioActual");
-  const usuario = usuarioString ? JSON.parse(usuarioString) : { nombre: "Invitado", rol: "Invitado", id: 0 };
+  const usuario = usuarioString ? JSON.parse(usuarioString) : { nombre: "Invitado", rol: "Invitado", id: 0, rol_id: 0 };
+  
+  // 2 = Cliente
+  const isCliente = usuario.rol_id === 2;
 
   useEffect(() => {
     async function cargarDatos() {
-      // 1. Cargar Estadísticas
-      const estadisticas = await getDashboardStats(usuario);
+      // 1. Cargar Estadísticas (El backend ahora filtra por cliente_id si es cliente)
+      const estadisticas = await getDashboardStats();
       setStats(estadisticas);
 
       // 2. Cargar Lista Reciente (Limitada a 5)
-      const listaOts = await getOTs({}, usuario);
+      const listaOts = await getOTs({});
       if (Array.isArray(listaOts)) {
         setOts(listaOts.slice(0, 5));
       }
@@ -45,7 +48,8 @@ const Dashboard = () => {
         <div className="cardContainer">
           <Link to={`/crearot/${usuario?.id}`} className="card">Crear OT</Link>
           <Link to={`/listaot/${usuario?.id}`} className="card">Órdenes de Trabajo</Link>
-          <Link to="/GestionUser" className="card">Usuarios</Link>
+          {/* El cliente NO debe ver el botón de Usuarios */}
+          {!isCliente && <Link to="/GestionUser" className="card">Usuarios</Link>}
         </div>
 
         <div className="panel-resumen">
