@@ -1,17 +1,28 @@
 import pg from "pg";
-import "dotenv/config";
+import dotenv from "dotenv";
 
-const { Pool } = pg;
+dotenv.config();
 
-// Detectamos si la URL incluye "localhost" o "127.0.0.1"
-const isLocal = process.env.DATA_BASEURL?.includes("localhost") || process.env.DATA_BASEURL?.includes("127.0.0.1");
+// Detectamos si estamos en producción (Render pone NODE_ENV en 'production')
+const isProduction = process.env.NODE_ENV === "production";
 
-// Configuración dinámica:
-// - Si es local: ssl = false
-// - Si es nube: ssl = { rejectUnauthorized: false }
-const config = {
-  connectionString: process.env.DATA_BASEURL,
-  ssl: isLocal ? false : { rejectUnauthorized: false }
+const connectionConfig = {
+  user: process.env.DB_USER,
+  host: process.env.DB_HOST,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_DATABASE,
+  port: process.env.DB_PORT || 5432,
 };
 
-export const pool = new Pool(config);
+// Si estamos en producción, activamos SSL requerido por Render
+if (isProduction) {
+  connectionConfig.ssl = {
+    rejectUnauthorized: false,
+  };
+}
+
+export const pool = new pg.Pool(connectionConfig);
+
+pool.connect()
+  .then(() => console.log(`✅ Conectado a la BD (${isProduction ? 'Nube' : 'Local'})`))
+  .catch((err) => console.error("❌ Error de conexión a BD", err));

@@ -1,8 +1,8 @@
+// Detecta la URL de la API según el entorno (Local o Nube)
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
 const API_URL = `${BASE_URL}/api/ot`;
 const PDF_URL = `${BASE_URL}/api/pdf`; 
 
-// --- AUXILIAR: HEADERS CON TOKEN ---
 const getAuthHeaders = () => {
   const token = localStorage.getItem("token");
   return {
@@ -11,8 +11,6 @@ const getAuthHeaders = () => {
   };
 };
 
-// --- AUXILIAR: HEADERS PARA BLOB (PDF/CSV) ---
-// (Fetch de blobs no suele llevar Content-Type json en la petición GET, pero sí el token)
 const getAuthHeadersBlob = () => {
   const token = localStorage.getItem("token");
   return {
@@ -20,7 +18,6 @@ const getAuthHeadersBlob = () => {
   };
 };
 
-// --- AUXILIAR BLOB ---
 const downloadBlob = (blob, filename) => {
   const url = window.URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -32,13 +29,12 @@ const downloadBlob = (blob, filename) => {
   window.URL.revokeObjectURL(url);
 };
 
-// --- MANEJO DE ERRORES DE SESIÓN ---
 const handleResponse = async (response) => {
   if (response.status === 401 || response.status === 403) {
     alert("Sesión expirada o inválida. Por favor inicie sesión nuevamente.");
     localStorage.removeItem("token");
     localStorage.removeItem("usuarioActual");
-    window.location.href = "/"; // Redirigir al login
+    window.location.href = "/";
     throw new Error("Sesión expirada");
   }
   if (!response.ok) {
@@ -48,7 +44,6 @@ const handleResponse = async (response) => {
   return response;
 };
 
-// --- ESTADÍSTICAS ---
 export async function getDashboardStats() {
   try {
     const response = await fetch(`${API_URL}/stats`, {
@@ -63,7 +58,6 @@ export async function getDashboardStats() {
   }
 }
 
-// --- OBTENER OTs ---
 export async function getOTs(filtros = {}) {
   const params = new URLSearchParams();
   if (filtros.estado && filtros.estado !== "Todos") params.append("estado", filtros.estado);
@@ -84,7 +78,6 @@ export async function getOTs(filtros = {}) {
   }
 }
 
-// --- CREAR OT ---
 export async function createOT(otData) {
   try {
     const response = await fetch(API_URL, {
@@ -100,7 +93,6 @@ export async function createOT(otData) {
   }
 }
 
-// --- OBTENER POR ID ---
 export async function getOTById(id) {
   try {
     const response = await fetch(`${API_URL}/${id}`, {
@@ -120,7 +112,6 @@ export async function getOTById(id) {
   }
 }
 
-// --- ACTUALIZAR OT ---
 export async function updateOT(id, data) {
   try {
     const response = await fetch(`${API_URL}/${id}`, {
@@ -136,7 +127,6 @@ export async function updateOT(id, data) {
   }
 }
 
-// --- ELIMINAR OT ---
 export async function deleteOTBackend(id) {
   try {
     const response = await fetch(`${API_URL}/${id}`, {
@@ -151,7 +141,6 @@ export async function deleteOTBackend(id) {
   }
 }
 
-// --- EXPORTAR CSV ---
 export async function exportCSV(filtros = {}) {
   const params = new URLSearchParams();
   if (filtros.estado && filtros.estado !== "Todos") params.append("estado", filtros.estado);
@@ -173,7 +162,6 @@ export async function exportCSV(filtros = {}) {
   }
 }
 
-// --- EXPORTAR PDF ---
 export async function exportPDFById(id, codigo) {
   try {
     const response = await fetch(`${PDF_URL}/ot/${id}/export`, {
@@ -189,12 +177,9 @@ export async function exportPDFById(id, codigo) {
   }
 }
 
-// --- IMPORTAR ---
 export async function importCSV(file) {
   const formData = new FormData();
   formData.append("file", file);
-  // Nota: Al enviar FormData, no seteamos Content-Type manualmente, el navegador lo hace.
-  // Pero sí necesitamos el token.
   const token = localStorage.getItem("token");
   
   try {
@@ -217,7 +202,6 @@ export async function importCSV(file) {
   }
 }
 
-// --- COMENTARIOS ---
 export async function getComentarios(otId) {
   try {
     const res = await fetch(`${BASE_URL}/api/comentarios/${otId}`);
@@ -259,10 +243,8 @@ export async function updateComentario(comentarioId, usuarioId, texto) {
   }
 }
 
-// --- HISTORIAL ---
 export async function getHistorial(otId) {
   try {
-    // Si quieres proteger historial también, añade headers aquí
     const res = await fetch(`${BASE_URL}/api/auditorias/${otId}`);
     if (!res.ok) throw new Error("Error cargando historial");
     return await res.json();
