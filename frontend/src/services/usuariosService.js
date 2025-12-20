@@ -2,6 +2,28 @@
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
 const API_URL = `${BASE_URL}/api/usuarios`;
 
+// --- NUEVO: Registro Público ---
+export async function registerPublic(userData) {
+  try {
+    const res = await fetch(`${API_URL}/registro`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(userData),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || "Error al registrarse");
+    }
+    return data;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+}
+
 // --- Selectores ---
 export async function getClientes() {
   const token = localStorage.getItem("token");
@@ -93,8 +115,6 @@ export async function createUser(userData) {
     throw error;
   }
 }
-
-// --- NUEVAS FUNCIONES ---
 
 export async function updateProfile(data) {
   const token = localStorage.getItem("token");

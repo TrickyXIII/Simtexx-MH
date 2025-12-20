@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom"; // IMPORTAMOS LINK
 import Footer from "../components/Footer";
 import "./Login.css";
 
@@ -15,7 +15,6 @@ export default function Login() {
     e.preventDefault();
 
     try {
-      // USAMOS LA VARIABLE BASE_URL AQUÍ
       const res = await fetch(`${BASE_URL}/api/usuarios/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -69,6 +68,15 @@ export default function Login() {
 
           <button type="submit">Iniciar Sesion</button>
         </form>
+
+        {/* --- NUEVO: Enlace a Registro --- */}
+        <div style={{marginTop: '25px', textAlign: 'center', fontSize: '14px', borderTop: '1px solid #eee', paddingTop: '15px'}}>
+            ¿Nuevo en Simtexx? <br/>
+            <Link to="/registro" style={{color: '#007bff', textDecoration: 'none', fontWeight: 'bold'}}>
+                Crear una cuenta
+            </Link>
+        </div>
+
       </div>
       <Footer />
     </>

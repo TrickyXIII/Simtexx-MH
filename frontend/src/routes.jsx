@@ -9,7 +9,8 @@ import CrearUsuario from "./pages/CrearUser";
 import Usuarios from "./pages/GestionUser";
 import ModificarUser from "./pages/ModificarUser";
 import AuditoriaGlobal from "./pages/AuditoriaGlobal";
-import MiPerfil from "./pages/MiPerfil"; // <--- IMPORTAR
+import MiPerfil from "./pages/MiPerfil"; 
+import Registro from "./pages/Registro"; // <--- IMPORTAR
 
 export default function AppRoutes() {
   return (
@@ -17,6 +18,7 @@ export default function AppRoutes() {
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/registro" element={<Registro />} /> {/* <--- NUEVA RUTA */}
         <Route path="/dashboard" element={<Dashboard />} />
         
         {/* Rutas de OT */}
@@ -32,7 +34,7 @@ export default function AppRoutes() {
         
         {/* Perfil y Auditoría */}
         <Route path="/auditoria" element={<AuditoriaGlobal />} />
-        <Route path="/mi-perfil" element={<MiPerfil />} /> {/* <--- NUEVA RUTA */}
+        <Route path="/mi-perfil" element={<MiPerfil />} />
         
       </Routes>
     </BrowserRouter>

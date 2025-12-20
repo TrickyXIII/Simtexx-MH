@@ -6,9 +6,10 @@ import {
   obtenerUsuario,
   editarUsuario,
   desactivarUsuario,
-  activarUsuario,   // <--- IMPORTAR
-  actualizarPerfil, // <--- IMPORTAR
-  loginUsuario
+  activarUsuario,
+  actualizarPerfil,
+  loginUsuario,
+  registrarUsuarioPublico // <--- IMPORTADO
 } from "../controllers/usuarios.controller.js";
 import { verifyToken } from "../middlewares/auth.middleware.js";
 
@@ -51,12 +52,13 @@ router.get("/clientes", verifyToken, async (req, res) => {
 });
 
 /* =======================================
-   RUTA DE LOGIN (PÚBLICA)
+   RUTAS PÚBLICAS (Login y Registro)
    ======================================= */
 router.post("/login", loginUsuario);
+router.post("/registro", registrarUsuarioPublico); // <--- NUEVA RUTA PÚBLICA
 
 /* =======================================
-   RUTAS NUEVAS (Perfil y Activación)
+   RUTAS PROTEGIDAS (Requieren Login)
    ======================================= */
 
 // Actualizar mi propio perfil (Cualquier rol)
@@ -65,11 +67,7 @@ router.put("/perfil", verifyToken, actualizarPerfil);
 // Activar usuario (Solo admin)
 router.patch("/:id/activar", verifyToken, activarUsuario);
 
-/* =======================================
-   RUTAS CRUD DE USUARIOS (Protegidas)
-   ======================================= */
-
-// Crear usuario
+// Crear usuario (Admin)
 router.post("/", verifyToken, crearUsuario);
 
 // Listar todos los usuarios

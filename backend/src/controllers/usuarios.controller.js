@@ -15,19 +15,72 @@ function validarPassword(password) {
 }
 
 /**
+ * NUEVO: Registro público de usuarios (Rol Cliente por defecto)
+ */
+export async function registrarUsuarioPublico(req, res) {
+  try {
+    const { nombre, correo, password, confirmarPassword } = req.body;
+
+    // 1. Validaciones básicas
+    if (!nombre || !correo || !password || !confirmarPassword) {
+      return res.status(400).json({ error: "Todos los campos son obligatorios" });
+    }
+
+    if (password !== confirmarPassword) {
+      return res.status(400).json({ error: "Las contraseñas no coinciden" });
+    }
+
+    const errorPass = validarPassword(password);
+    if (errorPass) {
+      return res.status(400).json({ error: errorPass });
+    }
+
+    // 2. Verificar si el correo ya existe
+    const existe = await pool.query("SELECT 1 FROM usuarios WHERE correo = $1", [correo]);
+    if (existe.rows.length) {
+      return res.status(409).json({ error: "El correo ya está registrado" });
+    }
+
+    // 3. Hashear password
+    const password_hash = await bcrypt.hash(password, 10);
+
+    // 4. Insertar usuario (FORZANDO ROL_ID = 2 para Cliente)
+    const result = await pool.query(
+      `INSERT INTO usuarios (nombre, correo, password_hash, rol_id, activo)
+       VALUES ($1, $2, $3, 2, TRUE) 
+       RETURNING id_usuarios, nombre, correo`,
+      [nombre, correo, password_hash]
+    );
+
+    const nuevoUsuario = result.rows[0];
+
+    // Auditoría
+    await pool.query(
+      `INSERT INTO auditorias (usuario_id, ot_id, accion, descripcion, ip_address)
+       VALUES ($1, NULL, 'REGISTRO_PUBLICO', $2, $3)`,
+      [nuevoUsuario.id_usuarios, `Usuario ${nuevoUsuario.nombre} se registró como Cliente`, req.ip || req.connection.remoteAddress]
+    );
+
+    res.status(201).json({ message: "Usuario registrado correctamente", usuario: nuevoUsuario });
+
+  } catch (error) {
+    console.error("registrarUsuarioPublico:", error);
+    res.status(500).json({ error: "Error interno al registrar usuario" });
+  }
+}
+
+/**
  * ACTUALIZAR PERFIL PROPIO (Cualquier usuario logueado)
- * No permite cambiar el rol.
  */
 export async function actualizarPerfil(req, res) {
   try {
-    const idUsuario = req.user.id; // ID del token
+    const idUsuario = req.user.id;
     const { nombre, correo, password, confirmarPassword } = req.body;
 
     if (!nombre || !correo) {
       return res.status(400).json({ error: "Nombre y correo son obligatorios" });
     }
 
-    // Validar unicidad de correo (excluyendo al propio usuario)
     const existe = await pool.query(
       "SELECT 1 FROM usuarios WHERE correo = $1 AND id_usuarios <> $2", 
       [correo, idUsuario]
@@ -40,7 +93,6 @@ export async function actualizarPerfil(req, res) {
     let values = [nombre, correo];
     let counter = 3;
 
-    // Si envía contraseña, la validamos y hasheamos
     if (password) {
       if (password !== confirmarPassword) {
         return res.status(400).json({ error: "Las contraseñas no coinciden." });
@@ -60,7 +112,6 @@ export async function actualizarPerfil(req, res) {
     const result = await pool.query(query, values);
     const usuarioActualizado = result.rows[0];
 
-    // Auditoría
     await pool.query(
       `INSERT INTO auditorias (usuario_id, ot_id, accion, descripcion, ip_address)
        VALUES ($1, NULL, 'EDITAR_PERFIL', $2, $3)`,
@@ -106,21 +157,16 @@ export async function activarUsuario(req, res) {
 }
 
 /**
- * MODIFICADO: Editar usuario (Admin)
- * Agregamos validación para que el Admin no se quite su propio rol.
+ * EDITAR USUARIO (Admin)
  */
 export async function editarUsuario(req, res) {
   try {
     const { id } = req.params;
     const { nombre, correo, rol_id } = req.body;
 
-    // --- VALIDACIÓN DE SEGURIDAD ---
-    // Si el usuario logueado (req.user.id) es el mismo que se edita (id)
-    // y está intentando cambiar su rol (rol_id != 1)
     if (parseInt(id) === req.user.id && parseInt(rol_id) !== 1) {
       return res.status(403).json({ error: "No puedes quitarte el rol de Administrador a ti mismo." });
     }
-    // -------------------------------
 
     if (!nombre || !correo || !rol_id) {
       return res.status(400).json({ error: "Faltan campos obligatorios" });
@@ -157,7 +203,7 @@ export async function editarUsuario(req, res) {
 }
 
 /**
- * Crear usuario (Admin)
+ * CREAR USUARIO (Admin)
  */
 export async function crearUsuario(req, res) {
   try {
@@ -201,7 +247,7 @@ export async function crearUsuario(req, res) {
 }
 
 /**
- * Listar usuarios (Admin)
+ * LISTAR USUARIOS
  */
 export async function listarUsuarios(req, res) {
   try {
@@ -219,7 +265,7 @@ export async function listarUsuarios(req, res) {
 }
 
 /**
- * Obtener usuario por id
+ * OBTENER USUARIO
  */
 export async function obtenerUsuario(req, res) {
   try {
@@ -237,7 +283,7 @@ export async function obtenerUsuario(req, res) {
 }
 
 /**
- * Desactivar (soft delete) usuario (Admin)
+ * DESACTIVAR USUARIO
  */
 export async function desactivarUsuario(req, res) {
   try {
