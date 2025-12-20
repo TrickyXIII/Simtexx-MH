@@ -48,7 +48,8 @@ export const getDashboardStats = async (req, res) => {
 export const getOTs = async (req, res) => {
   try {
     const { busqueda, estado, fechaInicio, fechaFin } = req.query;
-    const { rol, id } = req.user || {};
+    // Extraemos también rol_id del token
+    const { rol, id, rol_id } = req.user || {}; 
     const userid = id;
     const userRole = rol ? rol.toLowerCase() : "";
 
@@ -59,24 +60,35 @@ export const getOTs = async (req, res) => {
       LEFT JOIN usuarios uc ON o.cliente_id = uc.id_usuarios
       WHERE o.activo = TRUE 
     `; 
-    // Nota: Agregué "o.activo = TRUE" para no mostrar las eliminadas (soft delete)
     
     const values = [];
     let counter = 1;
 
-    if (userRole !== 'admin' && userRole !== 'administrador' && userid) {
+    // --- INICIO CORRECCIÓN ---
+    // Lógica diferenciada por Rol ID:
+    // 1 = Admin, 2 = Cliente, 3 = Mantenedor
+
+    if (rol_id === 2) {
+      // Si es CLIENTE: Filtramos por la columna cliente_id
+      query += ` AND o.cliente_id = $${counter}`;
+      values.push(userid);
+      counter++;
+    } else if (rol_id === 3) {
+      // Si es MANTENEDOR: Filtramos por la columna responsable_id
+      query += ` AND o.responsable_id = $${counter}`;
+      values.push(userid);
+      counter++;
+    } else if (userRole !== 'admin' && userRole !== 'administrador') {
+      // Fallback de seguridad: Si no es admin y no cayó en los anteriores,
+      // asumimos que es un técnico o rol restringido.
       query += ` AND o.responsable_id = $${counter}`;
       values.push(userid);
       counter++;
     }
+    // Si es Admin (rol_id 1), no entra en ninguno y ve todo.
+    // --- FIN CORRECCIÓN ---
     
-    // Seguridad extra: Si es cliente, ver solo las suyas
-    if (req.user && req.user.rol_id === 2) {
-       query += ` AND o.cliente_id = $${counter}`;
-       values.push(req.user.id);
-       counter++;
-    }
-    
+    // Filtros adicionales (Estado, Búsqueda, Fechas)
     if (estado && estado !== "Todos") {
       query += ` AND o.estado = $${counter}`;
       values.push(estado);
