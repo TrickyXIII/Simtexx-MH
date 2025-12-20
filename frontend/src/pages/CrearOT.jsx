@@ -1,44 +1,49 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { createOT } from "../services/otService";
 import { getClientes, getMantenedores } from "../services/usuariosService";
-import Footer from "../components/Footer";
 import NavBar from "../components/NavBar";
+import Footer from "../components/Footer";
 import "./CrearOT.css";
-import { useNavigate } from "react-router-dom";
 
 export default function CrearOT() {
   const navigate = useNavigate();
   
-  // Estados para selectores
-  const [clientes, setClientes] = useState([]);
-  const [responsables, setResponsables] = useState([]);
+  // 1. Detectar Rol
+  const usuarioActual = JSON.parse(localStorage.getItem("usuarioActual") || "{}");
+  const isCliente = usuarioActual.rol_id === 2; // 2 = Cliente
 
-  // Estado del formulario
+  // 2. Estado Inicial (Si es cliente, pre-rellenamos datos)
   const [form, setForm] = useState({
     titulo: "",
     descripcion: "",
+    fecha_inicio: isCliente ? new Date().toISOString().split('T')[0] : "",
+    fecha_fin: "",
     estado: "Pendiente",
-    cliente_id: "",
-    responsable_id: "",
-    fecha_inicio_contrato: "",
-    fecha_fin_contrato: "",
-    activo: true
+    cliente_id: isCliente ? usuarioActual.id : "", 
+    responsable_id: ""
   });
 
-  // Cargar listas de usuarios al iniciar
+  // Listas (solo para Admin)
+  const [clientes, setClientes] = useState([]);
+  const [mantenedores, setMantenedores] = useState([]);
+
   useEffect(() => {
-    async function loadData() {
-      try {
-        const c = await getClientes();
-        const r = await getMantenedores();
-        setClientes(c);
-        setResponsables(r);
-      } catch (error) {
-        console.error("Error cargando usuarios:", error);
+    // Si NO es cliente, cargamos las listas para que el Admin elija
+    if (!isCliente) {
+      async function loadData() {
+        try {
+          const c = await getClientes();
+          const m = await getMantenedores();
+          setClientes(c.usuarios || []); 
+          setMantenedores(m.usuarios || []);
+        } catch (e) {
+          console.error("Error cargando listas", e);
+        }
       }
+      loadData();
     }
-    loadData();
-  }, []);
+  }, [isCliente]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -47,63 +52,137 @@ export default function CrearOT() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await createOT(form);
-      if (res) {
-        alert("OT creada exitosamente ✔");
-        navigate("/dashboard");
-      } else {
-        alert("Error al crear la OT");
-      }
+      await createOT({
+        titulo: form.titulo,
+        descripcion: form.descripcion,
+        // Lógica de Envío:
+        // Si es cliente -> Forzamos "Pendiente" y Fecha Hoy. Responsable y Fin van nulos.
+        // Si es admin -> Enviamos lo que haya elegido en el form.
+        estado: isCliente ? "Pendiente" : form.estado,
+        fecha_inicio_contrato: isCliente ? new Date() : form.fecha_inicio,
+        fecha_fin_contrato: isCliente ? null : form.fecha_fin,
+        cliente_id: isCliente ? usuarioActual.id : parseInt(form.cliente_id),
+        responsable_id: isCliente ? null : (form.responsable_id ? parseInt(form.responsable_id) : null)
+      });
+      alert("OT creada exitosamente");
+      navigate("/dashboard");
     } catch (error) {
-      console.error(error);
-      alert("Error de conexión");
+      alert("Error: " + error.message);
     }
   };
 
   return (
     <>
       <NavBar />
-      <div className="container-crearot">
-        <h2>Crear Orden de Trabajo</h2>
-        <form className="form-box" onSubmit={handleSubmit}>
+      <div className="crear-ot-container">
+        <h2>Crear Nueva Orden de Trabajo</h2>
+        <form onSubmit={handleSubmit} className="crear-ot-form">
           
           <label>Título</label>
-          <input name="titulo" value={form.titulo} onChange={handleChange} required />
+          <input
+            name="titulo"
+            value={form.titulo}
+            onChange={handleChange}
+            required
+            placeholder="Ej: Revisión de equipos"
+          />
 
           <label>Descripción</label>
-          <textarea name="descripcion" value={form.descripcion} onChange={handleChange} required />
+          <textarea
+            name="descripcion"
+            value={form.descripcion}
+            onChange={handleChange}
+            required
+            placeholder="Detalles del trabajo a realizar..."
+          />
 
-          <label>Estado</label>
-          <select name="estado" value={form.estado} onChange={handleChange}>
-            <option value="Pendiente">Pendiente</option>
-            <option value="En Proceso">En Proceso</option>
-            <option value="Finalizada">Finalizada</option>
-          </select>
+          {/* SECCIÓN SOLO PARA ADMIN / MANTENEDOR */}
+          {!isCliente && (
+            <>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Fecha Inicio</label>
+                  <input
+                    type="date"
+                    name="fecha_inicio"
+                    value={form.fecha_inicio}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Fecha Fin (Estimada)</label>
+                  <input
+                    type="date"
+                    name="fecha_fin"
+                    value={form.fecha_fin}
+                    onChange={handleChange}
+                  />
+                </div>
+              </div>
 
-          <label>Cliente</label>
-          <select name="cliente_id" value={form.cliente_id} onChange={handleChange} required>
-            <option value="">Seleccione Cliente</option>
-            {clientes.map(c => (
-              <option key={c.id_usuarios} value={c.id_usuarios}>{c.nombre}</option>
-            ))}
-          </select>
+              <label>Estado</label>
+              <select name="estado" value={form.estado} onChange={handleChange}>
+                <option value="Pendiente">Pendiente</option>
+                <option value="En Proceso">En Proceso</option>
+                <option value="Finalizada">Finalizada</option>
+              </select>
 
-          <label>Responsable</label>
-          <select name="responsable_id" value={form.responsable_id} onChange={handleChange} required>
-            <option value="">Seleccione Responsable</option>
-            {responsables.map(r => (
-              <option key={r.id_usuarios} value={r.id_usuarios}>{r.nombre}</option>
-            ))}
-          </select>
+              <label>Cliente</label>
+              <select 
+                name="cliente_id" 
+                value={form.cliente_id} 
+                onChange={handleChange}
+                required
+              >
+                <option value="">Seleccionar Cliente</option>
+                {clientes.map((c) => (
+                  <option key={c.id_usuarios} value={c.id_usuarios}>
+                    {c.nombre}
+                  </option>
+                ))}
+              </select>
 
-          <label>Fecha Inicio</label>
-          <input type="date" name="fecha_inicio_contrato" value={form.fecha_inicio_contrato} onChange={handleChange} required />
+              <label>Responsable (Técnico)</label>
+              <select 
+                name="responsable_id" 
+                value={form.responsable_id} 
+                onChange={handleChange}
+              >
+                <option value="">Sin asignar</option>
+                {mantenedores.map((m) => (
+                  <option key={m.id_usuarios} value={m.id_usuarios}>
+                    {m.nombre}
+                  </option>
+                ))}
+              </select>
+            </>
+          )}
 
-          <label>Fecha Fin</label>
-          <input type="date" name="fecha_fin_contrato" value={form.fecha_fin_contrato} onChange={handleChange} required />
+          {/* MENSAJE PARA EL CLIENTE */}
+          {isCliente && (
+            <div style={{
+              background: "#e3f2fd", 
+              padding: "15px", 
+              borderRadius: "8px", 
+              marginBottom: "20px", 
+              fontSize: "0.95em",
+              color: "#0277bd",
+              border: "1px solid #b3e5fc"
+            }}>
+              <p style={{margin: 0}}>
+                <strong>ℹ️ Información:</strong> Su solicitud se creará con estado <em>"Pendiente"</em>. 
+                Nuestro equipo administrativo asignará un responsable y la fecha de término a la brevedad.
+              </p>
+            </div>
+          )}
 
-          <button className="btn-rojo" type="submit">Crear OT</button>
-          <button className="btn-cancelar" type="button" onClick={() => navigate(-1)}>Cancelar</button>
+          <div className="form-actions">
+            <button type="submit" className="btn-save">Guardar OT</button>
+            <button type="button" className="btn-cancel" onClick={() => navigate("/dashboard")}>
+              Cancelar
+            </button>
+          </div>
         </form>
       </div>
       <Footer />
