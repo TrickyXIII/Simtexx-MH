@@ -3,14 +3,16 @@ const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
 const API_URL = `${BASE_URL}/api/ot`;
 const PDF_URL = `${BASE_URL}/api/pdf`; 
 
+// --- HELPER: HEADERS CON TOKEN ---
 const getAuthHeaders = () => {
   const token = localStorage.getItem("token");
   return {
     "Content-Type": "application/json",
-    "Authorization": `Bearer ${token}`
+    "Authorization": `Bearer ${token}` // <--- La clave para que funcione
   };
 };
 
+// --- HELPER: HEADERS PARA ARCHIVOS (PDF/CSV) ---
 const getAuthHeadersBlob = () => {
   const token = localStorage.getItem("token");
   return {
@@ -18,6 +20,7 @@ const getAuthHeadersBlob = () => {
   };
 };
 
+// --- HELPER: DESCARGA DE BLOBS ---
 const downloadBlob = (blob, filename) => {
   const url = window.URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -29,6 +32,7 @@ const downloadBlob = (blob, filename) => {
   window.URL.revokeObjectURL(url);
 };
 
+// --- MANEJO DE ERRORES ---
 const handleResponse = async (response) => {
   if (response.status === 401 || response.status === 403) {
     alert("Sesión expirada o inválida. Por favor inicie sesión nuevamente.");
@@ -44,6 +48,7 @@ const handleResponse = async (response) => {
   return response;
 };
 
+// --- ESTADÍSTICAS ---
 export async function getDashboardStats() {
   try {
     const response = await fetch(`${API_URL}/stats`, {
@@ -58,6 +63,7 @@ export async function getDashboardStats() {
   }
 }
 
+// --- OBTENER OTs ---
 export async function getOTs(filtros = {}) {
   const params = new URLSearchParams();
   if (filtros.estado && filtros.estado !== "Todos") params.append("estado", filtros.estado);
@@ -78,6 +84,7 @@ export async function getOTs(filtros = {}) {
   }
 }
 
+// --- CREAR OT ---
 export async function createOT(otData) {
   try {
     const response = await fetch(API_URL, {
@@ -93,6 +100,7 @@ export async function createOT(otData) {
   }
 }
 
+// --- OBTENER POR ID ---
 export async function getOTById(id) {
   try {
     const response = await fetch(`${API_URL}/${id}`, {
@@ -112,6 +120,7 @@ export async function getOTById(id) {
   }
 }
 
+// --- ACTUALIZAR OT ---
 export async function updateOT(id, data) {
   try {
     const response = await fetch(`${API_URL}/${id}`, {
@@ -127,6 +136,7 @@ export async function updateOT(id, data) {
   }
 }
 
+// --- ELIMINAR OT ---
 export async function deleteOTBackend(id) {
   try {
     const response = await fetch(`${API_URL}/${id}`, {
@@ -141,6 +151,7 @@ export async function deleteOTBackend(id) {
   }
 }
 
+// --- EXPORTAR CSV ---
 export async function exportCSV(filtros = {}) {
   const params = new URLSearchParams();
   if (filtros.estado && filtros.estado !== "Todos") params.append("estado", filtros.estado);
@@ -162,6 +173,7 @@ export async function exportCSV(filtros = {}) {
   }
 }
 
+// --- EXPORTAR PDF ---
 export async function exportPDFById(id, codigo) {
   try {
     const response = await fetch(`${PDF_URL}/ot/${id}/export`, {
@@ -177,6 +189,7 @@ export async function exportPDFById(id, codigo) {
   }
 }
 
+// --- IMPORTAR CSV ---
 export async function importCSV(file) {
   const formData = new FormData();
   formData.append("file", file);
@@ -202,9 +215,13 @@ export async function importCSV(file) {
   }
 }
 
+// --- SECCIÓN COMENTARIOS (Corregida) ---
 export async function getComentarios(otId) {
   try {
-    const res = await fetch(`${BASE_URL}/api/comentarios/${otId}`);
+    // AHORA SÍ: headers con token
+    const res = await fetch(`${BASE_URL}/api/comentarios/${otId}`, {
+        headers: getAuthHeaders() 
+    });
     if (!res.ok) throw new Error("Error cargando comentarios");
     return await res.json();
   } catch (error) {
@@ -215,9 +232,10 @@ export async function getComentarios(otId) {
 
 export async function crearComentario(otId, usuarioId, texto) {
   try {
+    // AHORA SÍ: headers con token (getAuthHeaders incluye content-type y auth)
     const res = await fetch(`${BASE_URL}/api/comentarios`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: getAuthHeaders(), 
       body: JSON.stringify({ ot_id: otId, usuarios_id: usuarioId, texto }),
     });
     if (!res.ok) throw new Error("Error guardando comentario");
@@ -230,9 +248,10 @@ export async function crearComentario(otId, usuarioId, texto) {
 
 export async function updateComentario(comentarioId, usuarioId, texto) {
   try {
+    // AHORA SÍ: headers con token
     const res = await fetch(`${BASE_URL}/api/comentarios/${comentarioId}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: getAuthHeaders(),
       body: JSON.stringify({ usuarios_id: usuarioId, texto }),
     });
     if (!res.ok) throw new Error("Error editando comentario");
@@ -243,9 +262,13 @@ export async function updateComentario(comentarioId, usuarioId, texto) {
   }
 }
 
+// --- HISTORIAL ---
 export async function getHistorial(otId) {
   try {
-    const res = await fetch(`${BASE_URL}/api/auditorias/${otId}`);
+    // AHORA SÍ: headers con token
+    const res = await fetch(`${BASE_URL}/api/auditorias/${otId}`, {
+        headers: getAuthHeaders()
+    });
     if (!res.ok) throw new Error("Error cargando historial");
     return await res.json();
   } catch (error) {
