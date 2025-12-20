@@ -1,26 +1,22 @@
 // Detecta la URL de la API según el entorno
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
 const API_URL = `${BASE_URL}/api/ot`;
-const PDF_URL = `${BASE_URL}/api/pdf`;
+const PDF_URL = `${BASE_URL}/api/pdf`; 
 
 // --- HELPER: HEADERS CON TOKEN ---
 const getAuthHeaders = () => {
   const token = localStorage.getItem("token");
   return {
     "Content-Type": "application/json",
-    "Authorization": `Bearer ${token}`
+    "Authorization": `Bearer ${token}` 
   };
 };
 
-// --- HELPER: HEADERS PARA ARCHIVOS (PDF/CSV) ---
 const getAuthHeadersBlob = () => {
   const token = localStorage.getItem("token");
-  return {
-    "Authorization": `Bearer ${token}`
-  };
+  return { "Authorization": `Bearer ${token}` };
 };
 
-// --- HELPER: DESCARGA DE BLOBS ---
 const downloadBlob = (blob, filename) => {
   const url = window.URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -32,7 +28,6 @@ const downloadBlob = (blob, filename) => {
   window.URL.revokeObjectURL(url);
 };
 
-// --- MANEJO DE ERRORES ---
 const handleResponse = async (response) => {
   if (response.status === 401 || response.status === 403) {
     alert("Sesión expirada o inválida. Por favor inicie sesión nuevamente.");
@@ -107,7 +102,6 @@ export async function getOTById(id) {
       method: "GET",
       headers: getAuthHeaders()
     });
-
     if (response.status === 403) {
       alert("Acceso Denegado: No tienes permiso para ver esta OT.");
       return null;
@@ -161,8 +155,8 @@ export async function exportCSV(filtros = {}) {
 
   try {
     const response = await fetch(`${API_URL}/export/csv?${params.toString()}`, {
-      method: 'GET',
-      headers: getAuthHeadersBlob()
+        method: 'GET',
+        headers: getAuthHeadersBlob()
     });
     if (!response.ok) throw new Error("Error al exportar CSV");
     const blob = await response.blob();
@@ -177,8 +171,8 @@ export async function exportCSV(filtros = {}) {
 export async function exportPDFById(id, codigo) {
   try {
     const response = await fetch(`${PDF_URL}/ot/${id}/export`, {
-      method: 'GET',
-      headers: getAuthHeadersBlob()
+        method: 'GET',
+        headers: getAuthHeadersBlob()
     });
     if (!response.ok) throw new Error("Error al exportar PDF");
     const blob = await response.blob();
@@ -194,7 +188,7 @@ export async function importCSV(file) {
   const formData = new FormData();
   formData.append("file", file);
   const token = localStorage.getItem("token");
-
+  
   try {
     const response = await fetch(`${API_URL}/import/csv`, {
       method: "POST",
@@ -203,10 +197,9 @@ export async function importCSV(file) {
       },
       body: formData,
     });
-
     if (!response.ok) {
-      const err = await response.json();
-      throw new Error(err.error || "Error en la subida");
+        const err = await response.json();
+        throw new Error(err.error || "Error en la subida");
     }
     return await response.json();
   } catch (error) {
@@ -215,12 +208,11 @@ export async function importCSV(file) {
   }
 }
 
-// --- SECCIÓN COMENTARIOS ---
-
+// --- COMENTARIOS ---
 export async function getComentarios(otId) {
   try {
     const res = await fetch(`${BASE_URL}/api/comentarios/${otId}`, {
-      headers: getAuthHeaders()
+        headers: getAuthHeaders() 
     });
     if (!res.ok) throw new Error("Error cargando comentarios");
     return await res.json();
@@ -230,14 +222,11 @@ export async function getComentarios(otId) {
   }
 }
 
-// --- MODIFICADO: Soporte para imagen ---
 export async function crearComentario(otId, usuarioId, texto, archivoImagen) {
   const token = localStorage.getItem("token");
   const formData = new FormData();
-
   formData.append("ot_id", otId);
   formData.append("texto", texto);
-
   if (archivoImagen) {
     formData.append("imagen", archivoImagen);
   }
@@ -246,8 +235,7 @@ export async function crearComentario(otId, usuarioId, texto, archivoImagen) {
     const res = await fetch(`${BASE_URL}/api/comentarios`, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${token}`
-        // IMPORTANTE: No Content-Type, fetch lo pone
+        "Authorization": `Bearer ${token}` 
       },
       body: formData,
     });
@@ -278,10 +266,31 @@ export async function updateComentario(comentarioId, usuarioId, texto) {
 export async function getHistorial(otId) {
   try {
     const res = await fetch(`${BASE_URL}/api/auditorias/${otId}`, {
-      headers: getAuthHeaders()
+        headers: getAuthHeaders()
     });
     if (!res.ok) throw new Error("Error cargando historial");
     return await res.json();
+  } catch (error) {
+    console.error(error);
+    return [];
+  }
+}
+
+// --- NUEVO: AUDITORÍA GLOBAL (Solo Admin) ---
+export async function getAuditoriaGlobal() {
+  try {
+    const response = await fetch(`${BASE_URL}/api/auditorias`, {
+      method: "GET",
+      headers: getAuthHeaders(),
+    });
+    
+    if (response.status === 403) {
+      alert("Acceso Denegado. Solo Administradores.");
+      return [];
+    }
+    
+    if (!response.ok) throw new Error("Error fetching logs");
+    return await response.json();
   } catch (error) {
     console.error(error);
     return [];

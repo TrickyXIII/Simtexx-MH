@@ -7,7 +7,8 @@ import DetalleOT from "./pages/DetalleOT";
 import ModificarOT from "./pages/ModificarOT";
 import CrearUsuario from "./pages/CrearUser";
 import Usuarios from "./pages/GestionUser";
-import ModificarUser from "./pages/ModificarUser"; // <--- Importamos la nueva página
+import ModificarUser from "./pages/ModificarUser";
+import AuditoriaGlobal from "./pages/AuditoriaGlobal"; // <--- IMPORTAR
 
 export default function AppRoutes() {
   return (
@@ -26,7 +27,10 @@ export default function AppRoutes() {
         {/* Rutas de Usuarios */}
         <Route path="/CrearUser/" element={<CrearUsuario />} />
         <Route path="/GestionUser/" element={<Usuarios />} />
-        <Route path="/ModificarUser/:id" element={<ModificarUser />} /> {/* <--- Nueva Ruta Agregada */}
+        <Route path="/ModificarUser/:id" element={<ModificarUser />} />
+        
+        {/* Ruta de Auditoría */}
+        <Route path="/auditoria" element={<AuditoriaGlobal />} /> {/* <--- NUEVA RUTA */}
         
       </Routes>
     </BrowserRouter>
