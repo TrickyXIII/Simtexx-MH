@@ -23,3 +23,7 @@ logs
 # Archivos del sistema operativo (Basura)
 .DS_Store
 Thumbs.db
+
+seed.js
+init-db.js
+reparar-admin.js

@@ -2,9 +2,13 @@
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
 const API_URL = `${BASE_URL}/api/usuarios`;
 
+// --- CORRECCIÓN AQUÍ: Agregamos el Token a getClientes ---
 export async function getClientes() {
+  const token = localStorage.getItem("token");
   try {
-    const res = await fetch(`${API_URL}/clientes`); // NO requiere token (según rutas actuales) o ajusta si lo protegiste
+    const res = await fetch(`${API_URL}/clientes`, {
+        headers: { "Authorization": `Bearer ${token}` } 
+    });
     if (!res.ok) throw new Error("Error cargando clientes");
     return await res.json();
   } catch (error) {
@@ -14,7 +18,7 @@ export async function getClientes() {
 }
 
 export async function getMantenedores() {
-  const token = localStorage.getItem("token"); // Si protegiste esta ruta en backend, envía token
+  const token = localStorage.getItem("token");
   try {
     const res = await fetch(`${API_URL}/mantenedores`, {
         headers: { "Authorization": `Bearer ${token}` } 
