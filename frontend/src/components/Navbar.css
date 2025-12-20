@@ -1,60 +1,70 @@
 /* Estilos generales de la barra */
 .navbar {
   display: flex;
-  justify-content: space-between; /* Separa izquierda y derecha al máximo */
-  align-items: center; /* Centra verticalmente todos los elementos */
-  background-color: #000; /* Fondo negro (o tu color corporativo) */
+  justify-content: space-between;
+  align-items: center;
+  background-color: white;
+  width: 100%;
   padding: 0 20px;
-  height: 60px; /* Altura fija para evitar desbordes */
-  color: white;
+  height: 60px;
+  color: black;
   box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-  position: sticky; /* Opcional: para que se quede fija arriba */
+  position: sticky;
   top: 0;
   z-index: 1000;
 }
 
-/* Sección Izquierda (Logo + Enlaces) */
+/* Sección Izquierda */
 .nav-left {
   display: flex;
-  align-items: center; /* Alinea logo y textos verticalmente */
-  gap: 20px; /* Espacio uniforme entre logo, inicio y auditoría */
+  align-items: center;
+  gap: 15px;
 }
 
 .logo {
-  height: 40px; /* Ajusta la altura del logo */
+  height: 40px;
   width: auto;
   cursor: pointer;
   object-fit: contain;
 }
 
-/* Enlaces del menú (Inicio, Auditoría) */
+/* ESTILO BASE PARA TODOS LOS BOTONES/ENLACES */
 .nav-link {
-  color: white;
   text-decoration: none;
   font-weight: 600;
-  font-size: 16px;
-  transition: color 0.3s ease;
-  padding: 5px 10px;
-  border-radius: 4px;
+  font-size: 15px;
+  padding: 8px 16px;       /* Más relleno para parecer botón */
+  border-radius: 6px;      /* Bordes redondeados */
+  transition: all 0.3s ease;
+  display: inline-block;
+}
+
+/* Botón "Inicio" (Estilo normal) */
+.nav-link {
+  color: #ffffff; /* Letra blanca */
 }
 
 .nav-link:hover {
-  color: #ccc;
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.25); /* Más claro al pasar el mouse */
+  transform: translateY(-1px); /* Pequeño efecto de elevación */
 }
 
-/* Estilo especial para el botón de Auditoría */
+/* Botón "Auditoría" (Estilo Destacado/Relleno) */
 .nav-link-audit {
-  color: #ffeb3b; /* Amarillo */
-  border: 1px solid #ffeb3b;
+  background-color: #ffca28; /* Amarillo relleno (Amber 400) */
+  color: #000000;            /* Letra negra para máximo contraste */
+  border: none;              /* Sin borde, solo relleno */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
 .nav-link-audit:hover {
-  background-color: rgba(255, 235, 59, 0.1);
-  color: #fff;
+  background-color: #ffc107; /* Amarillo un poco más oscuro al hover */
+  color: #000;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+  transform: translateY(-1px);
 }
 
-/* Sección Derecha (Usuario + Logout) */
+/* Sección Derecha */
 .nav-right {
   display: flex;
   align-items: center;
@@ -64,20 +74,21 @@
 .user-name {
   font-size: 14px;
   font-weight: 500;
-  color: #eee;
+  color: #ecf0f1; /* Blanco grisáceo */
 }
 
 .btn-logout {
-  background-color: #d32f2f;
+  background-color: #c0392b; /* Rojo sólido */
   color: white;
   border: none;
-  padding: 8px 12px;
-  border-radius: 4px;
+  padding: 8px 16px;
+  border-radius: 6px;
   cursor: pointer;
   font-size: 14px;
+  font-weight: 600;
   transition: background 0.3s;
 }
 
 .btn-logout:hover {
-  background-color: #b71c1c;
+  background-color: #a93226;
 }
