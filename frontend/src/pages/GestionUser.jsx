@@ -3,20 +3,22 @@ import { useNavigate } from "react-router-dom";
 import NavBar from "../components/NavBar";
 import Footer from "../components/Footer";
 
+// Definimos la URL correcta (Local o Nube)
+const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
+
 export default function Usuarios() {
   const navigate = useNavigate();
   const [usuarios, setUsuarios] = useState([]);
 
-  // Cargar usuarios desde el Backend
   useEffect(() => {
     cargarUsuarios();
   }, []);
 
   const cargarUsuarios = async () => {
-    // Recuperamos el token para la petición (Si implementaste la seguridad JWT)
     const token = localStorage.getItem("token");
     try {
-      const res = await fetch("http://localhost:4000/api/usuarios", {
+      // USAMOS BASE_URL
+      const res = await fetch(`${BASE_URL}/api/usuarios`, {
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}` 
@@ -32,13 +34,13 @@ export default function Usuarios() {
     }
   };
 
-  // Función para desactivar usuario
   async function desactivarUsuario(id) {
     if (!confirm("¿Seguro que deseas desactivar este usuario?")) return;
 
     const token = localStorage.getItem("token");
     try {
-      const res = await fetch(`http://localhost:4000/api/usuarios/${id}/desactivar`, {
+      // USAMOS BASE_URL
+      const res = await fetch(`${BASE_URL}/api/usuarios/${id}/desactivar`, {
         method: "PATCH",
         headers: {
           "Authorization": `Bearer ${token}`
@@ -47,7 +49,7 @@ export default function Usuarios() {
 
       if (res.ok) {
         alert("Usuario desactivado correctamente");
-        cargarUsuarios(); // Recargar la tabla
+        cargarUsuarios(); 
       } else {
         alert("No se pudo desactivar el usuario");
       }
@@ -62,7 +64,6 @@ export default function Usuarios() {
       <NavBar />
       <div style={{ maxWidth: "1000px", margin: "80px auto", padding: "20px", minHeight: "calc(100vh - 160px)" }}>
         
-        {/* ENCABEZADO CON BOTÓN VOLVER */}
         <div style={{ 
             display: 'flex', 
             justifyContent: 'center', 
@@ -143,7 +144,6 @@ export default function Usuarios() {
                     </td>
                     <td style={{ padding: "12px", textAlign: "center", display: "flex", justifyContent: "center", gap: "10px" }}>
                       
-                      {/* BOTÓN EDITAR */}
                       <button
                         onClick={() => navigate(`/ModificarUser/${u.id_usuarios}`)}
                         style={{
@@ -159,7 +159,6 @@ export default function Usuarios() {
                         Editar
                       </button>
 
-                      {/* BOTÓN DESACTIVAR */}
                       <button
                         onClick={() => desactivarUsuario(u.id_usuarios)}
                         style={{

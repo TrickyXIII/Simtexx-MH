@@ -3,6 +3,9 @@ import { useNavigate } from "react-router-dom";
 import Footer from "../components/Footer";
 import "./Login.css";
 
+// Definimos la URL correcta (Local o Nube)
+const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
+
 export default function Login() {
   const navigate = useNavigate();
   const [correo, setCorreo] = useState("");
@@ -12,7 +15,8 @@ export default function Login() {
     e.preventDefault();
 
     try {
-      const res = await fetch("http://localhost:4000/api/usuarios/login", {
+      // USAMOS LA VARIABLE BASE_URL AQUÍ
+      const res = await fetch(`${BASE_URL}/api/usuarios/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -28,7 +32,6 @@ export default function Login() {
         return;
       }
 
-      // Guardamos el token y el usuario en localStorage
       localStorage.setItem("token", data.token);
       localStorage.setItem("usuarioActual", JSON.stringify(data.user));
       
@@ -36,7 +39,7 @@ export default function Login() {
 
     } catch (error) {
       console.error(error);
-      alert("Error al conectar con el servidor. Revisa que el backend esté encendido.");
+      alert("Error de conexión. Verifica que el servidor esté encendido.");
     }
   }
 
@@ -49,7 +52,7 @@ export default function Login() {
           <label>Email</label>
           <input
             type="email"
-            placeholder="Example@mail.com"
+            placeholder="admin@simtexx.com"
             value={correo}
             onChange={(e) => setCorreo(e.target.value)}
             required
