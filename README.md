@@ -47,7 +47,7 @@ El proyecto ha pasado por una fase de optimización detallada:
 3. **Frontend:** ```bash
    cd frontend
    npm install
-   npm run dev
+   npm run dev´´´
 
 
 
@@ -76,7 +76,7 @@ El proyecto ha pasado por una fase de optimización detallada:
 
 
 
-
+---------
 
 
 
