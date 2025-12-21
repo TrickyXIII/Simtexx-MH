@@ -48,7 +48,7 @@ El proyecto ha pasado por una fase de optimización detallada:
    ```bash
    cd frontend
    npm install
-   npm run dev
+   npm run dev´´´
 
 
 
