@@ -1,6 +1,23 @@
 import PDFDocument from "pdfkit";
 import { pool } from "../db.js";
 
+// Función auxiliar para ajustar a GMT-3
+const formatDateGMT3 = (date) => {
+  if (!date) return "N/A";
+  const d = new Date(date);
+  // Restamos 3 horas (3 * 60 * 60 * 1000)
+  const gmt3Date = new Date(d.getTime() - (3 * 60 * 60 * 1000));
+  
+  // Formato simple DD/MM/YYYY HH:MM
+  const day = String(gmt3Date.getUTCDate()).padStart(2, '0');
+  const month = String(gmt3Date.getUTCMonth() + 1).padStart(2, '0');
+  const year = gmt3Date.getUTCFullYear();
+  const hours = String(gmt3Date.getUTCHours()).padStart(2, '0');
+  const minutes = String(gmt3Date.getUTCMinutes()).padStart(2, '0');
+  
+  return `${day}/${month}/${year} ${hours}:${minutes}`;
+};
+
 export const exportPdfOT = async (req, res) => {
   try {
     const { id } = req.params;
@@ -9,7 +26,7 @@ export const exportPdfOT = async (req, res) => {
     const otResult = await pool.query(
       `SELECT o.*, u.nombre AS responsable_nombre
        FROM ot o
-       JOIN usuarios u ON u.id_usuarios = o.responsable_id
+       LEFT JOIN usuarios u ON u.id_usuarios = o.responsable_id
        WHERE id_ot = $1`,
       [id]
     );
@@ -17,7 +34,7 @@ export const exportPdfOT = async (req, res) => {
     const ot = otResult.rows[0];
     if (!ot) return res.status(404).json({ error: "OT no encontrada" });
 
-    // 2. Obtener comentarios
+    // 2. Obtener comentarios (ojo con el campo 'texto')
     const comentariosResult = await pool.query(
       `SELECT c.texto, c.fecha_creacion, u.nombre AS autor
        FROM comentarios c
@@ -49,11 +66,12 @@ export const exportPdfOT = async (req, res) => {
     doc.text(`Título: ${ot.titulo}`);
     doc.text(`Descripción: ${ot.descripcion}`);
     doc.text(`Estado: ${ot.estado}`);
-    doc.text(`Responsable: ${ot.responsable_nombre}`);
-    doc.text(`Fecha inicio: ${ot.fecha_inicio_contrato}`);
-    doc.text(`Fecha fin: ${ot.fecha_fin_contrato}`);
-    doc.text(`Creación: ${ot.fecha_creacion}`);
-    doc.text(`Actualización: ${ot.fecha_actualizacion}`);
+    doc.text(`Responsable: ${ot.responsable_nombre || "Sin Asignar"}`);
+    // Ajuste de Fechas (GMT-3 manual si vienen de BD UTC)
+    doc.text(`Fecha inicio: ${ot.fecha_inicio_contrato ? ot.fecha_inicio_contrato.toString().slice(0,10) : 'N/A'}`);
+    doc.text(`Fecha fin: ${ot.fecha_fin_contrato ? ot.fecha_fin_contrato.toString().slice(0,10) : 'N/A'}`);
+    doc.text(`Creación: ${formatDateGMT3(ot.fecha_creacion)}`);
+    doc.text(`Actualización: ${formatDateGMT3(ot.fecha_actualizacion)}`);
     doc.moveDown();
 
     // Comentarios
@@ -62,8 +80,9 @@ export const exportPdfOT = async (req, res) => {
 
     comentarios.forEach((c) => {
       doc.fontSize(12).text(`Autor: ${c.autor}`);
-      doc.text(`Fecha: ${c.fecha_creacion}`);
-      doc.text(`Comentario: ${c.comentario}`);
+      doc.fontSize(10).text(`Fecha: ${formatDateGMT3(c.fecha_creacion)}`);
+      // CORRECCIÓN: Usar c.texto, no c.comentario
+      doc.fontSize(12).text(`Comentario: ${c.texto}`);
       doc.moveDown();
     });
 

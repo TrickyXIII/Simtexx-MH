@@ -7,7 +7,7 @@ function validarPassword(password) {
   const minLength = 8;
   const hasNumber = /\d/;
   const hasUpperCase = /[A-Z]/;
-  const hasLowerCase = /[a-z]/; // Agregado minuscula
+  const hasLowerCase = /[a-z]/;
 
   if (password.length < minLength) return "La contraseña debe tener al menos 8 caracteres.";
   if (!hasNumber.test(password)) return "La contraseña debe contener al menos un número.";
@@ -17,13 +17,12 @@ function validarPassword(password) {
 }
 
 /**
- * NUEVO: Registro público de usuarios (Rol Cliente por defecto)
+ * Registro público de usuarios (Rol Cliente por defecto)
  */
 export async function registrarUsuarioPublico(req, res) {
   try {
     const { nombre, correo, password, confirmarPassword } = req.body;
 
-    // 1. Validaciones básicas
     if (!nombre || !correo || !password || !confirmarPassword) {
       return res.status(400).json({ error: "Todos los campos son obligatorios" });
     }
@@ -41,16 +40,13 @@ export async function registrarUsuarioPublico(req, res) {
       return res.status(400).json({ error: errorPass });
     }
 
-    // 2. Verificar si el correo ya existe
     const existe = await pool.query("SELECT 1 FROM usuarios WHERE correo = $1", [correo]);
     if (existe.rows.length) {
       return res.status(409).json({ error: "El correo ya está registrado" });
     }
 
-    // 3. Hashear password
     const password_hash = await bcrypt.hash(password, 10);
 
-    // 4. Insertar usuario (FORZANDO ROL_ID = 2 para Cliente)
     const result = await pool.query(
       `INSERT INTO usuarios (nombre, correo, password_hash, rol_id, activo)
        VALUES ($1, $2, $3, 2, TRUE) 
@@ -60,7 +56,6 @@ export async function registrarUsuarioPublico(req, res) {
 
     const nuevoUsuario = result.rows[0];
 
-    // Auditoría
     await pool.query(
       `INSERT INTO auditorias (usuario_id, ot_id, accion, descripcion, ip_address)
        VALUES ($1, NULL, 'REGISTRO_PUBLICO', $2, $3)`,
@@ -76,12 +71,12 @@ export async function registrarUsuarioPublico(req, res) {
 }
 
 /**
- * ACTUALIZAR PERFIL PROPIO (Cualquier usuario logueado)
+ * ACTUALIZAR PERFIL PROPIO
  */
 export async function actualizarPerfil(req, res) {
   try {
     const idUsuario = req.user.id;
-    const { nombre, correo, password, confirmarPassword, passwordActual } = req.body; // Se recibe passwordActual
+    const { nombre, correo, password, confirmarPassword, passwordActual } = req.body;
 
     if (!nombre || !correo) {
       return res.status(400).json({ error: "Nombre y correo son obligatorios" });
@@ -95,7 +90,6 @@ export async function actualizarPerfil(req, res) {
       return res.status(409).json({ error: "El correo ya está en uso por otro usuario." });
     }
 
-    // Obtener usuario actual para verificar contraseña si se requiere cambio
     const userResult = await pool.query("SELECT password_hash FROM usuarios WHERE id_usuarios = $1", [idUsuario]);
     const currentUser = userResult.rows[0];
 
@@ -108,7 +102,6 @@ export async function actualizarPerfil(req, res) {
         return res.status(400).json({ error: "Las contraseñas nuevas no coinciden." });
       }
 
-      // VERIFICACIÓN DE CONTRASEÑA ACTUAL
       if (!passwordActual) {
           return res.status(400).json({ error: "Debe ingresar su contraseña actual para realizar el cambio." });
       }
@@ -145,8 +138,6 @@ export async function actualizarPerfil(req, res) {
     res.status(500).json({ error: "Error al actualizar perfil" });
   }
 }
-
-// ... (Resto de controladores: activarUsuario, editarUsuario, crearUsuario, listarUsuarios, obtenerUsuario, desactivarUsuario, loginUsuario se mantienen igual o se adaptan ligeramente si se quiere usar validarPassword actualizado)
 
 export async function activarUsuario(req, res) {
   try {
@@ -327,15 +318,19 @@ export async function loginUsuario(req, res) {
         [user.id_usuarios]
       );
     }
+    
+    // --- CORRECCIÓN AQUÍ: SE AGREGA 'nombre' AL PAYLOAD DEL TOKEN ---
     const token = jwt.sign(
       { 
         id: user.id_usuarios, 
         rol: user.rol_nombre,
-        rol_id: user.rol_id 
+        rol_id: user.rol_id,
+        nombre: user.nombre // <--- IMPORTANTE: Se añade el nombre
       },
       process.env.JWT_SECRET || "secreto_super_seguro",
       { expiresIn: "8h" }
     );
+    
     const { password_hash, ...userSafe } = user;
     res.json({
       message: "Login exitoso",

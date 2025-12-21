@@ -13,25 +13,29 @@ export default function CrearOT() {
   const usuarioActual = JSON.parse(localStorage.getItem("usuarioActual") || "{}");
   const isCliente = usuarioActual.rol_id === 2; // 2 = Cliente
 
+  // El ID debe venir preferentemente del token si está disponible, pero usamos fallback
   const userId = usuarioActual.id_usuarios || usuarioActual.id;
 
   // 2. Estado Inicial
+  // Si es cliente, pre-llenamos valores por defecto
   const [form, setForm] = useState({
     titulo: "",
     descripcion: "",
+    // Fecha Inicio: Actual si es cliente, vacía si es Admin para que elija
     fecha_inicio: isCliente ? new Date().toISOString().split('T')[0] : "",
     fecha_fin: "",
-    estado: "Pendiente",
+    // Estado: Pendiente si es cliente
+    estado: isCliente ? "Pendiente" : "Pendiente",
+    // Cliente: Su propio ID si es cliente
     cliente_id: isCliente ? userId : "", 
     responsable_id: ""
   });
 
-  // Listas (solo para Admin / Mantenedor)
   const [clientes, setClientes] = useState([]);
   const [mantenedores, setMantenedores] = useState([]);
 
   useEffect(() => {
-    // Si NO es cliente, cargamos las listas
+    // Si NO es cliente, cargamos las listas para que Admin elija
     if (!isCliente) {
       async function loadData() {
         try {
@@ -55,7 +59,6 @@ export default function CrearOT() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // --- OBTENER FECHA ACTUAL EN FORMATO YYYY-MM-DD (LOCAL) ---
   const getTodayString = () => {
     const today = new Date();
     const yyyy = today.getFullYear();
@@ -72,7 +75,7 @@ export default function CrearOT() {
         return;
       }
 
-      // Validación de fecha fin
+      // Validación fecha fin (solo si se ingresa, Admin/Mantenedor)
       if (form.fecha_fin && form.fecha_fin < getTodayString()) {
         alert("La fecha fin no puede ser anterior a la fecha actual.");
         return;
@@ -81,9 +84,10 @@ export default function CrearOT() {
       await createOT({
         titulo: form.titulo,
         descripcion: form.descripcion,
+        // Lógica de asignación según rol
         estado: isCliente ? "Pendiente" : form.estado,
         fecha_inicio_contrato: isCliente ? new Date() : form.fecha_inicio,
-        fecha_fin_contrato: isCliente ? null : form.fecha_fin,
+        fecha_fin_contrato: isCliente ? null : form.fecha_fin, // Cliente no pone fecha fin
         cliente_id: isCliente ? userId : parseInt(form.cliente_id),
         responsable_id: isCliente ? null : (form.responsable_id ? parseInt(form.responsable_id) : null)
       });
@@ -121,7 +125,7 @@ export default function CrearOT() {
             placeholder="Detalles del trabajo a realizar..."
           />
 
-          {/* SECCIÓN SOLO PARA ADMIN / MANTENEDOR */}
+          {/* CAMPOS OCULTOS PARA CLIENTE */}
           {!isCliente && (
             <>
               <div className="form-row">
@@ -142,7 +146,7 @@ export default function CrearOT() {
                     name="fecha_fin"
                     value={form.fecha_fin}
                     onChange={handleChange}
-                    min={getTodayString()} // Restricción en UI
+                    min={getTodayString()}
                   />
                 </div>
               </div>
@@ -197,7 +201,7 @@ export default function CrearOT() {
               border: "1px solid #b3e5fc"
             }}>
               <p style={{margin: 0}}>
-                <strong>ℹ️ Información:</strong> Se registrará a nombre de <strong>{usuarioActual.nombre}</strong>.
+                <strong>ℹ️ Información:</strong> Se registrará a nombre de <strong>{usuarioActual.nombre}</strong> con fecha actual.
                 La solicitud quedará "Pendiente" hasta que un administrador la asigne.
               </p>
             </div>
