@@ -7,7 +7,7 @@
 .titulo {
   text-align: center;
   color: #333;
-  margin-bottom: 20px;
+  margin-bottom: 50px; /* AUMENTADO: Padding visual respecto a la tabla */
   font-size: 2.2rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -16,7 +16,7 @@
 /* --- HEADER CONTROLS --- */
 .header-controls {
     display: flex;
-    justify-content: flex-end; /* Alineado a la derecha */
+    justify-content: flex-end; 
     align-items: center;
     margin-bottom: 20px;
 }
@@ -34,7 +34,7 @@
 /* --- GRID LAYOUT --- */
 .layout-grid {
   display: grid;
-  grid-template-columns: 1fr 280px; /* Tabla flexible | Sidebar fijo 280px */
+  grid-template-columns: 1fr 280px; 
   gap: 25px;
   align-items: start;
 }
@@ -90,7 +90,7 @@
 .tabla-scroll { overflow-x: auto; }
 .tabla { width: 100%; border-collapse: collapse; font-size: 14px; }
 .tabla th { background-color: #333; color: white; text-align: left; padding: 12px 15px; border-bottom: 3px solid rgb(172, 5, 5); white-space: nowrap; }
-.tabla td { padding: 12px 15px; border-bottom: 1px solid #eee; color: #333; }
+.tabla td { padding: 12px 15px; border-bottom: 1px solid #eee; color: #333; vertical-align: middle; }
 .tabla tr:hover { background-color: #fff0f0; }
 
 .badge-estado { padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; }
@@ -98,9 +98,51 @@
 .badge-estado.en-proceso { background-color: #d1ecf1; color: #0c5460; }
 .badge-estado.finalizada { background-color: #d4edda; color: #155724; }
 
-.acciones-ot { display: flex; gap: 8px; }
-.btn-ver { background-color: #333; color: white; text-decoration: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; }
-.btn-eliminar { background-color: transparent; color: #dc3545; border: 1px solid #dc3545; padding: 5px 11px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+/* --- BOTONES DE LA TABLA (VER / ELIMINAR) --- */
+.acciones-ot { 
+  display: flex; 
+  gap: 10px; 
+  align-items: center;
+}
+
+/* Estilos comunes para igualar tamaño y centrado */
+.btn-ver, .btn-eliminar {
+  display: inline-flex;       /* Fundamental para centrar contenido */
+  align-items: center;        /* Centrado Vertical */
+  justify-content: center;    /* Centrado Horizontal */
+  height: 32px;               /* Altura fija idéntica para ambos */
+  padding: 0 15px;            /* Padding lateral igual */
+  border-radius: 4px;
+  font-weight: bold;
+  font-size: 12px;
+  box-sizing: border-box;     /* Para que el borde no afecte el tamaño total */
+  transition: all 0.2s ease;
+  text-decoration: none;      /* Quitar subrayado del Link */
+  line-height: 1;             /* Resetear altura de línea */
+}
+
+.btn-ver { 
+  background-color: #333; 
+  color: white; 
+  border: 1px solid #333; /* Borde invisible para igualar box-model con el de eliminar */
+}
+.btn-ver:hover {
+  background-color: #000;
+  transform: translateY(-1px);
+}
+
+.btn-eliminar { 
+  background-color: transparent; 
+  color: #dc3545; 
+  border: 1px solid #dc3545; 
+  cursor: pointer; 
+  font-size: 14px; /* Un pelín más grande para el ícono de basura */
+  padding: 0 10px; /* Ajuste ligero si el icono es muy ancho */
+}
+.btn-eliminar:hover {
+  background-color: #fff5f5;
+  transform: translateY(-1px);
+}
 
 /* --- SIDEBAR (DERECHA) --- */
 .sidebar-column {
@@ -163,13 +205,13 @@
   font-size: 0.95rem;
   box-shadow: 0 2px 5px rgba(0,0,0,0.1);
   box-sizing: border-box;
-  text-decoration: none; /* Importante para el Link */
+  text-decoration: none; 
 }
 
 /* 1. Botón Crear (Rojo) */
 .btn-sidebar.crear {
   background-color: rgb(172, 5, 5);
-  font-size: 1.1rem; /* Un poco más grande para destacar */
+  font-size: 1.1rem; 
 }
 .btn-sidebar.crear:hover { background-color: #8a0404; }
 
