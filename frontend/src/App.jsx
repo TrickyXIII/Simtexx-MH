@@ -13,13 +13,12 @@ import ModificarUser from "./pages/ModificarUser";
 import AuditoriaGlobal from "./pages/AuditoriaGlobal";
 import ProtectedRoute from "./components/ProtectedRoute"; 
 
-// Importamos la imagen y estilos
+// Importamos la imagen de fondo
 import bgImage from "./assets/fondo-C4YVKjzF.webp";
 import "./styles/global.css";
 
 function App() {
   return (
-    // Aplicamos el fondo aquí con estilos en línea para asegurar la ruta
     <div className="main-content" style={{ 
       backgroundImage: `url(${bgImage})`,
       backgroundSize: 'cover',
@@ -28,7 +27,6 @@ function App() {
       minHeight: '100vh'
     }}>
       <Routes>
-        {/* Rutas Públicas */}
         <Route path="/" element={<Login />} />
         <Route path="/login" element={<Login />} />
         <Route path="/registro" element={<Registro />} />
