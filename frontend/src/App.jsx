@@ -11,14 +11,15 @@ import GestionUser from "./pages/GestionUser";
 import CrearUser from "./pages/CrearUser";
 import ModificarUser from "./pages/ModificarUser";
 import AuditoriaGlobal from "./pages/AuditoriaGlobal";
-import ProtectedRoute from "./utils/auth";
+
+// --- IMPORTACIÓN CORREGIDA ---
+import ProtectedRoute from "./components/ProtectedRoute"; 
 
 // Importamos estilos globales
 import "./styles/global.css";
 
 function App() {
   return (
-    /* El #root en global.css ya tiene flex column y min-height */
     <>
       <div className="main-content">
         <Routes>
@@ -38,10 +39,6 @@ function App() {
           <Route path="/auditorias" element={<ProtectedRoute><AuditoriaGlobal /></ProtectedRoute>} />
         </Routes>
       </div>
-      {/* El Footer se renderiza dentro de cada página o aquí si es global, 
-          pero en tu código actual parece que lo llamas dentro de cada página. 
-          Para que el "sticky footer" funcione globalmente, lo ideal sería ponerlo aquí,
-          pero si lo mantienes en las páginas, asegúrate de que esas páginas usen .main-content */}
     </>
   );
 }
