@@ -4,6 +4,15 @@ import ExcelJS from "exceljs";
 import fs from "fs";
 
 /**
+ * Helper para obtener la fecha actual ajustada a la zona horaria de Chile.
+ * Útil para logs y valores por defecto.
+ */
+const getFechaChile = () => {
+  const fecha = new Date();
+  return new Date(fecha.toLocaleString("en-US", { timeZone: "America/Santiago" }));
+};
+
+/**
  * Obtiene estadísticas generales para el Dashboard.
  * Filtra los datos según el rol del usuario (Cliente, Mantenedor o Admin).
  * @param {Object} req - Request con la sesión del usuario.
@@ -192,7 +201,10 @@ export const createOT = async (req, res) => {
 
     // Valores por defecto
     if (!estado) estado = "Pendiente";
-    if (!fecha_inicio_contrato) fecha_inicio_contrato = new Date();
+    
+    // Si no viene fecha, usamos la hora de Chile
+    if (!fecha_inicio_contrato) fecha_inicio_contrato = getFechaChile();
+    
     if (fecha_fin_contrato === "") fecha_fin_contrato = null;
     if (cliente_id === "") cliente_id = null;
     if (responsable_id === "") responsable_id = null;
@@ -220,8 +232,8 @@ export const createOT = async (req, res) => {
     // Registro de Auditoría
     if (req.user) {
       await pool.query(
-        `INSERT INTO auditorias (usuario_id, ot_id, accion, descripcion, ip_address)
-         VALUES ($1, $2, $3, $4, $5)`,
+        `INSERT INTO auditorias (usuario_id, ot_id, accion, descripcion, ip_address, fecha_creacion)
+         VALUES ($1, $2, $3, $4, $5, NOW() AT TIME ZONE 'America/Santiago')`,
         [
           req.user.id, 
           nuevaOT.id_ot, 
@@ -254,11 +266,12 @@ export const updateOT = async (req, res) => {
     if (oldRes.rows.length === 0) return res.status(404).json({ error: "OT no encontrada" });
     const oldOT = oldRes.rows[0];
 
+    // Se asegura que la actualización de fecha respete la zona horaria si se usa NOW()
     const result = await pool.query(`
       UPDATE ot SET
         titulo = $1, descripcion = $2, estado = $3, cliente_id = $4,
         responsable_id = $5, fecha_inicio_contrato = $6, fecha_fin_contrato = $7,
-        activo = $8, fecha_actualizacion = NOW()
+        activo = $8, fecha_actualizacion = NOW() AT TIME ZONE 'America/Santiago'
       WHERE id_ot = $9 RETURNING *;
     `, [titulo, descripcion, estado, cliente_id, responsable_id, fecha_inicio_contrato, fecha_fin_contrato, activo, id]);
 
@@ -275,7 +288,7 @@ export const updateOT = async (req, res) => {
             const detalleCambio = cambios.join("; ");
             await pool.query(
                 `INSERT INTO auditorias (ot_id, usuario_id, accion, descripcion, fecha_creacion)
-                 VALUES ($1, $2, 'Modificación', $3, NOW())`,
+                 VALUES ($1, $2, 'Modificación', $3, NOW() AT TIME ZONE 'America/Santiago')`,
                 [id, usuarioIdInt, detalleCambio]
             );
         }
@@ -307,8 +320,8 @@ export const deleteOT = async (req, res) => {
 
     if (req.user) {
         await pool.query(
-            `INSERT INTO auditorias (usuario_id, ot_id, accion, descripcion, ip_address)
-             VALUES ($1, $2, 'ELIMINAR_OT', $3, $4)`,
+            `INSERT INTO auditorias (usuario_id, ot_id, accion, descripcion, ip_address, fecha_creacion)
+             VALUES ($1, $2, 'ELIMINAR_OT', $3, $4, NOW() AT TIME ZONE 'America/Santiago')`,
             [req.user.id, id, `OT eliminada (soft) ID: ${id}`, req.ip]
         );
     }
@@ -401,7 +414,7 @@ export const exportOTsCSV = async (req, res) => {
 
 /**
  * Importa OTs masivamente desde un archivo CSV.
- * Estructura esperada del CSV: Titulo, Descripcion, Estado, [Otros opcionales...]
+ * Mapea nombres de usuarios a IDs y valida estructura.
  * @param {Object} req - Request con el archivo CSV (req.file) y usuario autenticado.
  * @param {Object} res - Response para devolver el resultado.
  */
@@ -426,11 +439,30 @@ export const importOTs = async (req, res) => {
     await workbook.csv.readFile(filePath);
     const worksheet = workbook.getWorksheet(1);
     
+    // 3. Obtener Mapa de Usuarios (Nombre -> ID) para búsqueda rápida
+    // Se normalizan los nombres a minúsculas y sin espacios extra para mejorar la coincidencia.
+    const usersResult = await pool.query("SELECT id_usuarios, nombre FROM usuarios");
+    const usersMap = {};
+    usersResult.rows.forEach(u => {
+        if(u.nombre) usersMap[u.nombre.trim().toLowerCase()] = u.id_usuarios;
+    });
+
     let otsCreadas = 0;
     let errores = [];
     const rows = [];
 
-    // Recolectar filas (saltando la cabecera)
+    // Validar cabeceras mínimas en la fila 1
+    const firstRow = worksheet.getRow(1).values;
+    // ExcelJS indexa desde 1, el indice 0 suele ser empty en 'values' array.
+    // Verificamos si existe "Titulo" en alguna parte
+    const hasTitulo = firstRow.some(val => val && val.toString().toLowerCase().includes("titulo"));
+    
+    if (!hasTitulo) {
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+        return res.status(400).json({ error: "El archivo no tiene el formato correcto. Falta la columna 'Titulo'." });
+    }
+
+    // Recolectar filas de datos
     worksheet.eachRow((row, rowNumber) => {
       if (rowNumber > 1) rows.push({ num: rowNumber, values: row.values });
     });
@@ -438,22 +470,54 @@ export const importOTs = async (req, res) => {
     for (const row of rows) {
       const data = row.values;
       
-      // Mapeo basado en tu CSV: Titulo (1), Descripcion (2), Estado (3)...
-      // (ExcelJS usa base 1 para índices de values)
+      // Mapeo basado en tu CSV: 
+      // 1: Titulo, 2: Descripcion, 3: Estado, 4: Inicio, 5: Fin, 6: Responsable, 7: Cliente
       const titulo = data[1]; 
       const descripcion = data[2];
       const estado = data[3] || "Pendiente";
+      const inicio = data[4];
+      const fin = data[5];
+      const responsableNombre = data[6];
+      const clienteNombre = data[7];
       
       if (!titulo) continue;
 
       try {
         const codigo = await generarCodigoOT();
         
-        // Insertar en Base de Datos
+        // Buscar IDs usando el mapa (búsqueda insensible a mayúsculas)
+        let responsableId = null;
+        let clienteId = null;
+
+        if (responsableNombre && usersMap[responsableNombre.trim().toLowerCase()]) {
+            responsableId = usersMap[responsableNombre.trim().toLowerCase()];
+        }
+
+        if (clienteNombre && usersMap[clienteNombre.trim().toLowerCase()]) {
+            clienteId = usersMap[clienteNombre.trim().toLowerCase()];
+        }
+
+        // Determinar fecha de inicio: si viene en CSV usarla, si no usar hora Chile
+        let fechaInicioInsert = inicio ? new Date(inicio) : getFechaChile();
+
+        // Insertar en Base de Datos con IDs resueltos y Zona Horaria explícita
         await pool.query(
-          `INSERT INTO ot (codigo, titulo, descripcion, estado, activo, fecha_inicio_contrato)
-           VALUES ($1, $2, $3, $4, TRUE, NOW())`,
-          [codigo, titulo, descripcion, estado]
+          `INSERT INTO ot (
+            codigo, titulo, descripcion, estado, activo, 
+            fecha_inicio_contrato, fecha_fin_contrato, 
+            responsable_id, cliente_id
+           )
+           VALUES ($1, $2, $3, $4, TRUE, $5, $6, $7, $8)`,
+          [
+            codigo, 
+            titulo, 
+            descripcion, 
+            estado, 
+            fechaInicioInsert, 
+            fin ? new Date(fin) : null,
+            responsableId,
+            clienteId
+          ]
         );
         
         otsCreadas++;
@@ -475,6 +539,6 @@ export const importOTs = async (req, res) => {
   } catch (error) {
     console.error("Error crítico importando CSV:", error);
     if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
-    res.status(500).json({ error: "Error interno al procesar el archivo CSV" });
+    res.status(500).json({ error: "Error interno al procesar el archivo CSV: " + error.message });
   }
 };
