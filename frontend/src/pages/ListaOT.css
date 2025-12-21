@@ -7,8 +7,7 @@
 .titulo {
   text-align: center;
   color: #333;
-  /* AUMENTADO: Mucho más espacio (padding visual) respecto a la tabla */
-  margin-bottom: 80px; 
+  margin-bottom: 80px; /* Aumentado para mayor separación */
   font-size: 2.2rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -17,7 +16,7 @@
 /* --- HEADER CONTROLS --- */
 .header-controls {
     display: flex;
-    justify-content: flex-end; 
+    justify-content: flex-end; /* Alineado a la derecha */
     align-items: center;
     margin-bottom: 20px;
 }
@@ -35,7 +34,7 @@
 /* --- GRID LAYOUT --- */
 .layout-grid {
   display: grid;
-  grid-template-columns: 1fr 280px; 
+  grid-template-columns: 1fr 280px; /* Tabla flexible | Sidebar fijo 280px */
   gap: 25px;
   align-items: start;
 }
@@ -99,53 +98,48 @@
 .badge-estado.en-proceso { background-color: #d1ecf1; color: #0c5460; }
 .badge-estado.finalizada { background-color: #d4edda; color: #155724; }
 
-/* --- BOTONES DE LA TABLA (VER / ELIMINAR) --- */
 .acciones-ot { 
   display: flex; 
   gap: 10px; 
-  align-items: center;
+  align-items: center; 
 }
 
-/* Estilos UNIFICADOS para ambos botones */
+/* Estilos base compartidos para botones */
 .btn-ver, .btn-eliminar {
-  display: inline-flex;       /* Flex para centrar contenido */
-  align-items: center;        /* Centrado Vertical perfecto */
-  justify-content: center;    /* Centrado Horizontal perfecto */
-  
-  height: 34px;               /* Altura fija idéntica */
-  min-width: 45px;            /* Ancho mínimo para igualar visualmente */
-  padding: 0 12px;            /* Relleno lateral */
-  
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px; /* Altura fija para ambos */
+  padding: 0 15px;
   border-radius: 4px;
+  font-size: 12px;
   font-weight: bold;
-  font-size: 13px;
-  box-sizing: border-box;     
-  transition: all 0.2s ease;
-  text-decoration: none;      
-  line-height: 1;             
+  text-decoration: none;
   cursor: pointer;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
 }
 
-/* Específico Ver */
 .btn-ver { 
   background-color: #333; 
   color: white; 
-  border: 1px solid #333; 
+  border: 1px solid #333;
 }
 .btn-ver:hover {
   background-color: #000;
-  transform: translateY(-1px);
+  transform: translateY(-2px);
 }
 
-/* Específico Eliminar */
 .btn-eliminar { 
-  background-color: white; 
+  background-color: transparent; 
   color: #dc3545; 
-  border: 1px solid #dc3545; 
+  border: 1px solid #dc3545;
+  font-size: 14px; /* Un poco más grande para el icono */
 }
-.btn-eliminar:hover {
-  background-color: #ffe6e6;
-  transform: translateY(-1px);
+.btn-eliminar:hover { 
+  background-color: #dc3545; 
+  color: white;
+  transform: translateY(-2px);
 }
 
 /* --- SIDEBAR (DERECHA) --- */
@@ -209,13 +203,13 @@
   font-size: 0.95rem;
   box-shadow: 0 2px 5px rgba(0,0,0,0.1);
   box-sizing: border-box;
-  text-decoration: none; 
+  text-decoration: none; /* Importante para el Link */
 }
 
 /* 1. Botón Crear (Rojo) */
 .btn-sidebar.crear {
   background-color: rgb(172, 5, 5);
-  font-size: 1.1rem; 
+  font-size: 1.1rem; /* Un poco más grande para destacar */
 }
 .btn-sidebar.crear:hover { background-color: #8a0404; }
 
