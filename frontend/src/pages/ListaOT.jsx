@@ -1,34 +1,25 @@
-import { getOTs, deleteOTBackend, exportCSV, importCSV } from "../services/otService"; 
-import { Link, useParams } from "react-router-dom";
+import { getOTs, deleteOTBackend, exportCSV, importCSV } from "../services/otService";
+import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { getUserFromToken } from "../utils/auth"; 
 import NavBar from "../components/NavBar";
 import Footer from "../components/Footer";
-import { getUserFromToken } from "../utils/auth"; // <--- IMPORTANTE
 import "./ListaOT.css";
 
 export default function ListaOT() {
   const [ots, setOts] = useState([]);
+  const [busqueda, setBusqueda] = useState("");
+  const [filtroEstado, setFiltroEstado] = useState("");
   
-  // Filtros
-  const [filtros, setFiltros] = useState({
-    busqueda: "",
-    estado: "Todos",
-    fechaInicio: "",
-    fechaFin: ""
-  });
-
-  // --- FIX SEGURIDAD: Leer del token, no del localStorage editable ---
-  const usuario = getUserFromToken() || { nombre: "Sin Usuario", rol: "Invitado", id: 0, rol_id: 0 };
-  
+  // Usuario y Roles
+  const usuario = getUserFromToken() || { nombre: "Usuario", rol_id: 0 };
   const isAdmin = usuario.rol_id === 1;
   const isCliente = usuario.rol_id === 2;
   const isMantenedor = usuario.rol_id === 3;
 
-  const { id } = useParams();
-
   const cargarDatos = async () => {
     try {
-      const data = await getOTs(filtros, usuario);
+      const data = await getOTs({}, usuario);
       if (Array.isArray(data)) {
         setOts(data);
       } else {
@@ -42,171 +33,173 @@ export default function ListaOT() {
 
   useEffect(() => {
     cargarDatos();
-  }, [filtros]);
+  }, []);
 
-  const handleFiltro = (e) => {
-    setFiltros({ ...filtros, [e.target.name]: e.target.value });
+  const handleDelete = async (id) => {
+    if (window.confirm("¿Seguro que deseas eliminar esta OT?")) {
+      await deleteOTBackend(id);
+      cargarDatos();
+    }
   };
 
-  const handleImportar = async (e) => {
+  const handleExport = () => {
+    exportCSV(ots);
+  };
+
+  const handleImport = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
-    if (!window.confirm("¿Importar este archivo CSV? Asegúrate de que los correos de usuario existan.")) return;
-
-    try {
-        const resultado = await importCSV(file);
-        alert(`Importación Finalizada:\n- Creadas: ${resultado.creadas}\n- Errores: ${resultado.errores.length}\n\n${resultado.errores.join('\n')}`);
-        cargarDatos(); 
-    } catch (error) {
-        alert("Error al importar: " + error.message);
-    }
-    e.target.value = null; 
+    const res = await importCSV(file);
+    alert(res.message || "Importación finalizada");
+    cargarDatos();
   };
 
-  const handleDelete = async (idOT) => {
-    if (window.confirm("¿Estás seguro de eliminar esta OT?")) {
-        try {
-          await deleteOTBackend(idOT);
-          alert("OT eliminada correctamente");
-          cargarDatos(); 
-        } catch (error) {
-          alert("No se pudo eliminar la OT");
-        }
-      }
-  };
+  // Filtrado
+  const otsFiltradas = ots.filter((ot) => {
+    const texto = busqueda.toLowerCase();
+    const matchTexto = 
+      ot.titulo.toLowerCase().includes(texto) ||
+      ot.codigo.toLowerCase().includes(texto) ||
+      (ot.cliente_nombre && ot.cliente_nombre.toLowerCase().includes(texto));
+    
+    const matchEstado = filtroEstado ? ot.estado === filtroEstado : true;
 
-  const listaSegura = ots || [];
-  const pendientes = listaSegura.filter((o) => o?.estado === "Pendiente").length;
-  const enProceso = listaSegura.filter((o) => o?.estado === "En Proceso").length;
-  const finalizadas = listaSegura.filter((o) => o?.estado === "Finalizada").length;
+    return matchTexto && matchEstado;
+  });
+
+  // Estadísticas
+  const total = otsFiltradas.length;
+  const pendientes = otsFiltradas.filter(o => o.estado === "Pendiente").length;
+  const proceso = otsFiltradas.filter(o => o.estado === "En Proceso").length;
+  const finalizadas = otsFiltradas.filter(o => o.estado === "Finalizada").length;
 
   return (
     <>
       <NavBar />
-
+      
+      {/* Contenedor principal con la clase actualizada */}
       <div className="listaot-container">
-        <h1 className="titulo">Gestión de OTS</h1>
-
-        <div className="user-info-box">
-          <div>Usuario: <b>{usuario.nombre}</b> &nbsp;&nbsp; Rol: <b>{usuario.rol}</b></div>
-        </div>
         
-        <div className="btn-bar">
-          <Link to={`/crearot/${usuario.id || 0}`} className="btn-opcion">Crear OT</Link>
-          
-          {/* Botón Exportar CSV: Visible para Admin y Mantenedor, NO Cliente */}
-          {!isCliente && (
-            <button className="btn-opcion" onClick={() => exportCSV(filtros, usuario)}>Exportar CSV</button>
-          )}
-          
-          {/* Botón Importar CSV: Solo Visible para Admin */}
-          {isAdmin && (
-            <>
-              <input 
-                type="file" 
-                id="input-csv" 
-                accept=".csv" 
-                style={{ display: 'none' }} 
-                onChange={handleImportar} 
-              />
-              <label htmlFor="input-csv" className="btn-opcion" style={{cursor: 'pointer', backgroundColor: '#2e7d32'}}>
-                Importar CSV
-              </label>
-            </>
-          )}
+        <h1 className="titulo">Gestión de OTs</h1>
 
-          <Link to="/dashboard" className="btn-opcion">Inicio</Link>
+        {/* Info Usuario */}
+        <div className="user-info-box">
+          Hola, <strong>{usuario.nombre}</strong> ({usuario.rol})
+        </div>
+
+        {/* Barra de Botones */}
+        <div className="btn-bar">
+          <Link to="/crear-ot" className="btn-opcion">
+            + Nueva OT
+          </Link>
+          
+          <button onClick={handleExport} className="btn-opcion">
+            📊 Exportar CSV
+          </button>
+
+          {!isCliente && (
+            <div style={{position: 'relative', display: 'inline-block'}}>
+                <input 
+                    type="file" 
+                    id="importar-csv" 
+                    style={{display: 'none'}} 
+                    accept=".csv"
+                    onChange={handleImport}
+                />
+                <label htmlFor="importar-csv" className="btn-opcion" style={{cursor:'pointer', margin:0}}>
+                    📥 Importar CSV
+                </label>
+            </div>
+          )}
         </div>
 
         <div className="layout-grid">
-          
+          {/* Columna Izquierda: Tabla */}
           <div className="tabla-box">
-            
-            <div className="tabla-header" style={{gap:'10px', flexWrap:'wrap'}}>
-              <input
+            <div className="tabla-header">
+              <input 
+                type="text" 
+                placeholder="🔍 Buscar por código, título o cliente..." 
                 className="input-buscar"
-                type="text"
-                name="busqueda"
-                placeholder="Buscar por Título, Código o Responsable..."
-                value={filtros.busqueda}
-                onChange={handleFiltro}
+                value={busqueda}
+                onChange={e => setBusqueda(e.target.value)}
               />
-              <input type="date" name="fechaInicio" className="input-filtro" style={{width:'auto'}} onChange={handleFiltro} />
-              <input type="date" name="fechaFin" className="input-filtro" style={{width:'auto'}} onChange={handleFiltro} />
-              <select className="input-filtro" name="estado" onChange={handleFiltro} value={filtros.estado}>
-                <option value="Todos">Todos</option>
+              <select 
+                className="input-filtro"
+                value={filtroEstado} 
+                onChange={e => setFiltroEstado(e.target.value)}
+              >
+                <option value="">Todos los Estados</option>
                 <option value="Pendiente">Pendiente</option>
                 <option value="En Proceso">En Proceso</option>
                 <option value="Finalizada">Finalizada</option>
               </select>
             </div>
 
-            {listaSegura.length === 0 ? (
-                <div style={{padding:'20px', textAlign:'center', color: '#666'}}>
-                    No hay datos disponibles.
-                </div>
-            ) : (
-                <table className="tabla">
-                <thead>
-                    <tr>
-                    <th>Código</th>
-                    <th>Título</th>
-                    <th>Inicio</th>
-                    <th>Fin</th>
-                    <th>Responsable</th>
-                    <th>Estado</th>
-                    <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {listaSegura.map((ot) => (
-                    <tr key={ot.id_ot || Math.random()}> 
-                        <td>{ot.codigo}</td>
-                        <td>{ot.titulo}</td>
-                        <td>{ot.fecha_inicio_contrato ? ot.fecha_inicio_contrato.slice(0,10) : '-'}</td>
-                        <td>{ot.fecha_fin_contrato ? ot.fecha_fin_contrato.slice(0,10) : '-'}</td>
-                        <td>{ot.responsable_nombre || 'Sin asignar'}</td>
-                        <td>{ot.estado}</td>
-                        <td className="acciones-ot">
-                        <Link className="btn-ver" to={`/detalle/${ot.id_ot}`}>
-                            Ver
-                        </Link>
-                        {!isCliente && (
-                            <button className="btn-eliminar" onClick={() => handleDelete(ot.id_ot)}>
-                                Eliminar
-                            </button>
+            <table className="tabla">
+              <thead>
+                <tr>
+                  <th>Código</th>
+                  <th>Título</th>
+                  <th>Estado</th>
+                  <th>Cliente</th>
+                  <th>F. Inicio</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {otsFiltradas.length > 0 ? (
+                  otsFiltradas.map((ot) => (
+                    <tr key={ot.id_ot}>
+                      <td><strong>{ot.codigo}</strong></td>
+                      <td>{ot.titulo}</td>
+                      <td>
+                        <span style={{
+                          padding:'4px 8px', borderRadius:'12px', fontSize:'11px', fontWeight:'bold',
+                          backgroundColor: ot.estado === 'Finalizada' ? '#d4edda' : ot.estado === 'En Proceso' ? '#d1ecf1' : '#fff3cd',
+                          color: ot.estado === 'Finalizada' ? '#155724' : ot.estado === 'En Proceso' ? '#0c5460' : '#856404'
+                        }}>
+                          {ot.estado}
+                        </span>
+                      </td>
+                      <td>{ot.cliente_nombre || "N/A"}</td>
+                      <td>{ot.fecha_inicio_contrato ? new Date(ot.fecha_inicio_contrato).toLocaleDateString() : '-'}</td>
+                      <td className="acciones-ot">
+                        <Link to={`/detalle/${ot.id_ot}`} className="btn-ver">Ver</Link>
+                        {!isCliente && !isMantenedor && (
+                          <button className="btn-eliminar" onClick={() => handleDelete(ot.id_ot)}>🗑</button>
                         )}
-                        </td>
+                      </td>
                     </tr>
-                    ))}
-                </tbody>
-                </table>
-            )}
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="6" style={{textAlign:'center', padding:'20px'}}>No se encontraron órdenes.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
 
+          {/* Columna Derecha: Panel Estadísticas */}
           <div className="panel-registros">
-            <h3>Registros</h3>
+            <h3>Resumen</h3>
             <div className="panel-card total">
-              <span>Total OT</span>
-              <b>{listaSegura.length}</b>
+              <span>Total</span> <b>{total}</b>
             </div>
             <div className="panel-card pendiente">
-              <span>Pendientes</span>
-              <b>{pendientes}</b>
+              <span>Pendientes</span> <b>{pendientes}</b>
             </div>
             <div className="panel-card proceso">
-              <span>En proceso</span>
-              <b>{enProceso}</b>
+              <span>En Proceso</span> <b>{proceso}</b>
             </div>
             <div className="panel-card finalizada">
-              <span>Finalizadas</span>
-              <b>{finalizadas}</b>
+              <span>Finalizadas</span> <b>{finalizadas}</b>
             </div>
           </div>
-
         </div>
       </div>
+
       <Footer />
     </>
   );

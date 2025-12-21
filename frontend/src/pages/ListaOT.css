@@ -1,26 +1,29 @@
 /* frontend/src/pages/ListaOT.css */
 
 .listaot-container {
-  max-width: 1200px;
-  margin: 80px auto 40px auto; /* Margen superior para no chocar con el Navbar */
+  max-width: 95%; /* Aumentado de 1200px a 95% para usar más pantalla */
+  margin: 90px auto 40px auto; /* 90px arriba para acercarlo al navbar pero sin chocar */
   padding: 0 20px;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .titulo {
   text-align: center;
-  color: #333;
-  margin-bottom: 20px;
-  font-size: 2.5rem;
+  color: var(--simtexx-red, rgb(172, 5, 5)); /* Color rojo corporativo */
+  margin-bottom: 15px; /* Reducido el espacio debajo del título */
+  font-size: 2.2rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 /* --- Caja de Información de Usuario --- */
 .user-info-box {
-  background-color: #e3f2fd;
-  color: #0d47a1;
+  background-color: white;
+  color: #333;
   padding: 10px 20px;
-  border-radius: 8px;
-  border: 1px solid #bbdefb;
+  border-radius: 4px;
+  border-left: 5px solid var(--simtexx-red, rgb(172, 5, 5)); /* Borde rojo */
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
   display: inline-block;
   margin-bottom: 20px;
   font-size: 0.95rem;
@@ -30,39 +33,40 @@
 .btn-bar {
   display: flex;
   gap: 15px;
-  margin-bottom: 30px;
+  margin-bottom: 20px;
   flex-wrap: wrap;
 }
 
 .btn-opcion {
   text-decoration: none;
-  background-color: #333;
+  background-color: var(--simtexx-red, rgb(172, 5, 5)); /* Rojo Simtexx */
   color: white;
   padding: 10px 20px;
-  border-radius: 6px;
+  border-radius: 4px; /* Bordes menos redondeados para look más serio */
   font-weight: 600;
   transition: background-color 0.3s, transform 0.2s;
   border: none;
   display: inline-flex;
   align-items: center;
   font-size: 14px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
 .btn-opcion:hover {
-  background-color: #000;
-  transform: translateY(-2px);
+  background-color: #8a0404; /* Rojo más oscuro al pasar mouse */
+  transform: translateY(-1px);
 }
 
 /* --- Layout Principal (Tabla + Panel Lateral) --- */
 .layout-grid {
   display: grid;
-  grid-template-columns: 3fr 1fr; /* La tabla ocupa más espacio que el panel */
-  gap: 30px;
+  grid-template-columns: 1fr 280px; /* Tabla flexible, panel fijo de 280px */
+  gap: 20px;
   align-items: start;
 }
 
 /* En móviles, poner una columna */
-@media (max-width: 900px) {
+@media (max-width: 1000px) {
   .layout-grid {
     grid-template-columns: 1fr;
   }
@@ -71,32 +75,33 @@
 /* --- Contenedor de la Tabla --- */
 .tabla-box {
   background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
   padding: 20px;
-  overflow-x: auto; /* Scroll horizontal si es necesario */
+  overflow-x: auto;
+  border-top: 4px solid var(--simtexx-red, rgb(172, 5, 5)); /* Detalle rojo arriba */
 }
 
 /* Filtros sobre la tabla */
 .tabla-header {
   display: flex;
   gap: 10px;
-  margin-bottom: 20px;
+  margin-bottom: 15px;
   align-items: center;
 }
 
 .input-buscar {
-  flex: 1; /* Ocupa el espacio restante */
+  flex: 1;
   padding: 10px;
   border: 1px solid #ccc;
-  border-radius: 6px;
+  border-radius: 4px;
   font-size: 14px;
 }
 
 .input-filtro {
   padding: 10px;
   border: 1px solid #ccc;
-  border-radius: 6px;
+  border-radius: 4px;
   background-color: white;
   cursor: pointer;
 }
@@ -109,22 +114,22 @@
 }
 
 .tabla th {
-  background-color: #f8f9fa;
-  color: #495057;
-  font-weight: 700;
+  background-color: #333; /* Encabezado negro/gris oscuro */
+  color: white;
+  font-weight: 600;
   text-align: left;
-  padding: 12px;
-  border-bottom: 2px solid #dee2e6;
+  padding: 12px 15px;
+  border-bottom: 3px solid var(--simtexx-red, rgb(172, 5, 5)); /* Línea roja divisoria */
 }
 
 .tabla td {
-  padding: 12px;
+  padding: 12px 15px;
   border-bottom: 1px solid #eee;
   color: #333;
 }
 
 .tabla tr:hover {
-  background-color: #f1f1f1;
+  background-color: #fff0f0; /* Fondo muy suave rojo al pasar el mouse */
 }
 
 /* Botones de acción dentro de la tabla */
@@ -134,43 +139,47 @@
 }
 
 .btn-ver {
-  background-color: #007bff;
+  background-color: #333;
   color: white;
   text-decoration: none;
   padding: 6px 12px;
   border-radius: 4px;
   font-size: 12px;
   font-weight: bold;
+  transition: 0.2s;
 }
 
 .btn-ver:hover {
-  background-color: #0056b3;
+  background-color: var(--simtexx-red, rgb(172, 5, 5));
 }
 
 .btn-eliminar {
-  background-color: #dc3545;
-  color: white;
-  border: none;
-  padding: 6px 12px;
+  background-color: transparent;
+  color: #dc3545;
+  border: 1px solid #dc3545;
+  padding: 5px 11px;
   border-radius: 4px;
   cursor: pointer;
   font-size: 12px;
   font-weight: bold;
+  transition: 0.2s;
 }
 
 .btn-eliminar:hover {
-  background-color: #bd2130;
+  background-color: #dc3545;
+  color: white;
 }
 
 /* --- Panel Lateral de Estadísticas --- */
 .panel-registros {
   background: white;
   padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
   display: flex;
   flex-direction: column;
   gap: 15px;
+  border-top: 4px solid #333;
 }
 
 .panel-registros h3 {
@@ -178,8 +187,8 @@
   margin-bottom: 10px;
   color: #333;
   text-align: center;
-  font-size: 1.2rem;
-  border-bottom: 2px solid #eee;
+  font-size: 1.1rem;
+  border-bottom: 1px solid #eee;
   padding-bottom: 10px;
 }
 
@@ -188,32 +197,30 @@
   justify-content: space-between;
   align-items: center;
   padding: 15px;
-  border-radius: 8px;
+  border-radius: 6px;
   color: white;
   font-weight: bold;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
 .panel-card b {
   font-size: 1.4rem;
 }
 
-/* Colores específicos para las tarjetas */
+/* Colores específicos para estados (Se mantienen funcionales) */
 .panel-card.total {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-color: #333; /* Negro corporativo para el total */
 }
 
 .panel-card.pendiente {
-  background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
-  color: #333; /* Texto oscuro para contraste con amarillo */
+  background-color: #ffc107; /* Amarillo standard */
+  color: #333;
 }
 
 .panel-card.proceso {
-  background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
-  color: #005cbf;
+  background-color: #17a2b8; /* Azul cyan standard */
 }
 
 .panel-card.finalizada {
-  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-  color: #155724;
+  background-color: #28a745; /* Verde éxito standard */
 }
