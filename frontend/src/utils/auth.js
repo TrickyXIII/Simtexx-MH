@@ -3,8 +3,9 @@ export function getUserFromToken() {
   if (!token) return null;
 
   try {
-    // 1. Decodificar el payload del JWT manualmente para no instalar librerías extra
     const base64Url = token.split('.')[1];
+    if (!base64Url) return null; // Token mal formado
+
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
     const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
         return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
@@ -12,22 +13,21 @@ export function getUserFromToken() {
 
     const decoded = JSON.parse(jsonPayload);
     
-    // 2. Verificar expiración (opcional pero recomendado)
+    // Verificar expiración
     const currentTime = Date.now() / 1000;
     if (decoded.exp < currentTime) {
       localStorage.removeItem("token");
       return null;
     }
 
-    // Retorna { id, rol, rol_id, ... }
     return decoded; 
   } catch (error) {
-    console.error("Token inválido", error);
+    console.error("Error decodificando token:", error);
+    localStorage.removeItem("token"); // Limpiar token corrupto
     return null;
   }
 }
 
-// Helper rápido
 export function isAdminUser() {
   const user = getUserFromToken();
   return user && user.rol_id === 1;

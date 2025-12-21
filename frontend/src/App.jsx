@@ -11,35 +11,37 @@ import GestionUser from "./pages/GestionUser";
 import CrearUser from "./pages/CrearUser";
 import ModificarUser from "./pages/ModificarUser";
 import AuditoriaGlobal from "./pages/AuditoriaGlobal";
-
-// --- IMPORTACIÓN CORREGIDA ---
 import ProtectedRoute from "./components/ProtectedRoute"; 
-
-// Importamos estilos globales
 import "./styles/global.css";
 
 function App() {
   return (
-    <>
-      <div className="main-content">
-        <Routes>
-          <Route path="/" element={<Login />} />
-          <Route path="/registro" element={<Registro />} />
-          
-          {/* Rutas Protegidas */}
-          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-          <Route path="/lista-ot" element={<ProtectedRoute><ListaOT /></ProtectedRoute>} />
-          <Route path="/crear-ot" element={<ProtectedRoute><CrearOT /></ProtectedRoute>} />
-          <Route path="/detalle/:id" element={<ProtectedRoute><DetalleOT /></ProtectedRoute>} />
-          <Route path="/ModificarOT/:id" element={<ProtectedRoute><ModificarOT /></ProtectedRoute>} />
-          <Route path="/mi-perfil" element={<ProtectedRoute><MiPerfil /></ProtectedRoute>} />
-          <Route path="/gestion-usuarios" element={<ProtectedRoute><GestionUser /></ProtectedRoute>} />
-          <Route path="/CrearUser" element={<ProtectedRoute><CrearUser /></ProtectedRoute>} />
-          <Route path="/ModificarUser/:id" element={<ProtectedRoute><ModificarUser /></ProtectedRoute>} />
-          <Route path="/auditorias" element={<ProtectedRoute><AuditoriaGlobal /></ProtectedRoute>} />
-        </Routes>
-      </div>
-    </>
+    <div className="main-content">
+      <Routes>
+        {/* Rutas Públicas */}
+        <Route path="/" element={<Login />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/registro" element={<Registro />} />
+        
+        {/* Rutas Protegidas */}
+        <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        
+        {/* NOTA: Las rutas deben coincidir con los Links del Dashboard */}
+        <Route path="/lista-ot" element={<ProtectedRoute><ListaOT /></ProtectedRoute>} />
+        <Route path="/crear-ot" element={<ProtectedRoute><CrearOT /></ProtectedRoute>} />
+        
+        <Route path="/detalle/:id" element={<ProtectedRoute><DetalleOT /></ProtectedRoute>} />
+        <Route path="/ModificarOT/:id" element={<ProtectedRoute><ModificarOT /></ProtectedRoute>} />
+        
+        <Route path="/mi-perfil" element={<ProtectedRoute><MiPerfil /></ProtectedRoute>} />
+        
+        <Route path="/GestionUser" element={<ProtectedRoute><GestionUser /></ProtectedRoute>} />
+        <Route path="/CrearUser" element={<ProtectedRoute><CrearUser /></ProtectedRoute>} />
+        <Route path="/ModificarUser/:id" element={<ProtectedRoute><ModificarUser /></ProtectedRoute>} />
+        
+        <Route path="/auditoria" element={<ProtectedRoute><AuditoriaGlobal /></ProtectedRoute>} />
+      </Routes>
+    </div>
   );
 }
 
