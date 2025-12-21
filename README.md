@@ -46,9 +46,9 @@ El proyecto ha pasado por una fase de optimización detallada:
 2. **Backend:** Instalar dependencias con `npm install` y configurar el `.env` con las credenciales de PostgreSQL.
 3. **Frontend:**
    ```bash
-   cd frontend
-   npm install
-   npm run dev´´´
+   cd frontend´
+   npm install´
+   npm run dev´
 
 
 
