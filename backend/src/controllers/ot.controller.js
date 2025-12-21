@@ -3,7 +3,12 @@ import { generarCodigoOT } from "../utils/generarCodigoOT.js";
 import ExcelJS from "exceljs";
 import fs from "fs";
 
-// --- ESTADÍSTICAS DASHBOARD ---
+/**
+ * Obtiene estadísticas generales para el Dashboard.
+ * Filtra los datos según el rol del usuario (Cliente, Mantenedor o Admin).
+ * @param {Object} req - Request con la sesión del usuario.
+ * @param {Object} res - Response.
+ */
 export const getDashboardStats = async (req, res) => {
   try {
     const { rol, id, rol_id } = req.user || {};
@@ -13,21 +18,20 @@ export const getDashboardStats = async (req, res) => {
     const values = [];
     let whereClause = "WHERE 1=1"; 
     
-    // Lógica de filtrado según rol
+    // Filtro por Rol
     if (rol_id === 2) { 
-      // CLIENTE: Filtramos por cliente_id
+      // CLIENTE: Ve solo sus OTs
       whereClause += " AND cliente_id = $1";
       values.push(userid);
     } else if (rol_id === 3) {
-      // MANTENEDOR: Filtramos por responsable_id
+      // MANTENEDOR: Ve solo las OTs asignadas
       whereClause += " AND responsable_id = $1";
       values.push(userid);
     } else if (userRole !== 'admin' && userRole !== 'administrador') {
-      // Fallback genérico (por si acaso)
+      // Fallback de seguridad
       whereClause += " AND responsable_id = $1";
       values.push(userid);
     }
-    // Si es Admin (rol_id 1), no entra en los if y ve todo (WHERE 1=1)
 
     const query = `
       SELECT 
@@ -55,7 +59,11 @@ export const getDashboardStats = async (req, res) => {
   }
 };
 
-// --- OBTENER TODAS ---
+/**
+ * Obtiene el listado de Órdenes de Trabajo con filtros opcionales.
+ * @param {Object} req - Request (query params: busqueda, estado, fechas).
+ * @param {Object} res - Response.
+ */
 export const getOTs = async (req, res) => {
   try {
     const { busqueda, estado, fechaInicio, fechaFin } = req.query;
@@ -74,14 +82,12 @@ export const getOTs = async (req, res) => {
     const values = [];
     let counter = 1;
 
-    // Lógica diferenciada por Rol ID:
+    // Filtros de Seguridad por Rol
     if (rol_id === 2) {
-      // Si es CLIENTE: Filtramos por la columna cliente_id
       query += ` AND o.cliente_id = $${counter}`;
       values.push(userid);
       counter++;
     } else if (rol_id === 3) {
-      // Si es MANTENEDOR: Filtramos por la columna responsable_id
       query += ` AND o.responsable_id = $${counter}`;
       values.push(userid);
       counter++;
@@ -91,6 +97,7 @@ export const getOTs = async (req, res) => {
       counter++;
     }
     
+    // Filtros de Búsqueda
     if (estado && estado !== "Todos") {
       query += ` AND o.estado = $${counter}`;
       values.push(estado);
@@ -121,7 +128,11 @@ export const getOTs = async (req, res) => {
   }
 };
 
-// --- OBTENER POR ID ---
+/**
+ * Obtiene el detalle de una OT por su ID, validando permisos de acceso.
+ * @param {Object} req - Request.
+ * @param {Object} res - Response.
+ */
 export const getOTById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -140,6 +151,7 @@ export const getOTById = async (req, res) => {
     
     const ot = result.rows[0];
     
+    // Validación de acceso estricta para no administradores
     if (userRole !== 'admin' && userRole !== 'administrador') {
         const esResponsable = String(ot.responsable_id) === String(userIdToken);
         const esCliente = String(ot.cliente_id) === String(userIdToken);
@@ -156,7 +168,11 @@ export const getOTById = async (req, res) => {
   }
 };
 
-// --- CREAR OT ---
+/**
+ * Crea una nueva Orden de Trabajo y registra la auditoría.
+ * @param {Object} req - Request (body con datos del formulario).
+ * @param {Object} res - Response.
+ */
 export const createOT = async (req, res) => {
   try {
     let { 
@@ -174,6 +190,7 @@ export const createOT = async (req, res) => {
       return res.status(400).json({ error: "El título es obligatorio" });
     }
 
+    // Valores por defecto
     if (!estado) estado = "Pendiente";
     if (!fecha_inicio_contrato) fecha_inicio_contrato = new Date();
     if (fecha_fin_contrato === "") fecha_fin_contrato = null;
@@ -200,6 +217,7 @@ export const createOT = async (req, res) => {
 
     const nuevaOT = result.rows[0];
 
+    // Registro de Auditoría
     if (req.user) {
       await pool.query(
         `INSERT INTO auditorias (usuario_id, ot_id, accion, descripcion, ip_address)
@@ -221,7 +239,11 @@ export const createOT = async (req, res) => {
   }
 };
 
-// --- ACTUALIZAR OT ---
+/**
+ * Actualiza una OT existente y registra los cambios específicos en auditoría.
+ * @param {Object} req - Request.
+ * @param {Object} res - Response.
+ */
 export const updateOT = async (req, res) => {
   const { id } = req.params;
   const { titulo, descripcion, estado, cliente_id, responsable_id, fecha_inicio_contrato, fecha_fin_contrato, activo } = req.body;
@@ -240,6 +262,7 @@ export const updateOT = async (req, res) => {
       WHERE id_ot = $9 RETURNING *;
     `, [titulo, descripcion, estado, cliente_id, responsable_id, fecha_inicio_contrato, fecha_fin_contrato, activo, id]);
 
+    // Auditoría de cambios detallada
     const usuarioIdInt = parseInt(userIdToken);
     if (!isNaN(usuarioIdInt) && usuarioIdInt > 0) {
         const cambios = [];
@@ -266,7 +289,11 @@ export const updateOT = async (req, res) => {
   }
 };
 
-// --- ELIMINAR OT ---
+/**
+ * Realiza un borrado lógico (soft delete) de una OT.
+ * @param {Object} req - Request.
+ * @param {Object} res - Response.
+ */
 export const deleteOT = async (req, res) => {
   try {
     const { id } = req.params;
@@ -293,10 +320,14 @@ export const deleteOT = async (req, res) => {
   }
 };
 
-// --- EXPORTAR CSV (CON SEGURIDAD DE ROL) ---
+/**
+ * Exporta el listado de OTs a formato CSV.
+ * Solo permitido para Admin y Mantenedores.
+ * @param {Object} req - Request.
+ * @param {Object} res - Response.
+ */
 export const exportOTsCSV = async (req, res) => {
   try {
-    // 1. VALIDACIÓN DE ROL (1=Admin, 3=Mantenedor)
     const { rol_id } = req.user;
     if (rol_id !== 1 && rol_id !== 3) {
         return res.status(403).json({ error: "Acceso denegado. Solo personal autorizado." });
@@ -305,7 +336,7 @@ export const exportOTsCSV = async (req, res) => {
     const { rol, id } = req.user || {};
     const userid = id;
     const userRole = rol ? rol.toLowerCase() : "";
-    const { busqueda, estado, fechaInicio, fechaFin } = req.query;
+    const { busqueda, estado } = req.query;
 
     let query = `
       SELECT 
@@ -322,7 +353,6 @@ export const exportOTsCSV = async (req, res) => {
     const values = [];
     let counter = 1;
 
-    // Aunque validamos rol arriba, mantenemos filtros por si un mantenedor solo debe ver lo suyo (opcional)
     if (userRole !== 'admin' && userRole !== 'administrador' && userid) {
       query += ` AND o.responsable_id = $${counter}`;
       values.push(userid);
@@ -334,7 +364,6 @@ export const exportOTsCSV = async (req, res) => {
       values.push(estado);
       counter++;
     }
-    // (Resto de filtros aquí si son necesarios igual que en getOTs)
 
     query += " ORDER BY o.id_ot DESC";
 
@@ -343,6 +372,7 @@ export const exportOTsCSV = async (req, res) => {
 
     if (ots.length === 0) return res.status(404).send("No hay datos");
 
+    // Construcción del CSV
     const headers = ["ID", "Codigo", "Titulo", "Descripcion", "Estado", "Inicio", "Fin", "Responsable", "Cliente"];
     const csvRows = ots.map(row => {
       return [
@@ -369,64 +399,82 @@ export const exportOTsCSV = async (req, res) => {
   }
 };
 
-// --- IMPORTAR OTs (CON SEGURIDAD DE ROL) ---
+/**
+ * Importa OTs masivamente desde un archivo CSV.
+ * Estructura esperada del CSV: Titulo, Descripcion, Estado, [Otros opcionales...]
+ * @param {Object} req - Request con el archivo CSV (req.file) y usuario autenticado.
+ * @param {Object} res - Response para devolver el resultado.
+ */
 export const importOTs = async (req, res) => {
   try {
+    // 1. Validar existencia del archivo
     if (!req.file) {
       return res.status(400).json({ error: "No se subió ningún archivo CSV" });
     }
 
-    // 1. VALIDACIÓN DE ROL: Solo Admin (1) puede importar.
-    // El requerimiento dice: "trabajador solo debe poder exportar, no importar".
+    // 2. Validación de Seguridad: Solo Admin (rol_id = 1)
     const { rol_id } = req.user;
-    if (rol_id !== 1) {
-        // Borrar archivo si no tiene permisos
-        fs.unlinkSync(req.file.path);
-        return res.status(403).json({ error: "Acceso denegado. Solo administradores pueden importar." });
+    if (Number(rol_id) !== 1) {
+      if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+      return res.status(403).json({ error: "Acceso denegado. Solo administradores pueden importar." });
     }
 
     const filePath = req.file.path;
     const workbook = new ExcelJS.Workbook();
-    
+
+    // Leemos el CSV
     await workbook.csv.readFile(filePath);
     const worksheet = workbook.getWorksheet(1);
     
     let otsCreadas = 0;
     let errores = [];
-
     const rows = [];
+
+    // Recolectar filas (saltando la cabecera)
     worksheet.eachRow((row, rowNumber) => {
       if (rowNumber > 1) rows.push({ num: rowNumber, values: row.values });
     });
 
     for (const row of rows) {
       const data = row.values;
-      // Ajusta índices según tu CSV real. Ejemplo:
-      // A=1(ID?), B=2(Cod), C=3(Titulo), D=4(Desc), E=5(Estado)...
-      const titulo = data[3]; 
-      const descripcion = data[4];
-      const estado = data[5] || "Pendiente";
       
-      if(!titulo) continue;
+      // Mapeo basado en tu CSV: Titulo (1), Descripcion (2), Estado (3)...
+      // (ExcelJS usa base 1 para índices de values)
+      const titulo = data[1]; 
+      const descripcion = data[2];
+      const estado = data[3] || "Pendiente";
+      
+      if (!titulo) continue;
 
-      const codigo = await generarCodigoOT();
-      
-      await pool.query(
-        `INSERT INTO ot (codigo, titulo, descripcion, estado, activo)
-         VALUES ($1, $2, $3, $4, TRUE)`,
-        [codigo, titulo, descripcion, estado]
-      );
-      
-      otsCreadas++;
+      try {
+        const codigo = await generarCodigoOT();
+        
+        // Insertar en Base de Datos
+        await pool.query(
+          `INSERT INTO ot (codigo, titulo, descripcion, estado, activo, fecha_inicio_contrato)
+           VALUES ($1, $2, $3, $4, TRUE, NOW())`,
+          [codigo, titulo, descripcion, estado]
+        );
+        
+        otsCreadas++;
+      } catch (err) {
+        console.error(`Error en fila ${row.num}:`, err.message);
+        errores.push(`Fila ${row.num}: ${err.message}`);
+      }
     }
 
-    fs.unlinkSync(filePath);
+    // Limpieza: Borrar archivo temporal
+    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
 
-    res.json({ message: "Proceso finalizado", creadas: otsCreadas, errores: errores });
+    res.json({ 
+      message: "Proceso de importación finalizado", 
+      creadas: otsCreadas, 
+      errores: errores 
+    });
 
   } catch (error) {
-    console.error("Error importando CSV:", error);
-    if (req.file) fs.unlinkSync(req.file.path);
-    res.status(500).json({ error: "Error al procesar el archivo CSV" });
+    console.error("Error crítico importando CSV:", error);
+    if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+    res.status(500).json({ error: "Error interno al procesar el archivo CSV" });
   }
 };
