@@ -5,16 +5,17 @@
   padding: 0 20px;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   padding-bottom: 60px;
-  min-height: 80vh; /* Asegura que el contenedor ocupe buen alto de pantalla */
+  min-height: 80vh; 
 }
 
-/* --- TÍTULO Y BOTÓN VOLVER --- */
+/* --- TÍTULO Y BOTÓN VOLVER (FIX SOLAPAMIENTO) --- */
 .titulo-header {
   position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
   margin-bottom: 30px;
+  min-height: 50px; /* Asegura altura mínima */
 }
 
 .titulo {
@@ -23,29 +24,35 @@
   text-transform: uppercase;
   color: #333;
   margin: 0;
+  text-align: center;
+  /* SOLUCIÓN 1: Padding lateral de seguridad para que el texto nunca toque el botón */
+  padding: 0 140px; 
+  word-break: break-word; /* Si hay una palabra gigante, la corta */
+  line-height: 1.2;
 }
 
 /* Botón Volver - Estilo ListaOT (Sólido) */
 .btn-volver {
-  position: absolute;
+  position: absolute; /* Mantenemos absoluto en escritorio para centrado perfecto del título */
   left: 0;
-  background-color: #333; /* Fondo sólido oscuro */
-  color: white;           /* Texto blanco */
+  background-color: #333;
+  color: white;
   border: none;
   padding: 10px 20px;
-  border-radius: 4px;     /* Bordes levemente redondeados como en ListaOT */
+  border-radius: 4px;
   font-weight: 700;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s;
   display: flex;
   align-items: center;
   gap: 8px;
   text-decoration: none;
   font-size: 0.95rem;
+  z-index: 10; /* Asegura que el botón quede sobre el título si algo fallara */
 }
 
 .btn-volver:hover {
-  background-color: #000; /* Más oscuro al hover */
+  background-color: #000;
   transform: translateY(-1px);
 }
 
@@ -57,8 +64,6 @@
   padding: 25px;
   border-top: 4px solid rgb(172, 5, 5); /* Rojo Simtexx */
   margin-bottom: 30px;
-  
-  /* CORRECCIÓN: Altura mínima para evitar que se vea vacío con poca info */
   min-height: 250px; 
   display: flex;
   flex-direction: column;
@@ -79,7 +84,7 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 20px;
-  min-height: auto; /* El encabezado no necesita ser tan alto */
+  min-height: auto; 
 }
 
 .detalle-item {
@@ -107,9 +112,9 @@
 /* --- 2. ZONA PRINCIPAL (GRID 60% - 40%) --- */
 .detalle-main {
   display: grid;
-  grid-template-columns: 60% 1fr; /* 1fr toma el resto (aprox 40% menos gap) */
+  grid-template-columns: 60% 1fr; 
   gap: 30px;
-  align-items: stretch; /* Estirar para que ambas columnas tengan la misma altura */
+  align-items: stretch;
 }
 
 /* Datos */
@@ -117,7 +122,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
-  flex-grow: 1; /* Ocupa el espacio disponible en la caja flex */
+  flex-grow: 1;
 }
 
 .datos-grid label {
@@ -139,8 +144,8 @@
   flex-wrap: wrap;
   gap: 15px;
   justify-content: center;
-  flex-grow: 1; /* Empuja el footer hacia abajo */
-  align-content: flex-start; /* Evita espacios grandes entre filas si hay pocos */
+  flex-grow: 1; 
+  align-content: flex-start;
 }
 
 .recurso-item {
@@ -165,7 +170,7 @@
 }
 
 .recursos-footer {
-  margin-top: auto; /* Se pega al fondo gracias a flex-direction column en caja-estilo */
+  margin-top: auto; 
   padding-top: 15px;
   border-top: 1px solid #eee;
   display: flex;
@@ -215,7 +220,7 @@
 .btn-azul { background-color: #17a2b8; }
 .btn-azul:hover { background-color: #138496; }
 
-/* --- TABLA HISTORIAL (Estilo ListaOT) --- */
+/* --- TABLA HISTORIAL --- */
 .historial-tabla {
   width: 100%;
   border-collapse: collapse;
@@ -298,9 +303,27 @@
   background-color: #8a0404;
 }
 
-/* RESPONSIVIDAD */
+/* --- RESPONSIVIDAD (SOLUCIÓN 2) --- */
 @media (max-width: 900px) {
   .detalle-header { grid-template-columns: 1fr; }
   .detalle-main { grid-template-columns: 1fr; }
   .datos-grid { grid-template-columns: 1fr; }
+  
+  /* Ajuste de solapamiento en móviles */
+  .titulo-header {
+    flex-direction: column; /* Apila los elementos */
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  .btn-volver {
+    position: static; /* Quita el absolute para que ocupe su propio espacio */
+    margin-bottom: 10px;
+  }
+
+  .titulo {
+    padding: 0; /* Ya no necesitamos el colchón porque están apilados */
+    text-align: left;
+    font-size: 1.8rem;
+  }
 }
