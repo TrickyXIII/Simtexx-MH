@@ -57,15 +57,40 @@ export default function ListaOT() {
     exportCSV({ busqueda, estado: filtroEstado, fechaInicio, fechaFin });
   };
 
+  // --- MODIFICACIÓN AQUÍ: Mejor manejo de reporte de errores ---
   const handleImport = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+
+    // Resetear el input para permitir subir el mismo archivo si falla y se corrige
+    e.target.value = null;
+
     try {
         const res = await importCSV(file);
-        alert(res.message || "Importación finalizada");
+        
+        // Construimos un mensaje detallado
+        let mensaje = res.message || "Proceso finalizado";
+        
+        if (res.creadas !== undefined) {
+             mensaje += `\n\n✅ Registros creados exitosamente: ${res.creadas}`;
+        }
+        
+        // Si el backend reporta errores específicos por fila
+        if (res.errores && res.errores.length > 0) {
+            mensaje += `\n\n⚠️ Se encontraron ${res.errores.length} errores que impidieron la carga de ciertas filas:\n`;
+            // Mostramos los primeros 5 errores para no hacer la alerta gigante
+            mensaje += res.errores.slice(0, 5).join("\n");
+            
+            if (res.errores.length > 5) {
+                mensaje += `\n... y ${res.errores.length - 5} errores más.`;
+            }
+        }
+
+        alert(mensaje);
         cargarDatos();
-    } catch (e) {
-        alert("Error al importar");
+    } catch (err) {
+        console.error(err);
+        alert(err.message || "Error crítico al intentar importar el archivo.");
     }
   };
 
@@ -132,6 +157,7 @@ export default function ListaOT() {
                     <th>Código</th>
                     <th>Título</th>
                     <th>Estado</th>
+                    <th>Cliente</th> {/* NUEVA COLUMNA */}
                     <th>F. Inicio</th>
                     <th>F. Fin</th>
                     <th>Responsable</th>
@@ -149,6 +175,9 @@ export default function ListaOT() {
                               {ot.estado}
                             </span>
                         </td>
+                        {/* NUEVA CELDA CLIENTE */}
+                        <td>{ot.cliente_nombre || "Sin Asignar"}</td>
+                        
                         <td>{ot.fecha_inicio_contrato ? new Date(ot.fecha_inicio_contrato).toLocaleDateString() : '-'}</td>
                         <td>{ot.fecha_fin_contrato ? new Date(ot.fecha_fin_contrato).toLocaleDateString() : '-'}</td>
                         <td>{ot.responsable_nombre || "Sin Asignar"}</td>
@@ -162,7 +191,7 @@ export default function ListaOT() {
                     ))
                     ) : (
                     <tr>
-                        <td colSpan="7" style={{textAlign:'center', padding:'20px'}}>No se encontraron órdenes.</td>
+                        <td colSpan="8" style={{textAlign:'center', padding:'20px'}}>No se encontraron órdenes.</td>
                     </tr>
                     )}
                 </tbody>
@@ -208,7 +237,13 @@ export default function ListaOT() {
                {/* BOTÓN 3: IMPORTAR (Oculto para Clientes) */}
                {!isCliente && (
                   <div className="upload-wrapper">
-                      <input type="file" id="importar-csv" style={{display: 'none'}} accept=".csv" onChange={handleImport}/>
+                      <input 
+                        type="file" 
+                        id="importar-csv" 
+                        style={{display: 'none'}} 
+                        accept=".csv" 
+                        onChange={handleImport}
+                      />
                       <label htmlFor="importar-csv" className="btn-sidebar importar">
                         📥 Importar desde CSV
                       </label>
