@@ -7,7 +7,9 @@
 .titulo {
   text-align: center;
   color: #333;
-  margin-bottom: 80px; /* Aumentado para mayor separación */
+  /* CAMBIO: Usamos padding-bottom para asegurar la separación visual */
+  padding-bottom: 60px; 
+  margin-bottom: 0;
   font-size: 2.2rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -16,7 +18,7 @@
 /* --- HEADER CONTROLS --- */
 .header-controls {
     display: flex;
-    justify-content: flex-end; /* Alineado a la derecha */
+    justify-content: flex-end; 
     align-items: center;
     margin-bottom: 20px;
 }
@@ -34,7 +36,7 @@
 /* --- GRID LAYOUT --- */
 .layout-grid {
   display: grid;
-  grid-template-columns: 1fr 280px; /* Tabla flexible | Sidebar fijo 280px */
+  grid-template-columns: 1fr 280px; 
   gap: 25px;
   align-items: start;
 }
@@ -98,18 +100,19 @@
 .badge-estado.en-proceso { background-color: #d1ecf1; color: #0c5460; }
 .badge-estado.finalizada { background-color: #d4edda; color: #155724; }
 
+/* --- BOTONES DE LA TABLA (Mismo tamaño y alineación) --- */
 .acciones-ot { 
   display: flex; 
   gap: 10px; 
   align-items: center; 
 }
 
-/* Estilos base compartidos para botones */
 .btn-ver, .btn-eliminar {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: 36px; /* Altura fija para ambos */
+  display: inline-flex;       
+  align-items: center;        
+  justify-content: center;    
+  height: 36px;               /* Altura fija idéntica */
+  min-width: 45px;            /* Ancho mínimo */
   padding: 0 15px;
   border-radius: 4px;
   font-size: 12px;
@@ -118,6 +121,7 @@
   cursor: pointer;
   transition: all 0.2s ease;
   box-sizing: border-box;
+  line-height: 1;
 }
 
 .btn-ver { 
@@ -134,7 +138,7 @@
   background-color: transparent; 
   color: #dc3545; 
   border: 1px solid #dc3545;
-  font-size: 14px; /* Un poco más grande para el icono */
+  font-size: 14px; 
 }
 .btn-eliminar:hover { 
   background-color: #dc3545; 
@@ -203,13 +207,13 @@
   font-size: 0.95rem;
   box-shadow: 0 2px 5px rgba(0,0,0,0.1);
   box-sizing: border-box;
-  text-decoration: none; /* Importante para el Link */
+  text-decoration: none; 
 }
 
 /* 1. Botón Crear (Rojo) */
 .btn-sidebar.crear {
   background-color: rgb(172, 5, 5);
-  font-size: 1.1rem; /* Un poco más grande para destacar */
+  font-size: 1.1rem; 
 }
 .btn-sidebar.crear:hover { background-color: #8a0404; }
 
