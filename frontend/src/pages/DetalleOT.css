@@ -1,189 +1,298 @@
-.detalle-container {
-  width: 90%;
-  margin: 0 auto;
-  text-align: center;
-  padding-bottom: 40px; /* Espacio extra abajo */
+/* --- CONTENEDOR PRINCIPAL --- */
+.detalle-wrapper {
+  max-width: 1200px;
+  margin: 40px auto;
+  padding: 0 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
 }
 
-/* --- NUEVO: Estilos para el encabezado con botón Volver --- */
-.titulo-header {
-  position: relative; /* Permite posicionar elementos absolutos dentro */
+/* --- ENCABEZADO SUPERIOR (Título y Volver) --- */
+.top-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.titulo-pagina {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #333;
+  margin: 0;
+  text-transform: uppercase;
+  border-bottom: 4px solid rgb(172, 5, 5); /* Detalle Rojo */
+  padding-bottom: 5px;
+}
+
+.btn-volver-outline {
+  padding: 8px 20px;
+  background-color: transparent;
+  border: 2px solid #333;
+  color: #333;
+  font-weight: 700;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-volver-outline:hover {
+  background-color: #333;
+  color: white;
+}
+
+/* --- TARJETAS DE INFORMACIÓN (Resumen Superior) --- */
+.info-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.info-card {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  border-top: 4px solid #6c757d; /* Borde gris por defecto */
+  text-align: center;
+}
+
+.info-card label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: bold;
+  color: #777;
+  margin-bottom: 5px;
+  text-transform: uppercase;
+}
+
+.info-card span {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #333;
+  display: block;
+}
+
+/* Bordes de color para destacar */
+.info-card.red-accent { border-top-color: rgb(172, 5, 5); }
+.info-card.blue-accent { border-top-color: #17a2b8; }
+
+/* --- GRID PRINCIPAL (Datos y Recursos) --- */
+.main-content-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr; /* Izquierda más ancha */
+  gap: 30px;
+  align-items: start;
+}
+
+/* Caja General Estilo "ListaOT" */
+.content-box {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  padding: 25px;
+  border: 1px solid #eee;
+}
+
+.box-header {
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 1.3rem;
+  color: #333;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 10px;
+}
+
+/* Descripción */
+.desc-text {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #444;
+  white-space: pre-wrap; /* Mantiene saltos de línea */
+}
+
+/* Lista de Recursos */
+.recursos-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.recurso-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  text-decoration: none;
+  color: #333;
+  transition: background 0.2s;
+}
+
+.recurso-link:hover {
+  background-color: #e2e6ea;
+}
+
+.recurso-icon {
+  font-size: 1.5rem;
+}
+
+.recurso-info {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.recurso-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.recurso-meta {
+  font-size: 0.75rem;
+  color: #888;
+}
+
+/* --- BOTONERA DE ACCIONES --- */
+.actions-bar {
   display: flex;
   justify-content: center;
-  align-items: center;
-  margin-top: 30px;
-  margin-bottom: 20px;
-}
-
-.titulo {
-  margin: 0;
-  font-size: 32px;
-}
-
-.btn-volver {
-  position: absolute;
-  left: 0; /* Pegado a la izquierda del contenedor */
-  background: #720000;
-  border: 2px solid #444;
-  color: white;
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.btn-volver:hover {
-  background: #720000;
-  color: white;
-}
-/* --------------------------------------------------------- */
-
-.detalle-header {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
   gap: 15px;
-  background: #efefef;
-  padding: 20px;
-  border-radius: 12px;
-  margin-top: 20px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+  margin: 10px 0;
+  flex-wrap: wrap;
 }
 
-.detalle-item {
+.btn-action {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 6px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  color: white;
+  text-transform: uppercase;
+  font-size: 0.9rem;
+}
+
+.btn-action:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.btn-config { background-color: #333; } /* Gris oscuro */
+.btn-recurso { background-color: rgb(172, 5, 5); } /* Rojo */
+.btn-pdf { background-color: #17a2b8; } /* Azul */
+
+/* --- TABLA HISTORIAL (Estilo ListaOT) --- */
+.historial-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.historial-table th {
+  background-color: #333;
+  color: white;
   text-align: left;
-  background: white;
-  padding: 10px;
-  border-radius: 10px;
+  padding: 12px 15px;
+  border-bottom: 3px solid rgb(172, 5, 5);
 }
 
-.detalle-item label {
-  font-weight: bold;
+.historial-table td {
+  padding: 12px 15px;
+  border-bottom: 1px solid #eee;
   color: #444;
 }
 
-.detalle-item span {
-  display: block;
-  margin-top: 5px;
-  font-size: 18px;
+.historial-table tr:hover {
+  background-color: #fff0f0;
 }
 
-.detalle-main {
-  margin-top: 20px;
-  display: grid;
-  grid-template-columns: 60% 40%;
-  gap: 20px;
+/* --- COMENTARIOS / BITÁCORA --- */
+.comentarios-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
-.datos-box {
-  background: white;
-  padding: 20px;
-  border-radius: 15px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+.comentario-item {
+  background: #f9f9f9;
+  border-left: 4px solid #333; /* Borde lateral */
+  padding: 15px;
+  margin-bottom: 15px;
+  border-radius: 0 8px 8px 0;
+  position: relative;
 }
 
-.datos-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 15px;
-  text-align: left;
-}
-
-.datos-grid label {
-  font-weight: bold;
-}
-
-.recursos-box {
-  background: white;
-  padding: 20px;
-  border-radius: 15px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-}
-
-.recursos-grid {
-  margin-top: 10px;
+.comentario-header {
   display: flex;
   justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 0.85rem;
+  color: #666;
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 5px;
 }
 
-.rcard {
-  width: 30%;
-  background: #f4f4f4;
-  padding: 15px;
-  border-radius: 15px;
-  text-align: center;
+.comentario-body {
+  color: #333;
+  font-size: 1rem;
+  white-space: pre-wrap;
 }
 
-.rcard b {
-  font-size: 28px;
-  display: block;
-}
-
-.botonera {
-  margin-top: 30px;
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-}
-
-.botonera button {
-  padding: 12px 24px;
-  background: #333;
-  color: white;
+/* Input nuevo comentario */
+.nuevo-comentario-box {
+  background: #f1f1f1;
+  padding: 20px;
   border-radius: 8px;
-  border: none;
-  font-size: 16px;
-  cursor: pointer;
-  transition: 0.2s;
+  border: 1px solid #ddd;
+  margin-top: 20px;
 }
 
-.botonera button:hover {
-  background: #000;
-  transform: translateY(-2px);
-}
-
-.historial-box {
-  margin-top: 30px;
-  background: white;
-  padding: 20px;
-  border-radius: 15px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-}
-
-.historial-box table {
+.input-area {
   width: 100%;
-  border-collapse: collapse;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  min-height: 80px;
+  font-family: inherit;
+  resize: vertical;
+  box-sizing: border-box; /* Evita desborde */
 }
 
-.historial-box th {
-  background: #ddd;
-  padding: 10px;
+/* Badge de estado (Reutilizado) */
+.badge { padding: 5px 10px; border-radius: 12px; font-size: 0.9rem; color: white; }
+.badge.pendiente { background-color: #ffc107; color: #333; }
+.badge.en-proceso { background-color: #17a2b8; }
+.badge.finalizada { background-color: #28a745; }
+
+/* RESPONSIVIDAD */
+@media (max-width: 900px) {
+  .main-content-grid {
+    grid-template-columns: 1fr; /* Una sola columna */
+  }
 }
 
-.historial-box td {
-  padding: 10px;
-  border-bottom: 1px solid #ccc;
-}
-
-.comentarios-box {
-  margin-top: 30px;
-  background: white;
-  padding: 20px;
-  border-radius: 15px;
-  margin-bottom: 40px;
-}
-
-.btn-add {
-  margin-top: 10px;
-  height: 40px;
-  width: 40px;
-  background: #222;
-  color: white;
-  border-radius: 50%;
-  font-size: 22px;
-  border: none;
-  cursor: pointer;
+@media (max-width: 600px) {
+  .top-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .actions-bar {
+    flex-direction: column;
+    width: 100%;
+  }
+  .btn-action { width: 100%; }
 }
