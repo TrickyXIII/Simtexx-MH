@@ -82,13 +82,6 @@ export default function ListaOT() {
         
         <h1 className="titulo">Gestión de OTs</h1>
 
-        {/* HEADER: Solo info de usuario, el botón se fue al sidebar */}
-        <div className="header-controls">
-            <div className="user-info-box">
-               Hola, <strong>{usuario.nombre}</strong> ({usuario.rol})
-            </div>
-        </div>
-
         {/* ESTRUCTURA GRID */}
         <div className="layout-grid">
           
@@ -200,7 +193,7 @@ export default function ListaOT() {
             {/* 2. Botones de Acción (Sidebar) */}
             <div className="panel-acciones-masivas">
                
-               {/* BOTÓN 1: CREAR OT (Movido aquí) */}
+               {/* BOTÓN 1: CREAR OT */}
                <Link to="/crear-ot" className="btn-sidebar crear">
                  + Nueva Orden de Trabajo
                </Link>

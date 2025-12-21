@@ -13,24 +13,6 @@
   text-transform: uppercase;
 }
 
-/* --- HEADER CONTROLS --- */
-.header-controls {
-    display: flex;
-    justify-content: flex-end; /* Alineado a la derecha */
-    align-items: center;
-    margin-bottom: 20px;
-}
-
-.user-info-box {
-  background-color: rgba(255, 255, 255, 0.95);
-  padding: 12px 25px;
-  border-radius: 8px;
-  border-left: 5px solid rgb(172, 5, 5);
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-  font-size: 1rem;
-  color: #333;
-}
-
 /* --- GRID LAYOUT --- */
 .layout-grid {
   display: grid;
@@ -98,8 +80,29 @@
 .badge-estado.en-proceso { background-color: #d1ecf1; color: #0c5460; }
 .badge-estado.finalizada { background-color: #d4edda; color: #155724; }
 
-.acciones-ot { display: flex; gap: 8px; }
-.btn-ver { background-color: #333; color: white; text-decoration: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+.acciones-ot { 
+  display: flex; 
+  gap: 8px;
+  align-items: center;
+}
+
+/* --- BOTÓN VER MODIFICADO --- */
+.btn-ver { 
+  background-color: #333; 
+  color: white; 
+  text-decoration: none; 
+  padding: 8px 24px; /* Más ancho */
+  border-radius: 4px; 
+  font-size: 12px; 
+  font-weight: bold;
+  
+  /* Centrado perfecto */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 50px; 
+}
+
 .btn-eliminar { background-color: transparent; color: #dc3545; border: 1px solid #dc3545; padding: 5px 11px; border-radius: 4px; cursor: pointer; font-weight: bold; }
 
 /* --- SIDEBAR (DERECHA) --- */
