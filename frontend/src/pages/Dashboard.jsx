@@ -13,16 +13,18 @@ const Dashboard = () => {
   });
 
   const usuario = getUserFromToken() || { nombre: "Invitado", rol: "Invitado", id: 0, rol_id: 0 };
-  const isCliente = usuario.rol_id === 2;
+  const isCliente = usuario.rol_id === 2; // Cliente no ve botón usuarios
 
   useEffect(() => {
     async function cargarDatos() {
+      // 1. Cargar Estadísticas
       const estadisticas = await getDashboardStats();
       if(estadisticas) setStats(estadisticas);
 
+      // 2. Cargar lista de OTs (Solo las últimas 5 para la tabla)
       const listaOts = await getOTs({});
       if (Array.isArray(listaOts)) {
-        setOts(listaOts.slice(0, 5)); // Solo las últimas 5
+        setOts(listaOts.slice(0, 5)); 
       }
     }
     cargarDatos();
@@ -31,100 +33,98 @@ const Dashboard = () => {
   return (
     <>
       <NavBar />
-      <div className="dashboard-container">
-        <h1 className="titulo">Panel de Control</h1>
-
-        <div className="layout-grid">
+      <div className="dashboard-wrapper">
+        
+        {/* --- SECCIÓN 1: BOTONES DE ACCIÓN SUPERIOR --- */}
+        <div className="action-buttons-container">
+          <Link to="/crear-ot" className="big-action-btn">
+            Crear OT
+          </Link>
           
-          {/* COLUMNA IZQUIERDA: TABLA DE ÚLTIMOS REGISTROS */}
-          <div className="tabla-box">
-            <h3 style={{marginTop:0, borderBottom:'3px solid #333', paddingBottom:'10px', marginBottom:'20px'}}>
-              Últimas Órdenes Registradas
-            </h3>
-            
-            <div className="tabla-scroll">
-              <table className="tabla">
-                <thead>
-                  <tr>
-                    <th>Código</th>
-                    <th>Estado</th>
-                    <th>Fecha Inicio</th>
-                    <th>Responsable</th>
-                    <th>Acción</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {ots.length === 0 ? (
-                    <tr><td colSpan="5" style={{ textAlign: "center", padding: "20px" }}>No hay actividad reciente.</td></tr>
-                  ) : (
-                    ots.map((ot) => (
-                      <tr key={ot.id_ot}>
-                        <td><strong>{ot.codigo}</strong></td>
-                        <td>
-                          <span className={`badge-estado ${ot.estado.toLowerCase().replace(' ', '-')}`}>
-                            {ot.estado}
-                          </span>
-                        </td>
-                        <td>{ot.fecha_inicio_contrato?.slice(0, 10) || "N/A"}</td>
-                        <td>{ot.responsable_nombre || "Sin Asignar"}</td>
-                        <td>
-                           <Link to={`/detalle/${ot.id_ot}`} className="btn-ver-sm">Ver</Link>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-            
-            <div style={{marginTop: '20px', textAlign: 'center'}}>
-               <Link to="/lista-ot" style={{color: '#007bff', textDecoration: 'none', fontWeight: 'bold'}}>
-                 Ver todas las órdenes &rarr;
-               </Link>
-            </div>
-          </div>
+          <Link to="/lista-ot" className="big-action-btn">
+            Órdenes de Trabajo
+          </Link>
+          
+          {!isCliente && (
+            <Link to="/GestionUser" className="big-action-btn">
+              Usuarios
+            </Link>
+          )}
+        </div>
 
-          {/* COLUMNA DERECHA: SIDEBAR (RESUMEN Y ACCIONES) */}
-          <div className="sidebar-column">
-            
-            {/* 1. Panel de Estadísticas */}
-            <div className="panel-registros">
-              <h3>Estado Actual</h3>
-              <div className="panel-card total">
-                <span>Total OT</span> <b>{stats.total}</b>
-              </div>
-              <div className="panel-card pendiente">
-                <span>Pendientes</span> <b>{stats.pendientes}</b>
-              </div>
-              <div className="panel-card proceso">
-                <span>En Proceso</span> <b>{stats.en_proceso}</b>
-              </div>
-              <div className="panel-card finalizada">
-                <span>Finalizadas</span> <b>{stats.finalizadas}</b>
-              </div>
+        {/* --- SECCIÓN 2: PANEL RESUMEN DE OT (TARJETAS) --- */}
+        <div className="stats-section-container">
+          <h2 className="section-title">Panel Resumen de OT</h2>
+          
+          <div className="cards-row">
+            {/* Total (Negro) */}
+            <div className="stat-card card-total">
+              <span className="stat-label">Total</span>
+              <span className="stat-number">{stats.total}</span>
             </div>
 
-            {/* 2. Accesos Directos */}
-            <div className="panel-acciones-masivas">
-              <h3 style={{margin: '0 0 10px 0', fontSize:'16px', color:'#555', textAlign:'center'}}>Accesos Rápidos</h3>
-              
-              <Link to="/crear-ot" className="btn-sidebar crear">
-                + Nueva Orden
-              </Link>
-              
-              <Link to="/lista-ot" className="btn-sidebar azul">
-                📁 Gestionar OTs
-              </Link>
-              
-              {!isCliente && (
-                <Link to="/GestionUser" className="btn-sidebar gris">
-                  👥 Usuarios
-                </Link>
-              )}
+            {/* Pendiente (Amarillo) */}
+            <div className="stat-card card-pendiente">
+              <span className="stat-label">Pendientes</span>
+              <span className="stat-number">{stats.pendientes}</span>
             </div>
 
+            {/* En Proceso (Azul) */}
+            <div className="stat-card card-proceso">
+              <span className="stat-label">En Proceso</span>
+              <span className="stat-number">{stats.en_proceso}</span>
+            </div>
+
+            {/* Finalizada (Verde) */}
+            <div className="stat-card card-finalizada">
+              <span className="stat-label">Finalizadas</span>
+              <span className="stat-number">{stats.finalizadas}</span>
+            </div>
           </div>
         </div>
+
+        {/* --- SECCIÓN 3: ÚLTIMAS ÓRDENES (FONDO ROJO) --- */}
+        <div className="recent-orders-container">
+          <div className="red-header-strip">
+            <h3>Últimas Órdenes Registradas</h3>
+          </div>
+          
+          <div className="table-white-bg">
+            <table className="dashboard-table">
+              <thead>
+                <tr>
+                  <th>Código</th>
+                  <th>Título</th>
+                  <th>Estado</th>
+                  <th>Responsable</th>
+                  <th>Acción</th>
+                </tr>
+              </thead>
+              <tbody>
+                {ots.length === 0 ? (
+                  <tr><td colSpan="5" style={{ textAlign: "center", padding: "20px" }}>No hay actividad reciente.</td></tr>
+                ) : (
+                  ots.map((ot) => (
+                    <tr key={ot.id_ot}>
+                      <td><strong>{ot.codigo}</strong></td>
+                      <td>{ot.titulo}</td>
+                      <td>
+                        <span className={`badge-estado ${ot.estado.toLowerCase().replace(' ', '-')}`}>
+                          {ot.estado}
+                        </span>
+                      </td>
+                      <td>{ot.responsable_nombre || "Sin Asignar"}</td>
+                      <td>
+                         <Link to={`/detalle/${ot.id_ot}`} className="btn-ver-link">Ver Detalle</Link>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
       </div>
       <Footer />
     </>

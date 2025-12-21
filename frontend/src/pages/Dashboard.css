@@ -1,145 +1,180 @@
-/* Contenedor Principal */
-.dashboard-container {
-  max-width: 98%;
+/* Contenedor principal para centrar todo */
+.dashboard-wrapper {
+  max-width: 1100px;
   margin: 40px auto;
   padding: 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 40px; /* Espacio entre las 3 secciones principales */
 }
 
-.titulo {
-  text-align: center;
+/* --- 1. BOTONES SUPERIORES --- */
+.action-buttons-container {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  flex-wrap: wrap;
+}
+
+.big-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: white;
+  border: 3px solid #333; /* Borde grueso negro como en el dibujo */
   color: #333;
-  margin-bottom: 30px;
-  font-size: 2.2rem;
-  font-weight: 700;
+  font-weight: 800;
+  font-size: 1.1rem;
+  text-decoration: none;
+  width: 220px;
+  padding: 15px 0;
+  border-radius: 8px; /* Bordes levemente redondeados */
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
   text-transform: uppercase;
 }
 
-/* --- GRID LAYOUT (Igual a ListaOT) --- */
-.layout-grid {
-  display: grid;
-  grid-template-columns: 1fr 280px; /* Tabla flexible | Sidebar fijo 280px */
-  gap: 25px;
-  align-items: start;
+.big-action-btn:hover {
+  background-color: #333;
+  color: white;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 10px rgba(0,0,0,0.2);
 }
 
-@media (max-width: 1000px) {
-  .layout-grid {
-    grid-template-columns: 1fr; /* Colapsa en móviles */
-  }
-}
-
-/* --- CAJA DE TABLA --- */
-.tabla-box {
+/* --- 2. PANEL RESUMEN (TARJETAS) --- */
+.stats-section-container {
   background: white;
+  border: 3px solid #333; /* Borde del contenedor grande */
+  padding: 20px;
   border-radius: 8px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-  padding: 25px;
-  border-top: 4px solid rgb(172, 5, 5); /* Rojo Simtexx */
+  text-align: center;
 }
 
-.tabla-scroll { overflow-x: auto; }
-.tabla { width: 100%; border-collapse: collapse; font-size: 14px; }
-.tabla th { background-color: #333; color: white; text-align: left; padding: 12px 15px; border-bottom: 3px solid rgb(172, 5, 5); white-space: nowrap; }
-.tabla td { padding: 12px 15px; border-bottom: 1px solid #eee; color: #333; }
-.tabla tr:hover { background-color: #fff0f0; }
+.section-title {
+  margin-top: 0;
+  margin-bottom: 25px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #333;
+}
 
-/* Badges de estado */
+.cards-row {
+  display: flex;
+  justify-content: space-around; /* Espaciado uniforme */
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.stat-card {
+  width: 160px;
+  height: 140px; /* Cuadradas como en el dibujo */
+  border-radius: 20px; /* Bordes muy redondeados */
+  border: 4px solid; /* Borde de color */
+  background: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  transition: transform 0.2s;
+}
+
+.stat-card:hover {
+  transform: scale(1.05);
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: #555;
+  margin-bottom: 5px;
+}
+
+.stat-number {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #333;
+}
+
+/* Colores de bordes según estado */
+.card-total { border-color: #000000; }
+.card-pendiente { border-color: #ffd700; } /* Amarillo */
+.card-proceso { border-color: #00bfff; }   /* Azul Cyan */
+.card-finalizada { border-color: #28a745; } /* Verde */
+
+
+/* --- 3. TABLA INFERIOR (ESTILO ROJO) --- */
+.recent-orders-container {
+  background-color: rgb(120, 0, 0); /* Rojo oscuro de fondo */
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.red-header-strip {
+  background-color: black; /* Tira negra superior interna */
+  color: white;
+  padding: 10px;
+  text-align: center;
+  text-transform: uppercase;
+  font-weight: bold;
+  margin-bottom: 0; /* Pegado a la tabla */
+}
+
+.red-header-strip h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.table-white-bg {
+  background: white;
+  padding: 10px; /* Borde blanco interno */
+  min-height: 200px;
+}
+
+.dashboard-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.dashboard-table th {
+  background-color: transparent;
+  color: #333;
+  text-align: left;
+  padding: 12px;
+  border-bottom: 2px solid #333; /* Líneas divisorias gruesas */
+  font-weight: 800;
+}
+
+.dashboard-table td {
+  padding: 12px;
+  border-bottom: 1px solid #ccc;
+  color: #333;
+}
+
+/* Link simple para "Ver" */
+.btn-ver-link {
+  color: #007bff;
+  font-weight: bold;
+  text-decoration: none;
+}
+.btn-ver-link:hover {
+  text-decoration: underline;
+}
+
+/* Badges reutilizados */
 .badge-estado { padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; }
 .badge-estado.pendiente { background-color: #fff3cd; color: #856404; }
 .badge-estado.en-proceso { background-color: #d1ecf1; color: #0c5460; }
 .badge-estado.finalizada { background-color: #d4edda; color: #155724; }
 
-/* Botón ver pequeño para la tabla dashboard */
-.btn-ver-sm {
-  background-color: #333; 
-  color: white; 
-  text-decoration: none; 
-  padding: 5px 15px; 
-  border-radius: 4px; 
-  font-size: 12px; 
-  font-weight: bold;
-  display: inline-block;
+/* Responsividad para móviles */
+@media (max-width: 768px) {
+  .action-buttons-container { flex-direction: column; align-items: center; }
+  .cards-row { justify-content: center; }
+  .dashboard-wrapper { padding: 0 10px; }
+  
+  /* Tabla con scroll en móviles */
+  .table-white-bg { overflow-x: auto; }
 }
-.btn-ver-sm:hover { background-color: #000; }
-
-/* --- SIDEBAR (COLUMNA DERECHA) --- */
-.sidebar-column {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-/* Panel Resumen (Replicado de ListaOT) */
-.panel-registros {
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  border-top: 4px solid #333;
-}
-
-.panel-registros h3 {
-  margin: 0 0 10px 0;
-  text-align: center;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 10px;
-  color: #333;
-}
-
-.panel-card {
-  display: flex;
-  justify-content: space-between;
-  padding: 12px 15px;
-  border-radius: 6px;
-  color: white;
-  font-weight: bold;
-  font-size: 0.9rem;
-}
-.panel-card.total { background-color: #333; }
-.panel-card.pendiente { background-color: #ffc107; color: #333; }
-.panel-card.proceso { background-color: #17a2b8; }
-.panel-card.finalizada { background-color: #28a745; }
-
-/* Panel Acciones (Botones Verticales) */
-.panel-acciones-masivas {
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-.btn-sidebar {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  padding: 12px;
-  border: none;
-  border-radius: 8px;
-  color: white;
-  font-weight: bold;
-  text-align: center;
-  cursor: pointer;
-  transition: transform 0.2s, background 0.2s;
-  font-size: 0.95rem;
-  text-decoration: none;
-  box-sizing: border-box;
-}
-
-.btn-sidebar:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-
-/* Colores de botones */
-.btn-sidebar.crear { background-color: rgb(172, 5, 5); }
-.btn-sidebar.crear:hover { background-color: #8a0404; }
-
-.btn-sidebar.azul { background-color: #17a2b8; }
-.btn-sidebar.azul:hover { background-color: #138496; }
-
-.btn-sidebar.gris { background-color: #6c757d; }
-.btn-sidebar.gris:hover { background-color: #5a6268; }
