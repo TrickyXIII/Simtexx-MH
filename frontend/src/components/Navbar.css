@@ -1,17 +1,17 @@
-/* Estilos generales de la barra */
+/* frontend/src/components/Navbar.css */
+
 .navbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
   background-color: #ffffff;
   padding: 0 30px;
-  height: 80px; /* Altura aumentada */
+  height: 80px; 
   color: #333;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05); 
   position: sticky;
   top: 0;
   z-index: 1000;
-  border-bottom: 4px solid #333; /* Línea sólida inferior */
 }
 
 /* Sección Izquierda */
@@ -103,6 +103,6 @@
 }
 
 @media (max-width: 768px) {
-    .navbar { flex-direction: column; height: auto; padding: 15px; gap: 15px; }
+    .navbar { flex-direction: column; height: auto; padding: 15px; gap: 15px; padding-bottom: 15px;}
     .nav-right { width: 100%; justify-content: space-between; }
 }
