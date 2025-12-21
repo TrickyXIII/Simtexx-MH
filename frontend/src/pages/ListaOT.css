@@ -7,7 +7,8 @@
 .titulo {
   text-align: center;
   color: #333;
-  margin-bottom: 50px; /* AUMENTADO: Padding visual respecto a la tabla */
+  /* AUMENTADO: Mucho más espacio (padding visual) respecto a la tabla */
+  margin-bottom: 80px; 
   font-size: 2.2rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -105,42 +106,45 @@
   align-items: center;
 }
 
-/* Estilos comunes para igualar tamaño y centrado */
+/* Estilos UNIFICADOS para ambos botones */
 .btn-ver, .btn-eliminar {
-  display: inline-flex;       /* Fundamental para centrar contenido */
-  align-items: center;        /* Centrado Vertical */
-  justify-content: center;    /* Centrado Horizontal */
-  height: 32px;               /* Altura fija idéntica para ambos */
-  padding: 0 15px;            /* Padding lateral igual */
+  display: inline-flex;       /* Flex para centrar contenido */
+  align-items: center;        /* Centrado Vertical perfecto */
+  justify-content: center;    /* Centrado Horizontal perfecto */
+  
+  height: 34px;               /* Altura fija idéntica */
+  min-width: 45px;            /* Ancho mínimo para igualar visualmente */
+  padding: 0 12px;            /* Relleno lateral */
+  
   border-radius: 4px;
   font-weight: bold;
-  font-size: 12px;
-  box-sizing: border-box;     /* Para que el borde no afecte el tamaño total */
+  font-size: 13px;
+  box-sizing: border-box;     
   transition: all 0.2s ease;
-  text-decoration: none;      /* Quitar subrayado del Link */
-  line-height: 1;             /* Resetear altura de línea */
+  text-decoration: none;      
+  line-height: 1;             
+  cursor: pointer;
 }
 
+/* Específico Ver */
 .btn-ver { 
   background-color: #333; 
   color: white; 
-  border: 1px solid #333; /* Borde invisible para igualar box-model con el de eliminar */
+  border: 1px solid #333; 
 }
 .btn-ver:hover {
   background-color: #000;
   transform: translateY(-1px);
 }
 
+/* Específico Eliminar */
 .btn-eliminar { 
-  background-color: transparent; 
+  background-color: white; 
   color: #dc3545; 
   border: 1px solid #dc3545; 
-  cursor: pointer; 
-  font-size: 14px; /* Un pelín más grande para el ícono de basura */
-  padding: 0 10px; /* Ajuste ligero si el icono es muy ancho */
 }
 .btn-eliminar:hover {
-  background-color: #fff5f5;
+  background-color: #ffe6e6;
   transform: translateY(-1px);
 }
 
