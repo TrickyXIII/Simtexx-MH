@@ -7,13 +7,14 @@
   flex-direction: column;
   gap: 40px;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  min-height: 80vh;
 }
 
-/* --- 1. BOTONES DE ACCIÓN (GRIS PALETA) --- */
+/* --- 1. BOTONES DE ACCIÓN (GRIS OSCURO COMPACTOS) --- */
 .action-buttons-container {
   display: flex;
   justify-content: center;
-  gap: 30px;
+  gap: 20px;
   flex-wrap: wrap;
 }
 
@@ -21,16 +22,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  /* Color GRIS de la paleta (similar a botones secundarios/cancelar) */
-  background-color: #6c757d; 
+  background-color: #333; /* Gris oscuro unificado */
   color: white;
   border: none;
   font-weight: 700;
-  font-size: 1.1rem;
+  font-size: 1rem; /* Un poco más pequeño */
   text-decoration: none;
-  width: 220px;
-  padding: 18px 0;
-  border-radius: 8px;
+  width: 200px; /* Ancho reducido */
+  padding: 14px 0; /* Padding reducido */
+  border-radius: 4px;
   transition: all 0.2s ease;
   box-shadow: 0 4px 6px rgba(0,0,0,0.1);
   text-transform: uppercase;
@@ -38,19 +38,17 @@
 }
 
 .big-action-btn:hover {
-  background-color: #5a6268; /* Un tono más oscuro al pasar el mouse */
-  transform: translateY(-3px);
-  box-shadow: 0 6px 10px rgba(0,0,0,0.2);
+  background-color: #000;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 10px rgba(0,0,0,0.15);
 }
 
-/* --- 2. PANEL RESUMEN (ESTILO LISTA OT) --- */
+/* --- 2. PANEL RESUMEN (SIN BORDE NEGRO) --- */
 .stats-section-container {
   background: white;
-  /* Sin bordes laterales ni inferiores, solo borde superior sólido */
-  border: none;
-  border-top: 4px solid #333; 
+  border: none; /* Eliminado el borde negro superior */
   padding: 30px 20px;
-  border-radius: 8px; /* Bordes redondeados sutiles */
+  border-radius: 8px;
   box-shadow: 0 4px 15px rgba(0,0,0,0.08);
   text-align: center;
 }
@@ -71,12 +69,12 @@
   gap: 20px;
 }
 
-/* Tarjetas individuales (cuadradas con borde de color) */
+/* Tarjetas individuales */
 .stat-card {
   width: 160px;
   height: 140px;
   border-radius: 20px;
-  border: 4px solid; /* El color se define abajo */
+  border: 4px solid;
   background: white;
   display: flex;
   flex-direction: column;
@@ -91,10 +89,11 @@
 }
 
 .stat-label {
-  font-size: 0.95rem;
-  font-weight: bold;
+  font-size: 0.85rem; /* Fuente más pequeña */
+  font-weight: 500; /* Quitada la negrita fuerte */
   color: #555;
   margin-bottom: 5px;
+  text-transform: uppercase;
 }
 
 .stat-number {
@@ -103,16 +102,15 @@
   color: #333;
 }
 
-/* Colores de bordes de las tarjetas */
-.card-total { border-color: #333; } /* Negro/Gris oscuro */
-.card-pendiente { border-color: #ffc107; } /* Amarillo */
-.card-proceso { border-color: #17a2b8; }   /* Azul */
-.card-finalizada { border-color: #28a745; } /* Verde */
+/* Colores de bordes */
+.card-total { border-color: #333; }
+.card-pendiente { border-color: #ffc107; }
+.card-proceso { border-color: #17a2b8; }
+.card-finalizada { border-color: #28a745; }
 
 
-/* --- 3. ÚLTIMAS ÓRDENES (FONDO ROJO COMPLETO) --- */
+/* --- 3. ÚLTIMAS ÓRDENES --- */
 .recent-orders-container {
-  /* Rojo de la paleta Simtexx */
   background-color: rgb(172, 5, 5); 
   padding: 20px;
   border-radius: 8px;
@@ -120,10 +118,9 @@
 }
 
 .red-header-strip {
-  /* Fondo transparente o del mismo rojo para fusionarse */
   background-color: transparent; 
   color: white;
-  padding: 10px 0 20px 0; /* Espacio abajo para separar de la tabla blanca */
+  padding: 10px 0 20px 0;
   text-align: center;
   text-transform: uppercase;
   font-weight: bold;
@@ -137,9 +134,10 @@
 
 .table-white-bg {
   background: white;
-  /* Padding interno para que la tabla respire dentro de la caja blanca */
   padding: 0; 
   min-height: 150px;
+  border-radius: 4px;
+  overflow: hidden;
 }
 
 /* Tabla Estilizada */
@@ -150,7 +148,6 @@
 }
 
 .dashboard-table th {
-  /* Fondo GRIS (#333) y Texto BLANCO para contraste */
   background-color: #333; 
   color: white;
   text-align: left;
@@ -158,7 +155,7 @@
   font-weight: 700;
   text-transform: uppercase;
   font-size: 0.9rem;
-  border-bottom: 2px solid rgb(172, 5, 5); /* Detalle rojo sutil en el borde del header */
+  border-bottom: 2px solid rgb(172, 5, 5);
 }
 
 .dashboard-table td {
@@ -172,9 +169,8 @@
   background-color: #f1f1f1;
 }
 
-/* Enlace "Ver Detalle" */
 .btn-ver-link {
-  color: rgb(172, 5, 5); /* Rojo para la acción */
+  color: rgb(172, 5, 5);
   font-weight: bold;
   text-decoration: none;
   border: 1px solid rgb(172, 5, 5);
@@ -189,9 +185,8 @@
   color: white;
 }
 
-/* Responsividad */
 @media (max-width: 768px) {
   .action-buttons-container { flex-direction: column; align-items: center; }
   .dashboard-wrapper { padding: 0 10px; }
-  .table-white-bg { overflow-x: auto; } /* Scroll horizontal en móviles */
+  .table-white-bg { overflow-x: auto; }
 }
