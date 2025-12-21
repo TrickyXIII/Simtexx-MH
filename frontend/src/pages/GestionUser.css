@@ -3,16 +3,30 @@
   margin: 40px auto;
   padding: 0 20px;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  min-height: 80vh;
 }
 
+/* --- HEADER REESTRUCTURADO --- */
 .gestion-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 30px;
+  /* Usamos padding en lugar de margin para evitar colapsos, como en ListaOT */
+  padding-bottom: 40px; 
+  margin-bottom: 0;
+}
+
+/* Contenedores flexibles para equilibrar el header y centrar el título */
+.header-spacer-left, .header-spacer-right {
+    flex: 1;
+    display: flex;
+}
+.header-spacer-right {
+    justify-content: flex-end;
 }
 
 .titulo-gestion {
+  flex: 2; /* El título ocupa más espacio central */
+  text-align: center;
   font-size: 2rem;
   font-weight: 700;
   color: #333;
@@ -20,6 +34,29 @@
   margin: 0;
 }
 
+/* Nuevo estilo para el botón Volver (más limpio) */
+.btn-volver-simple {
+  background: none;
+  border: none;
+  color: #555;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 4px;
+  transition: background 0.2s, color 0.2s;
+  text-decoration: none; /* Por si acaso se usa como Link */
+}
+
+.btn-volver-simple:hover {
+  background-color: #f0f0f0;
+  color: #333;
+}
+
+/* Botón Crear */
 .btn-crear {
   padding: 10px 20px;
   background: rgb(172, 5, 5);
@@ -30,36 +67,21 @@
   font-weight: bold;
   text-decoration: none;
   transition: background 0.2s;
+  white-space: nowrap; /* Evita que el texto se rompa */
 }
 
 .btn-crear:hover {
   background: #8a0404;
 }
 
-.btn-volver-outline {
-  padding: 8px 16px;
-  background: transparent;
-  border: 2px solid #333;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: bold;
-  color: #333;
-  transition: all 0.2s;
-}
 
-.btn-volver-outline:hover {
-  background: #333;
-  color: white;
-}
-
-/* Tabla Estilo Simtexx */
+/* --- TABLA ESTILO SIMTEXX --- */
 .tabla-container {
   background: white;
   border-radius: 8px;
   box-shadow: 0 4px 15px rgba(0,0,0,0.08);
   border-top: 4px solid rgb(172, 5, 5);
   overflow-x: auto;
-  padding: 0; /* Full width inside box */
 }
 
 .tabla-users {
@@ -74,23 +96,59 @@
   padding: 15px;
   border-bottom: 3px solid rgb(172, 5, 5);
   font-size: 0.95rem;
+  white-space: nowrap;
 }
 
 .tabla-users td {
   padding: 12px 15px;
   border-bottom: 1px solid #eee;
   color: #333;
+  vertical-align: middle;
 }
 
 .tabla-users tr:hover {
-  background-color: #f9f9f9;
+  background-color: #fff0f0; /* Mismo hover suave que ListaOT */
 }
 
 /* Badges de estado */
 .badge-activo { background: #d4edda; color: #155724; padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 0.85rem; }
 .badge-inactivo { background: #f8d7da; color: #721c24; padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 0.85rem; }
 
-/* Botones de acción en tabla */
-.btn-accion-azul { padding: 5px 10px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem; margin-right: 5px; }
-.btn-accion-rojo { padding: 5px 10px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem; }
-.btn-accion-verde { padding: 5px 10px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem; }
+/* --- CORRECCIÓN BOTONES DE ACCIÓN --- */
+
+/* Contenedor Flex para la celda de acciones */
+.acciones-cell {
+    display: flex;
+    gap: 10px; /* Espacio entre botones */
+    justify-content: center;
+    align-items: center;
+}
+
+/* Estilos base unificados para los botones pequeños */
+.btn-accion-azul, .btn-accion-rojo, .btn-accion-verde {
+    display: inline-flex; /* Importante para alinear icono/texto verticalmente */
+    align-items: center;
+    justify-content: center;
+    height: 32px; /* Altura fija para uniformidad */
+    padding: 0 14px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: bold;
+    line-height: 1;
+    transition: background 0.2s, transform 0.1s;
+}
+
+.btn-accion-azul:hover, .btn-accion-rojo:hover, .btn-accion-verde:hover {
+    transform: translateY(-1px);
+}
+
+.btn-accion-azul { background: #333; color: white; } /* Azul cambiado a Negro/Gris oscuro para consistencia */
+.btn-accion-azul:hover { background: #000; }
+
+.btn-accion-rojo { background: #dc3545; color: white; }
+.btn-accion-rojo:hover { background: #c82333; }
+
+.btn-accion-verde { background: #28a745; color: white; }
+.btn-accion-verde:hover { background: #218838; }

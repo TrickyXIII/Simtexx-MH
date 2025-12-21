@@ -11,6 +11,7 @@ const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
 export default function Usuarios() {
   const navigate = useNavigate();
   const [usuarios, setUsuarios] = useState([]);
+  const [loading, setLoading] = useState(true); // Estado de carga
 
   const currentUser = getUserFromToken();
   const isAdmin = currentUser && currentUser.rol_id === 1;
@@ -26,6 +27,7 @@ export default function Usuarios() {
   }, [isAdmin, isMantenedor, navigate]);
 
   const cargarUsuarios = async () => {
+    setLoading(true);
     const token = localStorage.getItem("token");
     try {
       const res = await fetch(`${BASE_URL}/api/usuarios`, {
@@ -36,15 +38,18 @@ export default function Usuarios() {
         setUsuarios(data.usuarios);
       }
     } catch (error) { console.error("Error:", error); }
+    finally { setLoading(false); }
   };
 
   async function toggleEstadoUsuario(id, estadoActual) {
     if (!isAdmin) return;
+    // Confirmación más descriptiva
+    const accion = estadoActual ? "desactivar" : "activar";
+    if (!confirm(`¿Seguro que deseas ${accion} este usuario?`)) return;
+
     if (estadoActual) {
-        if (!confirm("¿Seguro que deseas desactivar este usuario?")) return;
         if (await desactivarUser(id)) { alert("Usuario desactivado"); cargarUsuarios(); }
     } else {
-        if (!confirm("¿Deseas REACTIVAR este usuario?")) return;
         if (await activateUser(id)) { alert("Usuario reactivado"); cargarUsuarios(); }
     }
   }
@@ -56,16 +61,24 @@ export default function Usuarios() {
       <NavBar />
       <div className="gestion-user-container">
         
+        {/* Header reestructurado con spacers para centrado perfecto */}
         <div className="gestion-header">
-            <button onClick={() => navigate(-1)} className="btn-volver-outline">
-                ⬅ Volver
-            </button>
+            <div className="header-spacer-left">
+                <button onClick={() => navigate(-1)} className="btn-volver-simple">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                    Volver
+                </button>
+            </div>
+            
             <h2 className="titulo-gestion">Gestión de Usuarios</h2>
-            {isAdmin && (
-              <button onClick={() => navigate("/CrearUser")} className="btn-crear">
-                + Crear Usuario
-              </button>
-            )}
+            
+            <div className="header-spacer-right">
+                {isAdmin && (
+                <button onClick={() => navigate("/CrearUser")} className="btn-crear">
+                    + Nuevo Usuario
+                </button>
+                )}
+            </div>
         </div>
 
         <div className="tabla-container">
@@ -76,16 +89,18 @@ export default function Usuarios() {
                 <th>Correo</th>
                 <th>Rol</th>
                 <th style={{textAlign: 'center'}}>Estado</th>
-                {isAdmin && <th style={{textAlign: 'center'}}>Acciones</th>}
+                {isAdmin && <th style={{textAlign: 'center', width: '180px'}}>Acciones</th>}
               </tr>
             </thead>
             <tbody>
-              {usuarios.length === 0 ? (
-                <tr><td colSpan={isAdmin ? 5 : 4} style={{ textAlign: "center", padding: "20px" }}>No hay usuarios registrados.</td></tr>
+              {loading ? (
+                 <tr><td colSpan={isAdmin ? 5 : 4} style={{ textAlign: "center", padding: "30px" }}>Cargando usuarios...</td></tr>
+              ) : usuarios.length === 0 ? (
+                <tr><td colSpan={isAdmin ? 5 : 4} style={{ textAlign: "center", padding: "30px" }}>No hay usuarios registrados.</td></tr>
               ) : (
                 usuarios.map((u) => (
                   <tr key={u.id_usuarios}>
-                    <td>{u.nombre}</td>
+                    <td style={{fontWeight:'600'}}>{u.nombre}</td>
                     <td>{u.correo}</td>
                     <td>{u.rol_nombre || "Sin Rol"}</td>
                     <td style={{textAlign: 'center'}}>
@@ -95,10 +110,15 @@ export default function Usuarios() {
                     </td>
                     {isAdmin && (
                       <td style={{ textAlign: "center" }}>
-                          <button onClick={() => navigate(`/ModificarUser/${u.id_usuarios}`)} className="btn-accion-azul">Editar</button>
-                          <button onClick={() => toggleEstadoUsuario(u.id_usuarios, u.activo)} className={u.activo ? "btn-accion-rojo" : "btn-accion-verde"}>
-                            {u.activo ? "Desactivar" : "Activar"}
-                          </button>
+                          {/* NUEVO: Contenedor flex para los botones de acción */}
+                          <div className="acciones-cell">
+                              <button onClick={() => navigate(`/ModificarUser/${u.id_usuarios}`)} className="btn-accion-azul" title="Editar Usuario">
+                                Editar
+                              </button>
+                              <button onClick={() => toggleEstadoUsuario(u.id_usuarios, u.activo)} className={u.activo ? "btn-accion-rojo" : "btn-accion-verde"} title={u.activo ? "Desactivar Usuario" : "Activar Usuario"}>
+                                {u.activo ? "Desactivar" : "Activar"}
+                              </button>
+                          </div>
                       </td>
                     )}
                   </tr>
