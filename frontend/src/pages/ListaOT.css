@@ -100,7 +100,7 @@
 .badge-estado.en-proceso { background-color: #d1ecf1; color: #0c5460; }
 .badge-estado.finalizada { background-color: #d4edda; color: #155724; }
 
-/* --- BOTONES DE LA TABLA (Mismo tamaño y alineación) --- */
+/* --- BOTONES DE LA TABLA --- */
 .acciones-ot { 
   display: flex; 
   gap: 10px; 
@@ -111,8 +111,8 @@
   display: inline-flex;       
   align-items: center;        
   justify-content: center;    
-  height: 36px;               /* Altura fija idéntica */
-  min-width: 45px;            /* Ancho mínimo */
+  height: 36px;
+  min-width: 45px;
   padding: 0 15px;
   border-radius: 4px;
   font-size: 12px;
@@ -134,15 +134,16 @@
   transform: translateY(-2px);
 }
 
+/* CAMBIO: Botón Eliminar ahora es sólido (Rojo relleno) */
 .btn-eliminar { 
-  background-color: transparent; 
-  color: #dc3545; 
+  background-color: #dc3545; /* Fondo rojo */
+  color: white;              /* Texto blanco */
   border: 1px solid #dc3545;
-  font-size: 14px; 
 }
+
 .btn-eliminar:hover { 
-  background-color: #dc3545; 
-  color: white;
+  background-color: #c82333; /* Rojo más oscuro */
+  border-color: #bd2130;
   transform: translateY(-2px);
 }
 

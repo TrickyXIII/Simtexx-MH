@@ -9,7 +9,6 @@ import Footer from "../components/Footer";
 import NavBar from "../components/NavBar";
 import "./DetalleOT.css";
 
-// Helper para iconos
 const getFileIcon = (filename) => {
     if (!filename) return '📎';
     const ext = filename.split('.').pop().toLowerCase();
@@ -19,7 +18,6 @@ const getFileIcon = (filename) => {
     return '📎'; 
 };
 
-// Helper URL
 const getResourceUrl = (url) => {
     if (!url) return "";
     if (url.startsWith("http")) return url;
@@ -131,15 +129,15 @@ export default function DetalleOT() {
 
       <div className="detalle-container">
 
-        {/* --- TÍTULO SUPERIOR --- */}
+        {/* --- TÍTULO SUPERIOR (Con Botón Estandarizado) --- */}
         <div className="titulo-header">
-          <button className="btn-volver" onClick={() => navigate(-1)}>
+          <button className="btn-volver-std" onClick={() => navigate(-1)}>
             ⬅ Volver
           </button>
           <h1 className="titulo">Detalle de Orden {ot.codigo}</h1>
         </div>
 
-        {/* --- 1. ENCABEZADO (GRID 3) --- */}
+        {/* --- 1. ENCABEZADO --- */}
         <div className="caja-estilo detalle-header">
           <div className="detalle-item"><label>Código</label><span>{ot.codigo}</span></div>
           <div className="detalle-item"><label>Título</label><span>{ot.titulo}</span></div>
@@ -149,10 +147,9 @@ export default function DetalleOT() {
           <div className="detalle-item"><label>Responsable</label><span>{ot.responsable_nombre || "Sin asignar"}</span></div>
         </div>
 
-        {/* --- 2. MAIN (DATOS + RECURSOS) --- */}
+        {/* --- 2. MAIN --- */}
         <div className="detalle-main">
           
-          {/* Columna Izquierda: Datos Generales */}
           <div className="caja-estilo">
             <h3 className="caja-titulo">Información General</h3>
             <div className="datos-grid">
@@ -163,7 +160,6 @@ export default function DetalleOT() {
             </div>
           </div>
 
-          {/* Columna Derecha: Recursos */}
           <div className="caja-estilo">
             <h3 className="caja-titulo">Recursos Adjuntos</h3>
             
@@ -267,6 +263,9 @@ export default function DetalleOT() {
                         style={{ width: '100%', padding: '10px', border:'1px solid #ccc', borderRadius:'4px' }} 
                         maxLength={1000}
                       />
+                      <div style={{textAlign:'right', fontSize:'0.8rem', color: textoEditado.length > 900 ? 'red' : '#666'}}>
+                        {textoEditado.length}/1000
+                      </div>
                       <div style={{ marginTop: '5px', textAlign: 'right', gap:'10px', display:'flex', justifyContent:'flex-end' }}>
                         <button onClick={cancelarEdicion} style={{cursor:'pointer', padding:'5px 10px'}}>Cancelar</button>
                         <button onClick={() => guardarEdicion(c.id)} style={{ background: '#28a745', color: 'white', border: 'none', padding: '5px 15px', borderRadius: '4px', cursor: 'pointer' }}>Guardar</button>
@@ -305,8 +304,15 @@ export default function DetalleOT() {
                 style={{ width: '100%', minHeight: '80px', padding: '10px', borderRadius: '4px', border: '1px solid #ccc', boxSizing:'border-box' }}
                 maxLength={1000}
               />
-              <div style={{ marginTop: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <input type="file" onChange={handleFileChange} style={{fontSize:'0.9rem'}}/>
+              <div style={{textAlign:'right', fontSize:'0.8rem', color: nuevoComentario.length > 900 ? 'red' : '#666', marginBottom:'5px'}}>
+                {nuevoComentario.length}/1000 caracteres
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap:'10px' }}>
+                <div style={{display:'flex', flexDirection:'column'}}>
+                    <input type="file" onChange={handleFileChange} style={{fontSize:'0.9rem'}}/>
+                    <small style={{fontSize:'0.75rem', color:'#666'}}>Máx. 10MB (Img, PDF, Doc, Excel)</small>
+                </div>
                 <div style={{ display: 'flex', gap: '10px' }}>
                   <button onClick={() => { setMostrarInput(false); setArchivoSeleccionado(null); }} style={{ padding: '8px 15px', borderRadius: '4px', border: 'none', cursor: 'pointer' }}>Cancelar</button>
                   <button onClick={handleEnviarComentario} style={{ background: 'rgb(172, 5, 5)', color: 'white', padding: '8px 20px', borderRadius: '4px', border: 'none', cursor: 'pointer', fontWeight:'bold' }}>Publicar</button>

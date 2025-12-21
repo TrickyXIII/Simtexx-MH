@@ -3,100 +3,106 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #ffffff; /* Fondo BLANCO original */
-  padding: 0 20px;
-  height: 70px; /* Un poco más alta para que respiren los botones */
-  color: #333333; /* Texto base oscuro */
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1); /* Sombra suave para separar del contenido */
+  background-color: #ffffff;
+  padding: 0 30px;
+  height: 80px; /* Altura aumentada */
+  color: #333;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
   position: sticky;
   top: 0;
   z-index: 1000;
+  border-bottom: 4px solid #333; /* Línea sólida inferior */
 }
 
 /* Sección Izquierda */
 .nav-left {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 20px;
 }
 
 .logo {
-  height: 45px; /* Logo un poco más grande */
+  height: 50px;
   width: auto;
   cursor: pointer;
-  object-fit: contain;
-  /* Si tu logo es blanco y no se ve, descomenta la siguiente línea para invertirlo: */
-  /* filter: invert(1); */
+  transition: transform 0.2s;
 }
 
-/* ESTILO BASE PARA TODOS LOS BOTONES/ENLACES */
+.logo:hover {
+    transform: scale(1.05);
+}
+
+/* Enlaces del Navbar */
 .nav-link {
   text-decoration: none;
-  font-weight: 600;
-  font-size: 15px;
-  padding: 8px 20px;       /* Relleno generoso */
-  border-radius: 8px;      /* Bordes redondeados modernos */
-  transition: all 0.3s ease;
+  font-weight: 700;
+  font-size: 0.95rem;
+  padding: 10px 20px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Sombra sutil en botones */
+  text-transform: uppercase;
 }
 
-/* Botón "Inicio" (Relleno Azul Oscuro para contraste) */
+/* Botón Inicio (Contorno Oscuro) */
 .nav-link {
-  background-color: #2c3e50; /* Azul grisáceo sólido */
-  color: #ffffff;            /* Letra blanca */
-  border: none;
+  background-color: transparent;
+  color: #333;
+  border: 2px solid #333;
 }
 
 .nav-link:hover {
-  background-color: #34495e; /* Un poco más claro al pasar el mouse */
-  transform: translateY(-2px); /* Efecto de elevación */
-  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  background-color: #333;
+  color: white;
 }
 
-/* Botón "Auditoría" (Relleno Amarillo Intenso) */
+/* Botón Auditoría (Rojo Sólido) */
 .nav-link-audit {
-  background-color: #ffc107; /* Amarillo Warning */
-  color: #000000;            /* Letra negra para máximo contraste */
-  border: none;
+  background-color: rgb(172, 5, 5);
+  color: white;
+  border: 2px solid rgb(172, 5, 5);
+  margin-left: 10px;
 }
 
 .nav-link-audit:hover {
-  background-color: #ffca28;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  background-color: #9a0007;
+  border-color: #9a0007;
 }
 
 /* Sección Derecha */
 .nav-right {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 25px;
 }
 
 .user-name {
-  font-size: 15px;
-  font-weight: 600;
-  color: #333; /* Texto oscuro para que se vea en el fondo blanco */
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #333;
+  text-transform: uppercase;
 }
 
 .btn-logout {
-  background-color: #e74c3c; /* Rojo sólido */
+  background-color: #555;
   color: white;
   border: none;
-  padding: 8px 20px;
-  border-radius: 8px;
+  padding: 10px 20px;
+  border-radius: 4px;
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 600;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  transition: all 0.3s ease;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  transition: all 0.2s ease;
 }
 
 .btn-logout:hover {
-  background-color: #c0392b;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  background-color: #333;
+}
+
+@media (max-width: 768px) {
+    .navbar { flex-direction: column; height: auto; padding: 15px; gap: 15px; }
+    .nav-right { width: 100%; justify-content: space-between; }
 }

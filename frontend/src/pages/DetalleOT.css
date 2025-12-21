@@ -327,3 +327,44 @@
     font-size: 1.8rem;
   }
 }
+
+/* --- BOTÓN VOLVER ESTANDARIZADO --- */
+/* Este estilo se usará en DetalleOT, GestionUser y AuditoriaGlobal */
+.btn-volver-std {
+  position: absolute; /* Para pantallas grandes */
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: #333;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  font-size: 0.9rem;
+  z-index: 10;
+  text-transform: uppercase;
+}
+
+.btn-volver-std:hover {
+  background-color: #000;
+  transform: translateY(-52%); /* Efecto hover manteniendo centrado */
+}
+
+/* Ajuste móvil para el botón volver */
+@media (max-width: 900px) {
+  .btn-volver-std {
+    position: static;
+    transform: none;
+    margin-bottom: 10px;
+  }
+  .btn-volver-std:hover {
+    transform: translateY(-2px);
+  }
+}

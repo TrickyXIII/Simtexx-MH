@@ -4,7 +4,9 @@
   flex-direction: column;
   align-items: center;
   margin-top: 40px;
-  min-height: calc(100vh - 140px);
+  /* CAMBIO: Altura ajustada y padding inferior para separar del footer */
+  min-height: calc(100vh - 160px);
+  padding-bottom: 80px; 
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
@@ -22,13 +24,13 @@
   background: white;
   width: 100%;
   max-width: 450px;
-  padding: 30px;
+  padding: 40px; /* Más espaciado interno */
   border-radius: 8px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
   border-top: 4px solid rgb(172, 5, 5); /* Identidad Simtexx */
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 20px;
 }
 
 /* Inputs y Labels */
@@ -36,18 +38,19 @@
   font-weight: 700;
   font-size: 0.9rem;
   color: #555;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
   display: block;
 }
 
 .form-card input,
 .form-card select {
-  padding: 10px;
+  padding: 12px;
   border: 1px solid #ccc;
   border-radius: 4px;
   width: 100%;
-  box-sizing: border-box; /* Evita que el padding rompa el ancho */
+  box-sizing: border-box; 
   font-size: 1rem;
+  transition: border 0.2s;
 }
 
 .form-card input:focus,
@@ -56,10 +59,18 @@
   border-color: rgb(172, 5, 5);
 }
 
+/* Textos de ayuda */
+.form-help {
+  display: block;
+  font-size: 0.8rem;
+  color: #666;
+  margin-top: 5px;
+}
+
 /* Botones */
 .btn-submit {
-  margin-top: 15px;
-  padding: 12px;
+  margin-top: 10px;
+  padding: 14px;
   background: rgb(172, 5, 5);
   color: white;
   border: none;
@@ -68,6 +79,7 @@
   font-weight: bold;
   font-size: 1rem;
   transition: background 0.2s;
+  text-transform: uppercase;
 }
 
 .btn-submit:hover {
@@ -75,17 +87,20 @@
 }
 
 .btn-secondary {
-  padding: 10px;
-  background: #6c757d;
-  color: white;
-  border: none;
+  padding: 12px;
+  background: white;
+  color: #555;
+  border: 2px solid #ddd;
   border-radius: 4px;
   cursor: pointer;
   font-weight: bold;
   text-align: center;
   text-decoration: none;
+  transition: all 0.2s;
 }
 
 .btn-secondary:hover {
-  background: #5a6268;
+  background: #f4f4f4;
+  color: #333;
+  border-color: #999;
 }

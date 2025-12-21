@@ -30,12 +30,8 @@ export default function Login() {
         return;
       }
 
-      // --- SEGURIDAD: Solo guardamos el token ---
       localStorage.setItem("token", data.token);
-      
-      // Limpiamos datos inseguros antiguos si existen
       localStorage.removeItem("usuarioActual");
-      
       navigate(`/dashboard`);
 
     } catch (error) {
@@ -46,26 +42,32 @@ export default function Login() {
 
   return (
     <>
-      <div className="div">
-        <h2>Iniciar Sesión</h2>
+      <div className="login-container">
+        <div className="login-card">
+          <h2 className="login-title">Iniciar Sesión</h2>
+          
+          <form onSubmit={handleLogin} className="login-form">
+            <div>
+                <label>Email</label>
+                <input type="email" placeholder="usuario@simtexx.com" value={correo} onChange={(e) => setCorreo(e.target.value)} required />
+            </div>
 
-        <form onSubmit={handleLogin}>
-          <label>Email</label>
-          <input type="email" placeholder="admin@simtexx.com" value={correo} onChange={(e) => setCorreo(e.target.value)} required />
+            <div>
+                <label>Contraseña</label>
+                <input type="password" placeholder="******" value={password} onChange={(e) => setPassword(e.target.value)} required />
+            </div>
 
-          <label>Contraseña</label>
-          <input type="password" placeholder="******" value={password} onChange={(e) => setPassword(e.target.value)} required />
+            <button type="submit" className="btn-login">Ingresar</button>
+          </form>
 
-          <button type="submit">Iniciar Sesion</button>
-        </form>
-
-        <div style={{marginTop: '25px', textAlign: 'center', fontSize: '14px', borderTop: '1px solid #eee', paddingTop: '15px'}}>
+          <div className="login-footer">
             ¿Nuevo en Simtexx? <br/>
-            <Link to="/registro" style={{color: '#007bff', textDecoration: 'none', fontWeight: 'bold'}}>
+            <Link to="/registro" className="login-link">
                 Crear una cuenta
             </Link>
-        </div>
+          </div>
 
+        </div>
       </div>
       <Footer />
     </>

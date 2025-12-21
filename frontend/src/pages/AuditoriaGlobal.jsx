@@ -4,6 +4,7 @@ import Footer from "../components/Footer";
 import { getAuditoriaGlobal } from "../services/otService";
 import { useNavigate } from "react-router-dom";
 import "./AuditoriaGlobal.css";
+import "./DetalleOT.css"; // Reutilizamos el botón volver
 
 export default function AuditoriaGlobal() {
   const [logs, setLogs] = useState([]);
@@ -24,12 +25,11 @@ export default function AuditoriaGlobal() {
       <NavBar />
       <div className="auditoria-container">
         
-        <div className="auditoria-header">
-            <button onClick={() => navigate(-1)} className="btn-volver-audit">
+        <div className="auditoria-header" style={{position: 'relative', display:'flex', justifyContent: 'center', alignItems:'center', minHeight:'60px'}}>
+            <button onClick={() => navigate(-1)} className="btn-volver-std" style={{position: 'absolute', left: 0}}>
               ⬅ Volver
             </button>
             <h1 className="titulo-auditoria">Auditoría Global</h1>
-            <div style={{width: '80px'}}></div> {/* Spacer para centrar título */}
         </div>
 
         {cargando ? (

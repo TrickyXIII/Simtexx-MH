@@ -5,13 +5,14 @@ import Footer from "../components/Footer";
 import { activateUser, desactivarUser } from "../services/usuariosService";
 import { getUserFromToken } from "../utils/auth";
 import "./GestionUser.css";
+import "./DetalleOT.css"; // IMPORTANTE: Reutilizamos el estilo del botón volver
 
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
 
 export default function Usuarios() {
   const navigate = useNavigate();
   const [usuarios, setUsuarios] = useState([]);
-  const [loading, setLoading] = useState(true); // Estado de carga
+  const [loading, setLoading] = useState(true); 
 
   const currentUser = getUserFromToken();
   const isAdmin = currentUser && currentUser.rol_id === 1;
@@ -43,7 +44,6 @@ export default function Usuarios() {
 
   async function toggleEstadoUsuario(id, estadoActual) {
     if (!isAdmin) return;
-    // Confirmación más descriptiva
     const accion = estadoActual ? "desactivar" : "activar";
     if (!confirm(`¿Seguro que deseas ${accion} este usuario?`)) return;
 
@@ -61,18 +61,14 @@ export default function Usuarios() {
       <NavBar />
       <div className="gestion-user-container">
         
-        {/* Header reestructurado con spacers para centrado perfecto */}
-        <div className="gestion-header">
-            <div className="header-spacer-left">
-                <button onClick={() => navigate(-1)} className="btn-volver-simple">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-                    Volver
-                </button>
-            </div>
+        <div className="gestion-header" style={{position: 'relative', display:'flex', justifyContent: 'center', alignItems:'center', minHeight:'60px'}}>
+            <button onClick={() => navigate(-1)} className="btn-volver-std" style={{position: 'absolute', left: 0}}>
+              ⬅ Volver
+            </button>
             
             <h2 className="titulo-gestion">Gestión de Usuarios</h2>
             
-            <div className="header-spacer-right">
+            <div style={{position: 'absolute', right: 0}}>
                 {isAdmin && (
                 <button onClick={() => navigate("/CrearUser")} className="btn-crear">
                     + Nuevo Usuario
@@ -110,7 +106,6 @@ export default function Usuarios() {
                     </td>
                     {isAdmin && (
                       <td style={{ textAlign: "center" }}>
-                          {/* NUEVO: Contenedor flex para los botones de acción */}
                           <div className="acciones-cell">
                               <button onClick={() => navigate(`/ModificarUser/${u.id_usuarios}`)} className="btn-accion-azul" title="Editar Usuario">
                                 Editar
