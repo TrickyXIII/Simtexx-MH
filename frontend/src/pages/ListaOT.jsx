@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import NavBar from "../components/NavBar";
 import Footer from "../components/Footer";
+import { getUserFromToken } from "../utils/auth"; // <--- IMPORTANTE
 import "./ListaOT.css";
 
 export default function ListaOT() {
@@ -16,8 +17,8 @@ export default function ListaOT() {
     fechaFin: ""
   });
 
-  const userStr = localStorage.getItem("usuarioActual");
-  const usuario = userStr ? JSON.parse(userStr) : { nombre: "Sin Usuario", rol: "Invitado", id: 0, rol_id: 0 };
+  // --- FIX SEGURIDAD: Leer del token, no del localStorage editable ---
+  const usuario = getUserFromToken() || { nombre: "Sin Usuario", rol: "Invitado", id: 0, rol_id: 0 };
   
   const isAdmin = usuario.rol_id === 1;
   const isCliente = usuario.rol_id === 2;
@@ -88,18 +89,18 @@ export default function ListaOT() {
         <h1 className="titulo">Gestión de OTS</h1>
 
         <div className="user-info-box">
-          <div>Usuario: <b>{usuario?.nombre}</b> &nbsp;&nbsp; Rol: <b>{usuario?.rol}</b></div>
+          <div>Usuario: <b>{usuario.nombre}</b> &nbsp;&nbsp; Rol: <b>{usuario.rol}</b></div>
         </div>
         
         <div className="btn-bar">
-          <Link to={`/crearot/${usuario?.id || 0}`} className="btn-opcion">Crear OT</Link>
+          <Link to={`/crearot/${usuario.id || 0}`} className="btn-opcion">Crear OT</Link>
           
           {/* Botón Exportar CSV: Visible para Admin y Mantenedor, NO Cliente */}
           {!isCliente && (
             <button className="btn-opcion" onClick={() => exportCSV(filtros, usuario)}>Exportar CSV</button>
           )}
           
-          {/* Botón Importar CSV: Solo Visible para Admin (Requiere permisos de rol 1 en backend) */}
+          {/* Botón Importar CSV: Solo Visible para Admin */}
           {isAdmin && (
             <>
               <input 
@@ -171,7 +172,6 @@ export default function ListaOT() {
                         <Link className="btn-ver" to={`/detalle/${ot.id_ot}`}>
                             Ver
                         </Link>
-                        {/* Botón eliminar (Quizás también quieras ocultarlo para clientes o mantenedores, pero el requerimiento no lo especificó explícitamente, aunque es buena práctica restringirlo si es necesario) */}
                         {!isCliente && (
                             <button className="btn-eliminar" onClick={() => handleDelete(ot.id_ot)}>
                                 Eliminar

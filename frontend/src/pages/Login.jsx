@@ -1,9 +1,8 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom"; // IMPORTAMOS LINK
+import { useNavigate, Link } from "react-router-dom"; 
 import Footer from "../components/Footer";
 import "./Login.css";
 
-// Definimos la URL correcta (Local o Nube)
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
 
 export default function Login() {
@@ -31,8 +30,11 @@ export default function Login() {
         return;
       }
 
+      // --- SEGURIDAD: Solo guardamos el token ---
       localStorage.setItem("token", data.token);
-      localStorage.setItem("usuarioActual", JSON.stringify(data.user));
+      
+      // Limpiamos datos inseguros antiguos si existen
+      localStorage.removeItem("usuarioActual");
       
       navigate(`/dashboard`);
 
@@ -49,27 +51,14 @@ export default function Login() {
 
         <form onSubmit={handleLogin}>
           <label>Email</label>
-          <input
-            type="email"
-            placeholder="admin@simtexx.com"
-            value={correo}
-            onChange={(e) => setCorreo(e.target.value)}
-            required
-          />
+          <input type="email" placeholder="admin@simtexx.com" value={correo} onChange={(e) => setCorreo(e.target.value)} required />
 
           <label>Contraseña</label>
-          <input
-            type="password"
-            placeholder="******"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
+          <input type="password" placeholder="******" value={password} onChange={(e) => setPassword(e.target.value)} required />
 
           <button type="submit">Iniciar Sesion</button>
         </form>
 
-        {/* --- NUEVO: Enlace a Registro --- */}
         <div style={{marginTop: '25px', textAlign: 'center', fontSize: '14px', borderTop: '1px solid #eee', paddingTop: '15px'}}>
             ¿Nuevo en Simtexx? <br/>
             <Link to="/registro" style={{color: '#007bff', textDecoration: 'none', fontWeight: 'bold'}}>

@@ -1,62 +1,33 @@
 import "./Navbar.css";
 import { useNavigate, Link } from "react-router-dom";
+import { getUserFromToken } from "../utils/auth"; // Seguridad
 
 export default function NavBar() {
   const navigate = useNavigate();
-
-  // 1. OBTENER DATOS DEL USUARIO
-  const userStr = localStorage.getItem("usuarioActual");
-  const usuario = userStr ? JSON.parse(userStr) : {};
-  
-  // 2. DETECTAR SI ES ADMIN
-  const rolUsuario = usuario.rol || usuario.rol_nombre || ""; 
-  const rolNormalizado = rolUsuario.toLowerCase().trim();
-  const isAdmin = rolNormalizado === 'admin' || rolNormalizado === 'administrador';
+  // 1. OBTENER DATOS SEGUROS DEL TOKEN
+  const usuario = getUserFromToken() || { nombre: "Invitado", rol: "" };
+  // 2. DETECTAR SI ES ADMIN REAL
+  const isAdmin = usuario.rol_id === 1;
 
   const handleLogout = () => {
-    localStorage.removeItem("usuarioActual");
     localStorage.removeItem("token");
     navigate("/");
   };
 
   return (
     <nav className="navbar">
-      {/* SECCIÓN IZQUIERDA: Logo + Menú */}
       <div className="nav-left">
-        <img 
-          src="/logo.png" 
-          alt="Logo" 
-          className="logo" 
-          onClick={() => navigate("/dashboard")}
-        />
-
-        {/* Enlace Inicio */}
-        <Link to="/dashboard" className="nav-link">
-          Inicio
-        </Link>
-        
-        {/* Enlace Auditoría (Solo Admin) */}
-        {isAdmin && (
-          <Link to="/auditoria" className="nav-link nav-link-audit">
-             🛡️ Auditoría
-          </Link>
-        )}
+        <img src="/logo.png" alt="Logo" className="logo" onClick={() => navigate("/dashboard")} />
+        <Link to="/dashboard" className="nav-link">Inicio</Link>
+        {isAdmin && <Link to="/auditoria" className="nav-link nav-link-audit">🛡️ Auditoría</Link>}
       </div>
 
-      {/* SECCIÓN DERECHA: Usuario + Salir */}
       <div className="nav-right">
         <div style={{display: 'flex', flexDirection: 'column', alignItems: 'flex-end', marginRight: '15px'}}>
             <span className="user-name">Hola, {usuario.nombre || "Usuario"}</span>
-            
-            {/* Enlace MI PERFIL */}
-            <Link to="/mi-perfil" style={{fontSize: '12px', color: '#007bff', textDecoration: 'none'}}>
-                Editar mi perfil
-            </Link>
+            <Link to="/mi-perfil" style={{fontSize: '12px', color: '#007bff', textDecoration: 'none'}}>Editar mi perfil</Link>
         </div>
-        
-        <button className="btn-logout" onClick={handleLogout}>
-          Cerrar sesión
-        </button>
+        <button className="btn-logout" onClick={handleLogout}>Cerrar sesión</button>
       </div>
     </nav>
   );

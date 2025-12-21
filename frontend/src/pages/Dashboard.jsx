@@ -4,29 +4,25 @@ import Footer from "../components/Footer";
 import "./Dashboard.css";
 import { getOTs, getDashboardStats } from "../services/otService"; 
 import { Link } from "react-router-dom";
+import { getUserFromToken } from "../utils/auth"; // Importamos
 
 const Dashboard = () => {
   const [ots, setOts] = useState([]);
   const [stats, setStats] = useState({
-    total: 0,
-    pendientes: 0,
-    en_proceso: 0,
-    finalizadas: 0
+    total: 0, pendientes: 0, en_proceso: 0, finalizadas: 0
   });
 
-  const usuarioString = localStorage.getItem("usuarioActual");
-  const usuario = usuarioString ? JSON.parse(usuarioString) : { nombre: "Invitado", rol: "Invitado", id: 0, rol_id: 0 };
+  // Usamos el token
+  const usuario = getUserFromToken() || { nombre: "Invitado", rol: "Invitado", id: 0, rol_id: 0 };
   
-  // 2 = Cliente
+  // Cliente = 2
   const isCliente = usuario.rol_id === 2;
 
   useEffect(() => {
     async function cargarDatos() {
-      // 1. Cargar Estadísticas (El backend ahora filtra por cliente_id si es cliente)
       const estadisticas = await getDashboardStats();
       setStats(estadisticas);
 
-      // 2. Cargar Lista Reciente (Limitada a 5)
       const listaOts = await getOTs({});
       if (Array.isArray(listaOts)) {
         setOts(listaOts.slice(0, 5));
@@ -42,19 +38,19 @@ const Dashboard = () => {
         <h1 className="title">Simtexx Inicio</h1>
 
         <div className="subtittle">
-          Usuario: <b>{usuario?.nombre}</b> &nbsp;&nbsp; Rol: <b>{usuario?.rol_nombre || usuario?.rol}</b>
+          Usuario: <b>{usuario.nombre}</b> &nbsp;&nbsp; Rol: <b>{usuario.rol}</b>
         </div>
 
         <div className="cardContainer">
-          <Link to={`/crearot/${usuario?.id}`} className="card">Crear OT</Link>
-          <Link to={`/listaot/${usuario?.id}`} className="card">Órdenes de Trabajo</Link>
-          {/* El cliente NO debe ver el botón de Usuarios */}
+          <Link to={`/crearot/${usuario.id}`} className="card">Crear OT</Link>
+          <Link to={`/listaot/${usuario.id}`} className="card">Órdenes de Trabajo</Link>
+          
+          {/* Bloqueo visual basado en token real */}
           {!isCliente && <Link to="/GestionUser" className="card">Usuarios</Link>}
         </div>
 
         <div className="panel-resumen">
           <h2 className="panel-title">Panel Resumen de OT (Tiempo Real)</h2>
-
           <div className="panel-items">
             <div className="panel-item">Total OT <strong>{stats.total}</strong></div>
             <div className="panel-item">Pendientes <strong>{stats.pendientes}</strong></div>
@@ -65,7 +61,6 @@ const Dashboard = () => {
 
         <div className="table-container">
           <h2 className="table-title">Últimas Órdenes Registradas</h2>
-
           <table>
             <thead>
               <tr>
@@ -76,16 +71,10 @@ const Dashboard = () => {
                 <th>Responsable</th>
               </tr>
             </thead>
-
             <tbody>
               {ots.length === 0 && (
-                <tr>
-                  <td colSpan="5" style={{ textAlign: "center", padding: "15px" }}>
-                    No hay órdenes registradas recientemente
-                  </td>
-                </tr>
+                <tr><td colSpan="5" style={{ textAlign: "center", padding: "15px" }}>No hay órdenes recientes</td></tr>
               )}
-
               {ots.map((ot) => (
                 <tr key={ot.id_ot}>
                   <td>{ot.codigo}</td>
@@ -99,7 +88,6 @@ const Dashboard = () => {
           </table>
         </div>
       </div>
-
       <Footer />
     </>
   );

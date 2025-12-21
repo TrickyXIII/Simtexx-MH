@@ -6,37 +6,27 @@ import "./Login.css";
 export default function Registro() {
   const navigate = useNavigate();
   const [form, setForm] = useState({
-    nombre: "",
-    correo: "",
-    password: "",
-    confirmarPassword: ""
+    nombre: "", correo: "", password: "", confirmarPassword: ""
   });
   const [error, setError] = useState("");
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+  const handleChange = (e) => { setForm({ ...form, [e.target.name]: e.target.value }); };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-
-    // Validaciones frontend explícitas
-    // Min 8 caracteres, 1 mayus, 1 minus, 1 numero
     const passRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
     if (!passRegex.test(form.password)) {
         setError("La contraseña no cumple con los requisitos de seguridad.");
         return;
     }
-
     if (form.password !== form.confirmarPassword) {
       setError("Las contraseñas no coinciden");
       return;
     }
-
     try {
       await registerPublic(form);
-      alert("Registro exitoso. Ahora puedes iniciar sesión con tu cuenta.");
+      alert("Registro exitoso.");
       navigate("/login");
     } catch (err) {
       setError(err.message);
@@ -46,66 +36,24 @@ export default function Registro() {
   return (
     <div className="div">
       <h2>Crear Cuenta</h2>
-      <p style={{fontSize:'14px', color:'#666', marginTop:'-10px', textAlign:'center'}}>Regístrate como Cliente</p>
-
+      <p style={{fontSize:'14px', color:'#666', marginTop:'-10px', textAlign:'center'}}>Cliente</p>
       <form onSubmit={handleSubmit} style={{marginTop:'20px'}}>
-        <label>Nombre Completo</label>
-        <input
-          type="text"
-          name="nombre"
-          value={form.nombre}
-          onChange={handleChange}
-          placeholder="Ej: Juan Pérez"
-          required
-          maxLength={50} // Limite de texto
-          title="Máximo 50 caracteres"
-        />
-
-        <label>Correo Electrónico</label>
-        <input
-          type="email"
-          name="correo"
-          value={form.correo}
-          onChange={handleChange}
-          placeholder="correo@ejemplo.com"
-          required
-        />
-
+        <label>Nombre</label>
+        <input type="text" name="nombre" value={form.nombre} onChange={handleChange} placeholder="Ej: Juan Pérez" required maxLength={50} title="Máximo 50 caracteres" />
+        <label>Correo</label>
+        <input type="email" name="correo" value={form.correo} onChange={handleChange} required />
         <label>Contraseña</label>
-        <div title="Debe contener al menos 8 caracteres, una mayúscula, una minúscula y un número.">
-            <input
-            type="password"
-            name="password"
-            value={form.password}
-            onChange={handleChange}
-            placeholder="********"
-            required
-            />
-            <small style={{display:'block', color:'#666', fontSize:'11px', marginTop:'2px', lineHeight:'1.2'}}>
-                Requisito: Mín. 8 caracteres, 1 Mayúscula, 1 minúscula, 1 número.
-            </small>
+        <div title="Mínimo 8 caracteres, 1 Mayúscula, 1 minúscula, 1 número.">
+            <input type="password" name="password" value={form.password} onChange={handleChange} required />
+            <small style={{display:'block', color:'#666', fontSize:'10px'}}>Mín. 8 caracteres, 1 Mayús, 1 num.</small>
         </div>
-
-        <label style={{marginTop:'10px'}}>Confirmar Contraseña</label>
-        <input
-          type="password"
-          name="confirmarPassword"
-          value={form.confirmarPassword}
-          onChange={handleChange}
-          placeholder="********"
-          required
-        />
-
-        {error && <div style={{color:'red', marginBottom:'15px', textAlign:'center', fontSize:'0.9em', background:'#ffe6e6', padding:'5px', borderRadius:'4px', marginTop:'10px'}}>{error}</div>}
-
+        <label>Confirmar</label>
+        <input type="password" name="confirmarPassword" value={form.confirmarPassword} onChange={handleChange} required />
+        {error && <div style={{color:'red', fontSize:'0.9em', marginTop:'10px'}}>{error}</div>}
         <button type="submit" style={{marginTop:'20px'}}>Registrarse</button>
       </form>
-      
       <div style={{marginTop: '25px', textAlign: 'center', fontSize: '14px', borderTop: '1px solid #eee', paddingTop: '15px'}}>
-          ¿Ya tienes una cuenta? <br/>
-          <Link to="/login" style={{color: '#007bff', textDecoration: 'none', fontWeight: 'bold'}}>
-              Inicia Sesión aquí
-          </Link>
+          <Link to="/login" style={{color: '#007bff'}}>Inicia Sesión aquí</Link>
       </div>
     </div>
   );

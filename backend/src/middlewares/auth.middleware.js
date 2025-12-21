@@ -11,7 +11,7 @@ export const verifyToken = (req, res, next) => {
     // Verifica el token usando una clave secreta (idealmente en .env)
     const verified = jwt.verify(token, process.env.JWT_SECRET || "secreto_super_seguro");
     
-    // Guardamos los datos del usuario en la request para usarlos en los controladores
+    // Guardamos los datos del usuario en la request
     req.user = verified; 
     next();
   } catch (error) {
@@ -21,8 +21,7 @@ export const verifyToken = (req, res, next) => {
 
 // NUEVO: Middleware para obligar a que sea Administrador
 export const verifyAdmin = (req, res, next) => {
-  // Asumiendo que rol_id 1 es Administrador
-  if (req.user && req.user.rol_id === 1) { 
+  if (req.user && req.user.rol_id === 1) { // 1 = Administrador
     next();
   } else {
     return res.status(403).json({ error: "Acceso denegado. Se requieren permisos de Administrador." });

@@ -1,10 +1,10 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 
-// URL base para construir ruta de imágenes
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
 
 import { getOTById, exportPDFById, getComentarios, crearComentario, updateComentario, getHistorial } from "../services/otService";
+import { getUserFromToken } from "../utils/auth"; // <--- Seguridad
 import Footer from "../components/Footer";
 import NavBar from "../components/NavBar";
 import "./DetalleOT.css";
@@ -13,11 +13,10 @@ import "./DetalleOT.css";
 const getFileIcon = (filename) => {
     if (!filename) return '📎';
     const ext = filename.split('.').pop().toLowerCase();
-    if (ext === 'pdf') return '📄'; // PDF
-    if (['xls', 'xlsx', 'csv'].includes(ext)) return '📊'; // Excel
-    if (['doc', 'docx'].includes(ext)) return '📝'; // Word
-    if (['txt'].includes(ext)) return '📃'; // Texto
-    return 'TB'; // Default
+    if (ext === 'pdf') return '📄'; 
+    if (['xls', 'xlsx', 'csv'].includes(ext)) return '📊'; 
+    if (['doc', 'docx'].includes(ext)) return '📝'; 
+    return '📎'; 
 };
 
 export default function DetalleOT() {
@@ -28,23 +27,21 @@ export default function DetalleOT() {
   const [comentarios, setComentarios] = useState([]);
   const [historial, setHistorial] = useState([]);
 
-  // Estados para recursos y comentarios
+  // Estados para imagen y comentarios
   const [nuevoComentario, setNuevoComentario] = useState("");
-  const [archivoSeleccionado, setArchivoSeleccionado] = useState(null);
+  const [archivoSeleccionado, setArchivoSeleccionado] = useState(null); // Antes imagenSeleccionada
   const [mostrarInput, setMostrarInput] = useState(false);
 
   // Estados para EDICIÓN
   const [editandoId, setEditandoId] = useState(null);
   const [textoEditado, setTextoEditado] = useState("");
 
-  const userStr = localStorage.getItem("usuarioActual");
-  const usuario = userStr ? JSON.parse(userStr) : { nombre: "Invitado", rol: "Invitado", id: 0, id_usuarios: 0 };
-  const userId = usuario.id_usuarios || usuario.id;
+  const usuario = getUserFromToken() || { nombre: "Invitado", rol: "Invitado", id: 0, rol_id: 0 };
+  const userId = usuario.id;
 
-  const rolNormalizado = (usuario.rol || usuario.rol_nombre || "").toLowerCase().trim();
-  const isAdmin = rolNormalizado === 'admin' || rolNormalizado === 'administrador';
-  const isCliente = usuario.rol_id === 2; 
-  const isMantenedor = usuario.rol_id === 3; 
+  const isAdmin = usuario.rol_id === 1;
+  const isCliente = usuario.rol_id === 2;
+  const isMantenedor = usuario.rol_id === 3;
 
   const canViewHistory = isAdmin || isMantenedor;
 
@@ -73,7 +70,7 @@ export default function DetalleOT() {
   const handleEnviarComentario = async () => {
     if (!nuevoComentario.trim() && !archivoSeleccionado) return;
 
-    // Usamos el servicio crearComentario (que acepta el archivo en el parámetro imagen)
+    // Usamos crearComentario que ya envía FormData con 'imagen' (que ahora acepta todo)
     const res = await crearComentario(id, userId, nuevoComentario, archivoSeleccionado);
 
     if (res) {
@@ -83,7 +80,7 @@ export default function DetalleOT() {
       const updatedComments = await getComentarios(id);
       setComentarios(updatedComments);
     } else {
-      alert("No se pudo guardar el recurso/comentario");
+      alert("No se pudo guardar el recurso.");
     }
   };
 
@@ -105,11 +102,11 @@ export default function DetalleOT() {
       const updatedComments = await getComentarios(id);
       setComentarios(updatedComments);
     } else {
-      alert("Error al editar. Verifique permisos.");
+      alert("Error al editar.");
     }
   };
 
-  // Función para abrir el formulario de recursos
+  // Función auxiliar para scroll
   const irAAgregarRecurso = () => {
       setMostrarInput(true);
       setTimeout(() => {
@@ -119,7 +116,7 @@ export default function DetalleOT() {
 
   if (!ot) return <h2 style={{ textAlign: 'center', marginTop: '50px' }}>Cargando OT...</h2>;
 
-  // Filtrar recursos (cualquier comentario con archivo adjunto)
+  // Filtramos recursos (comentarios con adjuntos)
   const recursos = comentarios.filter(c => c.imagen_url);
 
   return (
@@ -159,26 +156,19 @@ export default function DetalleOT() {
           <div className="recursos-box">
             <h3>Recursos Adjuntos</h3>
             
-            {/* GRID DE RECURSOS */}
+            {/* NUEVA VISTA DE RECURSOS (ICONOS) */}
             <div className="recursos-lista" style={{display:'flex', flexWrap:'wrap', gap:'15px', marginTop:'15px', justifyContent:'center'}}>
                 {recursos.length === 0 && <p style={{fontSize:'13px', color:'#777'}}>Sin recursos adjuntos.</p>}
                 
                 {recursos.map((r) => {
                     const isImg = r.imagen_url.match(/\.(jpeg|jpg|gif|png|webp)$/i);
-                    const fileName = r.imagen_url.split('/').pop().split('-').slice(1).join('-'); // Limpia timestamp
+                    const fileName = r.imagen_url.split('/').pop().split('-').slice(1).join('-'); // Limpiar nombre
 
                     return (
                         <a key={r.id} href={`${BASE_URL}/${r.imagen_url}`} target="_blank" rel="noreferrer" 
                            className="recurso-item"
                            title={`Subido por: ${r.autor}\nFecha: ${new Date(r.fecha_creacion).toLocaleDateString()}`}
-                           style={{
-                               display:'flex', flexDirection:'column', alignItems:'center', 
-                               width:'90px', textDecoration:'none', color:'#333', fontSize:'11px',
-                               padding:'5px', borderRadius:'8px', transition:'background 0.2s'
-                           }}
-                           onMouseEnter={(e) => e.currentTarget.style.background = '#f0f0f0'}
-                           onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                        >
+                           style={{display:'flex', flexDirection:'column', alignItems:'center', width:'80px', textDecoration:'none', color:'#333', fontSize:'11px', padding:'5px', borderRadius:'8px', transition:'0.2s'}}>
                             {isImg ? (
                                 <img src={`${BASE_URL}/${r.imagen_url}`} style={{width:'60px', height:'60px', objectFit:'cover', borderRadius:'8px', border:'1px solid #ddd'}} />
                             ) : (
@@ -194,8 +184,8 @@ export default function DetalleOT() {
                 })}
             </div>
 
-            <div className="recursos-grid" style={{borderTop:'1px solid #eee', paddingTop:'10px', marginTop:'15px'}}>
-              <div className="rcard" style={{width:'100%'}}><span>Total Archivos</span><b>{recursos.length}</b></div>
+            <div className="recursos-grid" style={{marginTop: '15px', borderTop:'1px solid #eee', paddingTop:'10px'}}>
+              <div className="rcard" style={{width:'100%'}}><span>Total</span><b>{recursos.length}</b></div>
             </div>
           </div>
         </div>
@@ -204,12 +194,10 @@ export default function DetalleOT() {
           {!isCliente && (
             <button onClick={() => navigate(`/ModificarOT/${ot.id_ot}`)}>Configurar OT</button>
           )}
-          
           <button onClick={irAAgregarRecurso}>Agregar Recursos</button>
           <button onClick={handleExportPDF}>Exportar PDF</button>
         </div>
 
-        {/* SECCIÓN HISTORIAL */}
         {canViewHistory && (
           <div className="historial-box">
             <h3>Historial de Auditoría</h3>
@@ -234,7 +222,6 @@ export default function DetalleOT() {
           </div>
         )}
 
-        {/* SECCIÓN COMENTARIOS Y ARCHIVOS */}
         <div className="comentarios-box">
           <h3>Bitácora y Archivos ({comentarios.length})</h3>
 
@@ -273,8 +260,6 @@ export default function DetalleOT() {
                       ) : (
                         <div>
                           <div style={{ fontSize: '15px', whiteSpace: 'pre-wrap' }}>{c.texto}</div>
-                          
-                          {/* VISUALIZACIÓN DE ADJUNTO */}
                           {c.imagen_url && (
                             <div style={{ marginTop: '10px' }}>
                               {isImg ? (
@@ -286,14 +271,9 @@ export default function DetalleOT() {
                                   />
                                 </a>
                               ) : (
-                                <a href={`${BASE_URL}/${c.imagen_url}`} target="_blank" rel="noreferrer" 
-                                   style={{
-                                       display:'inline-flex', alignItems:'center', gap:'8px', 
-                                       background:'#e3f2fd', padding:'8px 12px', borderRadius:'6px', 
-                                       textDecoration:'none', color:'#0d47a1', border:'1px solid #90caf9'
-                                   }}>
+                                <a href={`${BASE_URL}/${c.imagen_url}`} target="_blank" rel="noreferrer" style={{color:'#007bff', textDecoration:'none', fontWeight:'bold', display:'flex', alignItems:'center', gap:'5px', background:'#f0f8ff', padding:'8px', borderRadius:'5px', width:'fit-content'}}>
                                     <span style={{fontSize:'18px'}}>{getFileIcon(c.imagen_url)}</span>
-                                    <span style={{fontWeight:'bold'}}>Descargar Archivo Adjunto</span>
+                                    <span>Descargar Archivo Adjunto</span>
                                 </a>
                               )}
                             </div>
@@ -308,41 +288,35 @@ export default function DetalleOT() {
           </div>
 
           {mostrarInput ? (
-            <div style={{ marginTop: '20px', padding: '15px', background:'#f8f9fa', borderRadius:'10px', border:'1px solid #ddd' }}>
-              <h4 style={{marginTop:0, color:'#444'}}>Agregar Nuevo Recurso</h4>
+            <div style={{ marginTop: '15px', padding: '15px', background:'#f8f9fa', borderRadius:'10px', border:'1px solid #ddd' }}>
+              <h4 style={{marginTop:0, marginBottom:'10px', color:'#333'}}>Agregar Comentario o Archivo</h4>
               <textarea
                 value={nuevoComentario}
                 onChange={(e) => setNuevoComentario(e.target.value)}
-                placeholder="Escribe un comentario o descripción del archivo..."
-                style={{ width: '100%', minHeight: '60px', padding: '10px', borderRadius: '6px', marginBottom:'10px' }}
+                placeholder="Escribe tu comentario o descripción del archivo..."
+                style={{ width: '100%', minHeight: '60px', padding: '10px', borderRadius: '6px' }}
               />
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap:'wrap' }}>
-                <label htmlFor="file-upload" 
-                       style={{ 
-                           cursor: 'pointer', background: '#333', color:'white', 
-                           padding: '8px 15px', borderRadius: '5px', fontSize: '13px', 
-                           display: 'flex', alignItems: 'center', gap:'5px', fontWeight:'bold' 
-                       }}>
+              <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <label htmlFor="file-upload" style={{ cursor: 'pointer', background: '#333', color:'white', padding: '8px 15px', borderRadius: '5px', fontSize: '13px', display: 'flex', alignItems: 'center', gap:'5px' }}>
                   📎 Adjuntar Archivo
                 </label>
                 <input
                   id="file-upload"
                   type="file"
-                  // Aceptar variedad de documentos e imágenes
-                  accept="image/*, .pdf, .doc, .docx, .xls, .xlsx, .txt, .csv" 
+                  // Acepta documentos e imágenes
+                  accept="image/*, .pdf, .doc, .docx, .xls, .xlsx, .txt, .csv"
                   onChange={(e) => setArchivoSeleccionado(e.target.files[0])}
                   style={{ display: 'none' }}
                 />
-                
                 {archivoSeleccionado && (
-                  <span style={{ fontSize: '13px', color: '#007bff', display: 'flex', alignItems: 'center', background:'white', padding:'5px 10px', borderRadius:'5px', border:'1px solid #cce5ff' }}>
+                  <span style={{ fontSize: '12px', color: '#007bff', display: 'flex', alignItems: 'center', background:'white', padding:'5px 10px', borderRadius:'5px', border:'1px solid #cce5ff' }}>
                     {archivoSeleccionado.name}
                     <button onClick={() => setArchivoSeleccionado(null)} style={{ marginLeft: '10px', color: 'red', border: 'none', background: 'transparent', cursor: 'pointer', fontWeight: 'bold' }}>✕</button>
                   </span>
                 )}
               </div>
 
-              <div style={{ display: 'flex', gap: '10px', marginTop: '15px', justifyContent: 'flex-end' }}>
+              <div style={{ display: 'flex', gap: '10px', marginTop: '10px', justifyContent: 'flex-end' }}>
                 <button
                   onClick={() => { setMostrarInput(false); setArchivoSeleccionado(null); }}
                   style={{ background: '#6c757d', color: 'white', padding: '8px 15px', borderRadius: '5px', border: 'none', cursor: 'pointer' }}
@@ -350,11 +324,11 @@ export default function DetalleOT() {
                 <button
                   onClick={handleEnviarComentario}
                   style={{ background: '#28a745', color: 'white', padding: '8px 20px', borderRadius: '5px', border: 'none', cursor: 'pointer', fontWeight:'bold' }}
-                >Guardar</button>
+                >Enviar</button>
               </div>
             </div>
           ) : (
-            <button className="btn-add" onClick={irAAgregarRecurso} title="Agregar Comentario">
+            <button className="btn-add" onClick={irAAgregarRecurso} title="Agregar Comentario/Recurso">
               +
             </button>
           )}

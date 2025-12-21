@@ -1,162 +1,213 @@
-.listaot-container {
-  width: 95%;
-  margin: 0 auto;
-  text-align: center;
-}
+import { getOTs, deleteOTBackend, exportCSV, importCSV } from "../services/otService"; 
+import { Link, useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import NavBar from "../components/NavBar";
+import Footer from "../components/Footer";
+import { getUserFromToken } from "../utils/auth"; // <--- IMPORTANTE
+import "./ListaOT.css";
 
-.titulo {
-  font-size: 32px;
-  margin-top: 20px;
-}
+export default function ListaOT() {
+  const [ots, setOts] = useState([]);
+  
+  // Filtros
+  const [filtros, setFiltros] = useState({
+    busqueda: "",
+    estado: "Todos",
+    fechaInicio: "",
+    fechaFin: ""
+  });
 
-.user-info-box {
-  margin: 20px auto;
-  background: #f5f5f5;
-  width: 60%;
-  padding: 15px;
-  border-radius: 10px;
-  display: flex;
-  justify-content: space-around;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-}
+  // --- FIX SEGURIDAD: Leer del token, no del localStorage editable ---
+  const usuario = getUserFromToken() || { nombre: "Sin Usuario", rol: "Invitado", id: 0, rol_id: 0 };
+  
+  const isAdmin = usuario.rol_id === 1;
+  const isCliente = usuario.rol_id === 2;
+  const isMantenedor = usuario.rol_id === 3;
 
-.btn-bar {
-  margin-top: 15px;
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-}
+  const { id } = useParams();
 
-.btn-opcion {
-  background: #444;
-  color: white;
-  padding: 10px 20px;
-  border-radius: 8px;
-  text-decoration: none;
-}
+  const cargarDatos = async () => {
+    try {
+      const data = await getOTs(filtros, usuario);
+      if (Array.isArray(data)) {
+        setOts(data);
+      } else {
+        setOts([]); 
+      }
+    } catch (error) {
+      console.error("Error cargando OTs:", error);
+      setOts([]);
+    }
+  };
 
-.btn-opcion:hover {
-  background: #222;
-}
+  useEffect(() => {
+    cargarDatos();
+  }, [filtros]);
 
-.layout-grid {
-  margin-top: 25px;
-  display: grid;
-  grid-template-columns: 70% 30%;
-  gap: 20px;
-}
+  const handleFiltro = (e) => {
+    setFiltros({ ...filtros, [e.target.name]: e.target.value });
+  };
 
+  const handleImportar = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
 
-.tabla-box {
-  background: white;
-  padding: 20px;
-  border-radius: 15px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.2);
-}
+    if (!window.confirm("¿Importar este archivo CSV? Asegúrate de que los correos de usuario existan.")) return;
 
-.tabla-header {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 15px;
-}
+    try {
+        const resultado = await importCSV(file);
+        alert(`Importación Finalizada:\n- Creadas: ${resultado.creadas}\n- Errores: ${resultado.errores.length}\n\n${resultado.errores.join('\n')}`);
+        cargarDatos(); 
+    } catch (error) {
+        alert("Error al importar: " + error.message);
+    }
+    e.target.value = null; 
+  };
 
-.input-buscar {
-  width: 70%;
-  padding: 10px;
-  border-radius: 8px;
-  border: 1px solid #999;
-}
+  const handleDelete = async (idOT) => {
+    if (window.confirm("¿Estás seguro de eliminar esta OT?")) {
+        try {
+          await deleteOTBackend(idOT);
+          alert("OT eliminada correctamente");
+          cargarDatos(); 
+        } catch (error) {
+          alert("No se pudo eliminar la OT");
+        }
+      }
+  };
 
-.input-filtro {
-  padding: 10px;
-  border-radius: 8px;
-  border: 1px solid #999;
-}
+  const listaSegura = ots || [];
+  const pendientes = listaSegura.filter((o) => o?.estado === "Pendiente").length;
+  const enProceso = listaSegura.filter((o) => o?.estado === "En Proceso").length;
+  const finalizadas = listaSegura.filter((o) => o?.estado === "Finalizada").length;
 
-.tabla {
-  width: 100%;
-  border-collapse: collapse;
-}
+  return (
+    <>
+      <NavBar />
 
-.tabla th {
-  background: #ddd;
-  padding: 12px;
-}
+      <div className="listaot-container">
+        <h1 className="titulo">Gestión de OTS</h1>
 
-.tabla td {
-  padding: 10px;
-  border-bottom: 1px solid #ccc;
-}
+        <div className="user-info-box">
+          <div>Usuario: <b>{usuario.nombre}</b> &nbsp;&nbsp; Rol: <b>{usuario.rol}</b></div>
+        </div>
+        
+        <div className="btn-bar">
+          <Link to={`/crearot/${usuario.id || 0}`} className="btn-opcion">Crear OT</Link>
+          
+          {/* Botón Exportar CSV: Visible para Admin y Mantenedor, NO Cliente */}
+          {!isCliente && (
+            <button className="btn-opcion" onClick={() => exportCSV(filtros, usuario)}>Exportar CSV</button>
+          )}
+          
+          {/* Botón Importar CSV: Solo Visible para Admin */}
+          {isAdmin && (
+            <>
+              <input 
+                type="file" 
+                id="input-csv" 
+                accept=".csv" 
+                style={{ display: 'none' }} 
+                onChange={handleImportar} 
+              />
+              <label htmlFor="input-csv" className="btn-opcion" style={{cursor: 'pointer', backgroundColor: '#2e7d32'}}>
+                Importar CSV
+              </label>
+            </>
+          )}
 
-.btn-ver {
-  background: #0074FF;
-  padding: 6px 12px;
-  border-radius: 6px;
-  color: white;
-  font-size: 14px;
-  border: none;
-  text-decoration: none;
-  cursor: pointer;
-  transition: 0.2s;
-}
+          <Link to="/dashboard" className="btn-opcion">Inicio</Link>
+        </div>
 
-.btn-ver:hover {
-  background: rgb(0, 80, 190);
-}
+        <div className="layout-grid">
+          
+          <div className="tabla-box">
+            
+            <div className="tabla-header" style={{gap:'10px', flexWrap:'wrap'}}>
+              <input
+                className="input-buscar"
+                type="text"
+                name="busqueda"
+                placeholder="Buscar por Título, Código o Responsable..."
+                value={filtros.busqueda}
+                onChange={handleFiltro}
+              />
+              <input type="date" name="fechaInicio" className="input-filtro" style={{width:'auto'}} onChange={handleFiltro} />
+              <input type="date" name="fechaFin" className="input-filtro" style={{width:'auto'}} onChange={handleFiltro} />
+              <select className="input-filtro" name="estado" onChange={handleFiltro} value={filtros.estado}>
+                <option value="Todos">Todos</option>
+                <option value="Pendiente">Pendiente</option>
+                <option value="En Proceso">En Proceso</option>
+                <option value="Finalizada">Finalizada</option>
+              </select>
+            </div>
 
+            {listaSegura.length === 0 ? (
+                <div style={{padding:'20px', textAlign:'center', color: '#666'}}>
+                    No hay datos disponibles.
+                </div>
+            ) : (
+                <table className="tabla">
+                <thead>
+                    <tr>
+                    <th>Código</th>
+                    <th>Título</th>
+                    <th>Inicio</th>
+                    <th>Fin</th>
+                    <th>Responsable</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {listaSegura.map((ot) => (
+                    <tr key={ot.id_ot || Math.random()}> 
+                        <td>{ot.codigo}</td>
+                        <td>{ot.titulo}</td>
+                        <td>{ot.fecha_inicio_contrato ? ot.fecha_inicio_contrato.slice(0,10) : '-'}</td>
+                        <td>{ot.fecha_fin_contrato ? ot.fecha_fin_contrato.slice(0,10) : '-'}</td>
+                        <td>{ot.responsable_nombre || 'Sin asignar'}</td>
+                        <td>{ot.estado}</td>
+                        <td className="acciones-ot">
+                        <Link className="btn-ver" to={`/detalle/${ot.id_ot}`}>
+                            Ver
+                        </Link>
+                        {!isCliente && (
+                            <button className="btn-eliminar" onClick={() => handleDelete(ot.id_ot)}>
+                                Eliminar
+                            </button>
+                        )}
+                        </td>
+                    </tr>
+                    ))}
+                </tbody>
+                </table>
+            )}
+          </div>
 
-.btn-eliminar {
-  padding: 6px 12px;
-  border-radius: 6px;
-  color: white; 
-  border: none;
-  font-size: 14px;     
-  cursor: pointer;
-  background-color: #c62828; 
-  transition: background 0.2s ease;
-}
+          <div className="panel-registros">
+            <h3>Registros</h3>
+            <div className="panel-card total">
+              <span>Total OT</span>
+              <b>{listaSegura.length}</b>
+            </div>
+            <div className="panel-card pendiente">
+              <span>Pendientes</span>
+              <b>{pendientes}</b>
+            </div>
+            <div className="panel-card proceso">
+              <span>En proceso</span>
+              <b>{enProceso}</b>
+            </div>
+            <div className="panel-card finalizada">
+              <span>Finalizadas</span>
+              <b>{finalizadas}</b>
+            </div>
+          </div>
 
-.btn-eliminar:hover {
-  background-color: #b71c1c; 
-}
-
-.panel-registros {
-  background: white;
-  padding: 20px;
-  border-radius: 15px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.2);
-}
-
-.panel-card {
-  margin: 10px auto;
-  padding: 10px;
-  border-radius: 10px;
-  text-align: center;
-  font-size: 18px;
-  background: #eee;
-}
-
-.panel-card b {
-  font-size: 26px;
-  display: block;
-}
-
-/* Colores */
-.total { border-left: 6px solid black; }
-.pendiente { border-left: 6px solid #3A61A8; }
-.proceso { border-left: 6px solid #61A83A; }
-.finalizada { border-left: 6px solid red; }
-
-.acciones-ot {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px; /* Espacio uniforme */
-  white-space: nowrap;
-}
-
-
-
-.tabla td {
-  white-space: nowrap; /* Evita que los botones se dividan en columnas */
+        </div>
+      </div>
+      <Footer />
+    </>
+  );
 }

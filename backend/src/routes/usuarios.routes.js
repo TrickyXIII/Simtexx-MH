@@ -18,72 +18,43 @@ const router = Router();
 /* =======================================
    RUTAS AUXILIARES (Para Selectores)
    ======================================= */
-
-// Filtro para mantenedores (Protegido)
 router.get("/mantenedores", verifyToken, async (req, res) => {
   try {
-    const result = await pool.query(`
-      SELECT id_usuarios, nombre
-      FROM usuarios
-      WHERE rol_id = 3 AND activo = TRUE
-      ORDER BY nombre ASC
-    `);
+    const result = await pool.query(`SELECT id_usuarios, nombre FROM usuarios WHERE rol_id = 3 AND activo = TRUE ORDER BY nombre ASC`);
     res.json(result.rows);
   } catch (error) {
-    console.error("Error en /mantenedores:", error);
     res.status(500).json({ error: "Error al obtener responsables" });
   }
 });
 
-// Filtro clientes (Protegido)
 router.get("/clientes", verifyToken, async (req, res) => {
   try {
-    const result = await pool.query(`
-      SELECT id_usuarios, nombre
-      FROM usuarios
-      WHERE rol_id = 2 AND activo = TRUE
-      ORDER BY nombre ASC
-    `);
+    const result = await pool.query(`SELECT id_usuarios, nombre FROM usuarios WHERE rol_id = 2 AND activo = TRUE ORDER BY nombre ASC`);
     res.json(result.rows);
   } catch (error) {
-    console.error("Error en /clientes:", error);
     res.status(500).json({ error: "Error al obtener clientes" });
   }
 });
 
 /* =======================================
-   RUTAS PÚBLICAS (Login y Registro)
+   RUTAS PÚBLICAS
    ======================================= */
 router.post("/login", loginUsuario);
-router.post("/registro", registrarUsuarioPublico);
+router.post("/registro", registrarUsuarioPublico); 
 
 /* =======================================
-   RUTAS PROTEGIDAS
+   RUTAS PROTEGIDAS Y ADMIN
    ======================================= */
-
-// Actualizar mi propio perfil (Cualquier rol logueado)
 router.put("/perfil", verifyToken, actualizarPerfil);
 
-/* =======================================
-   RUTAS DE ADMINISTRADOR (Seguridad Extra)
-   ======================================= */
-
-// Activar usuario (Solo admin)
+// SOLO ADMIN (Protegido con verifyAdmin)
 router.patch("/:id/activar", verifyToken, verifyAdmin, activarUsuario);
-
-// Crear usuario (Admin)
 router.post("/", verifyToken, verifyAdmin, crearUsuario);
-
-// Listar todos los usuarios (Admin puede ver todo, o usuarios ver lista básica, aquí restringimos o dejamos verifyToken según necesidad. Dejamos verifyToken general por ahora, pero las acciones de edición son las críticas)
-router.get("/", verifyToken, listarUsuarios);
-
-// Obtener un usuario por ID
-router.get("/:id", verifyToken, obtenerUsuario);
-
-// Editar usuario (Solo admin) - EVITA ESCALADO DE PRIVILEGIOS
 router.put("/:id", verifyToken, verifyAdmin, editarUsuario);
-
-// Desactivar usuario (Solo admin)
 router.patch("/:id/desactivar", verifyToken, verifyAdmin, desactivarUsuario);
+
+// Listar y obtener (Dejamos verifyToken, pero podrías restringir a admin si quisieras)
+router.get("/", verifyToken, listarUsuarios);
+router.get("/:id", verifyToken, obtenerUsuario);
 
 export default router;
