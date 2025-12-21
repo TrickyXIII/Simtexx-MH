@@ -9,9 +9,9 @@ import {
   activarUsuario,
   actualizarPerfil,
   loginUsuario,
-  registrarUsuarioPublico // <--- IMPORTADO
+  registrarUsuarioPublico
 } from "../controllers/usuarios.controller.js";
-import { verifyToken } from "../middlewares/auth.middleware.js";
+import { verifyToken, verifyAdmin } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
@@ -55,31 +55,35 @@ router.get("/clientes", verifyToken, async (req, res) => {
    RUTAS PÚBLICAS (Login y Registro)
    ======================================= */
 router.post("/login", loginUsuario);
-router.post("/registro", registrarUsuarioPublico); // <--- NUEVA RUTA PÚBLICA
+router.post("/registro", registrarUsuarioPublico);
 
 /* =======================================
-   RUTAS PROTEGIDAS (Requieren Login)
+   RUTAS PROTEGIDAS
    ======================================= */
 
-// Actualizar mi propio perfil (Cualquier rol)
+// Actualizar mi propio perfil (Cualquier rol logueado)
 router.put("/perfil", verifyToken, actualizarPerfil);
 
+/* =======================================
+   RUTAS DE ADMINISTRADOR (Seguridad Extra)
+   ======================================= */
+
 // Activar usuario (Solo admin)
-router.patch("/:id/activar", verifyToken, activarUsuario);
+router.patch("/:id/activar", verifyToken, verifyAdmin, activarUsuario);
 
 // Crear usuario (Admin)
-router.post("/", verifyToken, crearUsuario);
+router.post("/", verifyToken, verifyAdmin, crearUsuario);
 
-// Listar todos los usuarios
+// Listar todos los usuarios (Admin puede ver todo, o usuarios ver lista básica, aquí restringimos o dejamos verifyToken según necesidad. Dejamos verifyToken general por ahora, pero las acciones de edición son las críticas)
 router.get("/", verifyToken, listarUsuarios);
 
 // Obtener un usuario por ID
 router.get("/:id", verifyToken, obtenerUsuario);
 
-// Editar usuario
-router.put("/:id", verifyToken, editarUsuario);
+// Editar usuario (Solo admin) - EVITA ESCALADO DE PRIVILEGIOS
+router.put("/:id", verifyToken, verifyAdmin, editarUsuario);
 
-// Desactivar usuario
-router.patch("/:id/desactivar", verifyToken, desactivarUsuario);
+// Desactivar usuario (Solo admin)
+router.patch("/:id/desactivar", verifyToken, verifyAdmin, desactivarUsuario);
 
 export default router;

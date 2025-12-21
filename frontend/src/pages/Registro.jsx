@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { registerPublic } from "../services/usuariosService";
-import "./Login.css"; // Reutilizamos estilos del Login para consistencia
+import "./Login.css"; 
 
 export default function Registro() {
   const navigate = useNavigate();
@@ -21,7 +21,14 @@ export default function Registro() {
     e.preventDefault();
     setError("");
 
-    // Validación local
+    // Validaciones frontend explícitas
+    // Min 8 caracteres, 1 mayus, 1 minus, 1 numero
+    const passRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
+    if (!passRegex.test(form.password)) {
+        setError("La contraseña no cumple con los requisitos de seguridad.");
+        return;
+    }
+
     if (form.password !== form.confirmarPassword) {
       setError("Las contraseñas no coinciden");
       return;
@@ -37,7 +44,7 @@ export default function Registro() {
   };
 
   return (
-    <div className="div"> {/* Reutiliza la clase contenedora del Login */}
+    <div className="div">
       <h2>Crear Cuenta</h2>
       <p style={{fontSize:'14px', color:'#666', marginTop:'-10px', textAlign:'center'}}>Regístrate como Cliente</p>
 
@@ -50,6 +57,8 @@ export default function Registro() {
           onChange={handleChange}
           placeholder="Ej: Juan Pérez"
           required
+          maxLength={50} // Limite de texto
+          title="Máximo 50 caracteres"
         />
 
         <label>Correo Electrónico</label>
@@ -63,16 +72,21 @@ export default function Registro() {
         />
 
         <label>Contraseña</label>
-        <input
-          type="password"
-          name="password"
-          value={form.password}
-          onChange={handleChange}
-          placeholder="********"
-          required
-        />
+        <div title="Debe contener al menos 8 caracteres, una mayúscula, una minúscula y un número.">
+            <input
+            type="password"
+            name="password"
+            value={form.password}
+            onChange={handleChange}
+            placeholder="********"
+            required
+            />
+            <small style={{display:'block', color:'#666', fontSize:'11px', marginTop:'2px', lineHeight:'1.2'}}>
+                Requisito: Mín. 8 caracteres, 1 Mayúscula, 1 minúscula, 1 número.
+            </small>
+        </div>
 
-        <label>Confirmar Contraseña</label>
+        <label style={{marginTop:'10px'}}>Confirmar Contraseña</label>
         <input
           type="password"
           name="confirmarPassword"
@@ -82,9 +96,9 @@ export default function Registro() {
           required
         />
 
-        {error && <div style={{color:'red', marginBottom:'15px', textAlign:'center', fontSize:'0.9em'}}>{error}</div>}
+        {error && <div style={{color:'red', marginBottom:'15px', textAlign:'center', fontSize:'0.9em', background:'#ffe6e6', padding:'5px', borderRadius:'4px', marginTop:'10px'}}>{error}</div>}
 
-        <button type="submit">Registrarse</button>
+        <button type="submit" style={{marginTop:'20px'}}>Registrarse</button>
       </form>
       
       <div style={{marginTop: '25px', textAlign: 'center', fontSize: '14px', borderTop: '1px solid #eee', paddingTop: '15px'}}>

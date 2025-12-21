@@ -1,4 +1,3 @@
-// backend/src/middlewares/auth.middleware.js
 import jwt from "jsonwebtoken";
 
 export const verifyToken = (req, res, next) => {
@@ -17,5 +16,15 @@ export const verifyToken = (req, res, next) => {
     next();
   } catch (error) {
     res.status(403).json({ error: "Token inválido o expirado." });
+  }
+};
+
+// NUEVO: Middleware para obligar a que sea Administrador
+export const verifyAdmin = (req, res, next) => {
+  // Asumiendo que rol_id 1 es Administrador
+  if (req.user && req.user.rol_id === 1) { 
+    next();
+  } else {
+    return res.status(403).json({ error: "Acceso denegado. Se requieren permisos de Administrador." });
   }
 };

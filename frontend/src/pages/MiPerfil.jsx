@@ -13,6 +13,7 @@ export default function MiPerfil() {
   });
   
   const [passwords, setPasswords] = useState({
+    passwordActual: "",
     password: "",
     confirmarPassword: ""
   });
@@ -41,14 +42,13 @@ export default function MiPerfil() {
       const dataToSend = {
         nombre: usuario.nombre,
         correo: usuario.correo,
-        ...(passwords.password ? passwords : {}) // Solo envía password si el usuario escribió algo
+        ...(passwords.password ? passwords : {}) 
       };
 
       await updateProfile(dataToSend);
       
       alert("Perfil actualizado correctamente. Por favor vuelve a iniciar sesión para ver los cambios.");
       
-      // Forzar cierre de sesión para recargar token con nuevos datos si fuera necesario
       localStorage.removeItem("token");
       localStorage.removeItem("usuarioActual");
       navigate("/");
@@ -96,7 +96,18 @@ export default function MiPerfil() {
           />
 
           <hr style={{width: '100%', border: '0', borderTop: '1px solid #eee', margin: '10px 0'}} />
-          <p style={{margin: 0, fontSize: '14px', color: '#888'}}>Dejar en blanco si no desea cambiar contraseña</p>
+          <p style={{margin: 0, fontSize: '14px', color: '#888'}}>Cambio de Contraseña (Opcional)</p>
+
+          <label style={{fontWeight: 'bold'}}>Contraseña Actual</label>
+          <input
+            type="password"
+            name="passwordActual"
+            value={passwords.passwordActual}
+            onChange={handlePassChange}
+            placeholder="Requerido para cambiar clave"
+            // CORREGIDO: Eliminado el atributo duplicado. Se deja habilitado siempre.
+            style={{padding: '10px', borderRadius: '5px', border: '1px solid #ccc'}}
+          />
 
           <label style={{fontWeight: 'bold'}}>Nueva Contraseña</label>
           <input
