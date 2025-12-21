@@ -19,7 +19,6 @@ export default function ListaOT() {
 
   const cargarDatos = async () => {
     try {
-      // Enviamos todos los filtros al backend
       const filtros = { 
         busqueda, 
         estado: filtroEstado,
@@ -41,7 +40,7 @@ export default function ListaOT() {
 
   useEffect(() => {
     cargarDatos();
-  }, []); // Carga inicial
+  }, []);
 
   const handleFiltrar = () => {
     cargarDatos();
@@ -70,7 +69,6 @@ export default function ListaOT() {
     }
   };
 
-  // Estadísticas locales basadas en la vista actual
   const total = ots.length;
   const pendientes = ots.filter(o => o.estado === "Pendiente").length;
   const proceso = ots.filter(o => o.estado === "En Proceso").length;
@@ -84,27 +82,22 @@ export default function ListaOT() {
         
         <h1 className="titulo">Gestión de OTs</h1>
 
+        {/* HEADER: Usuario + Botón Principal (Marcador Verde) */}
         <div className="header-controls">
             <div className="user-info-box">
-            Hola, <strong>{usuario.nombre}</strong> ({usuario.rol})
+               Hola, <strong>{usuario.nombre}</strong> ({usuario.rol})
             </div>
 
-            {/* Barra de Botones */}
-            <div className="btn-bar">
-            <Link to="/crear-ot" className="btn-opcion">+ Nueva OT</Link>
-            <button onClick={handleExport} className="btn-opcion">📊 Exportar CSV</button>
-            {!isCliente && (
-                <div style={{position: 'relative', display: 'inline-block'}}>
-                    <input type="file" id="importar-csv" style={{display: 'none'}} accept=".csv" onChange={handleImport}/>
-                    <label htmlFor="importar-csv" className="btn-opcion" style={{cursor:'pointer', margin:0}}>📥 Importar CSV</label>
-                </div>
-            )}
-            </div>
+            {/* Botón Crear OT aislado aquí */}
+            <Link to="/crear-ot" className="btn-crear-principal">
+              + Nueva Orden de Trabajo
+            </Link>
         </div>
 
-        {/* ESTRUCTURA GRID: Tabla Izquierda (Grande) - Resumen Derecha (Pequeño) */}
+        {/* ESTRUCTURA GRID */}
         <div className="layout-grid">
           
+          {/* Columna Izquierda: Tabla */}
           <div className="tabla-box">
             <div className="tabla-header">
               <input 
@@ -115,7 +108,6 @@ export default function ListaOT() {
                 onChange={e => setBusqueda(e.target.value)}
               />
               
-              {/* Nuevos Filtros de Fecha */}
               <input 
                 type="date" 
                 className="input-filtro"
@@ -136,7 +128,7 @@ export default function ListaOT() {
                 value={filtroEstado} 
                 onChange={e => setFiltroEstado(e.target.value)}
               >
-                <option value="">Todos los Estados</option>
+                <option value="">Todos</option>
                 <option value="Pendiente">Pendiente</option>
                 <option value="En Proceso">En Proceso</option>
                 <option value="Finalizada">Finalizada</option>
@@ -153,8 +145,8 @@ export default function ListaOT() {
                     <th>Título</th>
                     <th>Estado</th>
                     <th>F. Inicio</th>
-                    <th>F. Fin</th> {/* Columna Nueva */}
-                    <th>Responsable</th> {/* Columna Nueva */}
+                    <th>F. Fin</th>
+                    <th>Responsable</th>
                     <th>Acciones</th>
                     </tr>
                 </thead>
@@ -165,12 +157,8 @@ export default function ListaOT() {
                         <td><strong>{ot.codigo}</strong></td>
                         <td>{ot.titulo}</td>
                         <td>
-                            <span style={{
-                            padding:'4px 8px', borderRadius:'12px', fontSize:'11px', fontWeight:'bold',
-                            backgroundColor: ot.estado === 'Finalizada' ? '#d4edda' : ot.estado === 'En Proceso' ? '#d1ecf1' : '#fff3cd',
-                            color: ot.estado === 'Finalizada' ? '#155724' : ot.estado === 'En Proceso' ? '#0c5460' : '#856404'
-                            }}>
-                            {ot.estado}
+                            <span className={`badge-estado ${ot.estado.toLowerCase().replace(' ', '-')}`}>
+                              {ot.estado}
                             </span>
                         </td>
                         <td>{ot.fecha_inicio_contrato ? new Date(ot.fecha_inicio_contrato).toLocaleDateString() : '-'}</td>
@@ -194,21 +182,42 @@ export default function ListaOT() {
             </div>
           </div>
 
-          {/* Panel Resumen Lateral */}
-          <div className="panel-registros">
-            <h3>Resumen</h3>
-            <div className="panel-card total">
-              <span>Total</span> <b>{total}</b>
+          {/* Columna Derecha: Sidebar */}
+          <div className="sidebar-column">
+            
+            {/* 1. Panel Resumen */}
+            <div className="panel-registros">
+              <h3>Resumen</h3>
+              <div className="panel-card total">
+                <span>Total</span> <b>{total}</b>
+              </div>
+              <div className="panel-card pendiente">
+                <span>Pendientes</span> <b>{pendientes}</b>
+              </div>
+              <div className="panel-card proceso">
+                <span>En Proceso</span> <b>{proceso}</b>
+              </div>
+              <div className="panel-card finalizada">
+                <span>Finalizadas</span> <b>{finalizadas}</b>
+              </div>
             </div>
-            <div className="panel-card pendiente">
-              <span>Pendientes</span> <b>{pendientes}</b>
+
+            {/* 2. Botones de Acción Masiva (Marcador Azul) */}
+            <div className="panel-acciones-masivas">
+               <button onClick={handleExport} className="btn-sidebar exportar">
+                 📊 Exportar a Excel/CSV
+               </button>
+               
+               {!isCliente && (
+                  <div className="upload-wrapper">
+                      <input type="file" id="importar-csv" style={{display: 'none'}} accept=".csv" onChange={handleImport}/>
+                      <label htmlFor="importar-csv" className="btn-sidebar importar">
+                        📥 Importar desde CSV
+                      </label>
+                  </div>
+               )}
             </div>
-            <div className="panel-card proceso">
-              <span>En Proceso</span> <b>{proceso}</b>
-            </div>
-            <div className="panel-card finalizada">
-              <span>Finalizadas</span> <b>{finalizadas}</b>
-            </div>
+
           </div>
         </div>
       </div>
