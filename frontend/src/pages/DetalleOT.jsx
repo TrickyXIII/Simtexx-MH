@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
 
 import { getOTById, exportPDFById, getComentarios, crearComentario, updateComentario, getHistorial } from "../services/otService";
-import { getUserFromToken } from "../utils/auth";
+import { getUserFromToken } from "../utils/auth"; 
 import Footer from "../components/Footer";
 import NavBar from "../components/NavBar";
 import "./DetalleOT.css";
@@ -16,11 +16,10 @@ const getFileIcon = (filename) => {
     if (ext === 'pdf') return '📄'; 
     if (['xls', 'xlsx', 'csv'].includes(ext)) return '📊'; 
     if (['doc', 'docx'].includes(ext)) return '📝'; 
-    if (['jpg', 'jpeg', 'png', 'webp'].includes(ext)) return '🖼️';
     return '📎'; 
 };
 
-// Helper URLs
+// Helper URL
 const getResourceUrl = (url) => {
     if (!url) return "";
     if (url.startsWith("http")) return url;
@@ -35,39 +34,35 @@ export default function DetalleOT() {
   const [comentarios, setComentarios] = useState([]);
   const [historial, setHistorial] = useState([]);
 
-  // Formulario Comentario
+  // Estados Input
   const [nuevoComentario, setNuevoComentario] = useState("");
   const [archivoSeleccionado, setArchivoSeleccionado] = useState(null); 
   const [mostrarInput, setMostrarInput] = useState(false);
 
-  // Edición Comentario
+  // Estados Edición
   const [editandoId, setEditandoId] = useState(null);
   const [textoEditado, setTextoEditado] = useState("");
 
   const usuario = getUserFromToken() || { nombre: "Invitado", rol: "Invitado", id: 0, rol_id: 0 };
   const userId = usuario.id;
+  const isAdmin = usuario.rol_id === 1;
   const isCliente = usuario.rol_id === 2;
   const isMantenedor = usuario.rol_id === 3;
-  const isAdmin = usuario.rol_id === 1;
   const canViewHistory = isAdmin || isMantenedor;
 
   useEffect(() => {
     async function loadData() {
-      try {
-        const otData = await getOTById(id);
-        setOt(otData);
+      const otData = await getOTById(id);
+      setOt(otData);
 
-        if (otData) {
-          const commentsData = await getComentarios(id);
-          setComentarios(commentsData);
+      if (otData) {
+        const commentsData = await getComentarios(id);
+        setComentarios(commentsData);
 
-          if (canViewHistory) {
-            const historialData = await getHistorial(id);
-            setHistorial(historialData);
-          }
+        if (canViewHistory) {
+          const historialData = await getHistorial(id);
+          setHistorial(historialData);
         }
-      } catch (e) {
-        console.error("Error cargando detalle", e);
       }
     }
     loadData();
@@ -79,13 +74,16 @@ export default function DetalleOT() {
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
-    if (file && file.size > 10 * 1024 * 1024) {
-      alert("El archivo excede el tamaño máximo permitido de 10MB.");
-      e.target.value = null;
-      setArchivoSeleccionado(null);
-      return;
+    if (file) {
+      const maxSize = 10 * 1024 * 1024; 
+      if (file.size > maxSize) {
+        alert("El archivo excede el tamaño máximo permitido de 10MB.");
+        e.target.value = null;
+        setArchivoSeleccionado(null);
+        return;
+      }
+      setArchivoSeleccionado(file);
     }
-    setArchivoSeleccionado(file || null);
   };
 
   const handleEnviarComentario = async () => {
@@ -100,13 +98,12 @@ export default function DetalleOT() {
       const updated = await getComentarios(id);
       setComentarios(updated);
     } else {
-      alert("Error al guardar comentario.");
+      alert("No se pudo guardar.");
     }
   };
 
   const iniciarEdicion = (c) => { setEditandoId(c.id); setTextoEditado(c.texto); };
   const cancelarEdicion = () => { setEditandoId(null); setTextoEditado(""); };
-  
   const guardarEdicion = async (comentarioId) => {
     if (!textoEditado.trim()) return;
     const res = await updateComentario(comentarioId, userId, textoEditado);
@@ -124,134 +121,129 @@ export default function DetalleOT() {
       setTimeout(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }), 100);
   };
 
-  if (!ot) return <div style={{textAlign:'center', marginTop:'50px'}}>Cargando...</div>;
+  if (!ot) return <h2 style={{ textAlign: 'center', marginTop: '50px' }}>Cargando OT...</h2>;
 
   const recursos = comentarios.filter(c => c.imagen_url);
 
   return (
     <>
       <NavBar />
-      
-      <div className="detalle-wrapper">
-        
-        {/* 1. HEADER SUPERIOR */}
-        <div className="top-header">
-          <button className="btn-volver-outline" onClick={() => navigate(-1)}>
+
+      <div className="detalle-container">
+
+        {/* --- TÍTULO SUPERIOR --- */}
+        <div className="titulo-header">
+          <button className="btn-volver" onClick={() => navigate(-1)}>
             ⬅ Volver
           </button>
-          <h1 className="titulo-pagina">OT: {ot.codigo}</h1>
-          <span className={`badge ${ot.estado.toLowerCase().replace(' ', '-')}`}>
-            {ot.estado}
-          </span>
+          <h1 className="titulo">Detalle de Orden {ot.codigo}</h1>
         </div>
 
-        {/* 2. TARJETAS DE RESUMEN (GRID) */}
-        <div className="info-summary-grid">
-          <div className="info-card red-accent">
-            <label>Cliente</label>
-            <span>{ot.cliente_nombre || "N/A"}</span>
+        {/* --- 1. ENCABEZADO (GRID 3) --- */}
+        <div className="caja-estilo detalle-header">
+          <div className="detalle-item"><label>Código</label><span>{ot.codigo}</span></div>
+          <div className="detalle-item"><label>Título</label><span>{ot.titulo}</span></div>
+          <div className="detalle-item"><label>Estado</label><span>{ot.estado}</span></div>
+          <div className="detalle-item"><label>Inicio Contrato</label><span>{ot.fecha_inicio_contrato ? ot.fecha_inicio_contrato.slice(0, 10) : '-'}</span></div>
+          <div className="detalle-item"><label>Cliente</label><span>{ot.cliente_nombre}</span></div>
+          <div className="detalle-item"><label>Responsable</label><span>{ot.responsable_nombre || "Sin asignar"}</span></div>
+        </div>
+
+        {/* --- 2. MAIN (DATOS + RECURSOS) --- */}
+        <div className="detalle-main">
+          
+          {/* Columna Izquierda: Datos Generales */}
+          <div className="caja-estilo">
+            <h3 className="caja-titulo">Información General</h3>
+            <div className="datos-grid">
+              <div><label>Descripción:</label><p>{ot.descripcion}</p></div>
+              <div><label>Término Estimado:</label><p>{ot.fecha_fin_contrato ? ot.fecha_fin_contrato.slice(0, 10) : 'Indefinido'}</p></div>
+              <div><label>Estado Actual:</label><p>{ot.estado}</p></div>
+              <div><label>Última Actualización:</label><p>{new Date(ot.fecha_actualizacion).toLocaleDateString()}</p></div>
+            </div>
           </div>
-          <div className="info-card blue-accent">
-            <label>Responsable</label>
-            <span>{ot.responsable_nombre || "Sin Asignar"}</span>
-          </div>
-          <div className="info-card">
-            <label>Fecha Inicio</label>
-            <span>{ot.fecha_inicio_contrato ? new Date(ot.fecha_inicio_contrato).toLocaleDateString() : '-'}</span>
-          </div>
-          <div className="info-card">
-            <label>Fecha Fin</label>
-            <span>{ot.fecha_fin_contrato ? new Date(ot.fecha_fin_contrato).toLocaleDateString() : '-'}</span>
+
+          {/* Columna Derecha: Recursos */}
+          <div className="caja-estilo">
+            <h3 className="caja-titulo">Recursos Adjuntos</h3>
+            
+            <div className="recursos-lista">
+                {recursos.length === 0 && <p style={{fontSize:'13px', color:'#777'}}>Sin adjuntos.</p>}
+                
+                {recursos.map((r) => {
+                    const url = getResourceUrl(r.imagen_url);
+                    const isImg = url.match(/\.(jpeg|jpg|gif|png|webp)/i) || url.includes("cloudinary");
+
+                    return (
+                        <a key={r.id} href={url} target="_blank" rel="noreferrer" className="recurso-item" title={r.autor}>
+                            {isImg ? (
+                                <img src={url} style={{width:'50px', height:'50px', objectFit:'cover', borderRadius:'4px'}} />
+                            ) : (
+                                <div style={{fontSize:'30px'}}>{getFileIcon(r.imagen_url)}</div>
+                            )}
+                            <span style={{fontSize:'10px', marginTop:'5px', textAlign:'center', width:'100%', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis'}}>
+                                Archivo
+                            </span>
+                        </a>
+                    )
+                })}
+            </div>
+
+            <div className="recursos-footer">
+              <span style={{color: '#666'}}>Archivos Totales</span>
+              <div className="rcard"><b>{recursos.length}</b></div>
+            </div>
           </div>
         </div>
 
-        {/* 3. BOTONERA DE ACCIONES */}
-        <div className="actions-bar">
+        {/* --- 3. BOTONERA --- */}
+        <div className="botonera">
           {!isCliente && (
-            <button className="btn-action btn-config" onClick={() => navigate(`/ModificarOT/${ot.id_ot}`)}>
-              ⚙ Configurar OT
+            <button className="btn-accion btn-negro" onClick={() => navigate(`/ModificarOT/${ot.id_ot}`)}>
+              Configurar OT
             </button>
           )}
-          <button className="btn-action btn-recurso" onClick={irAAgregarRecurso}>
-            📎 Agregar Recurso
+          <button className="btn-accion btn-negro" onClick={irAAgregarRecurso}>
+            + Agregar Recurso
           </button>
-          <button className="btn-action btn-pdf" onClick={handleExportPDF}>
-            📄 Exportar PDF
+          <button className="btn-accion btn-azul" onClick={handleExportPDF}>
+            Descargar PDF
           </button>
         </div>
 
-        {/* 4. CONTENIDO PRINCIPAL (2 Columnas) */}
-        <div className="main-content-grid">
-          
-          {/* Izquierda: Descripción */}
-          <div className="content-box">
-            <h3 className="box-header">Descripción del Trabajo</h3>
-            <div className="desc-text">
-              {ot.descripcion || "Sin descripción detallada."}
-            </div>
-          </div>
-
-          {/* Derecha: Recursos */}
-          <div className="content-box">
-            <h3 className="box-header">Archivos Adjuntos ({recursos.length})</h3>
-            <div className="recursos-list">
-              {recursos.length === 0 && <p style={{color:'#777', fontStyle:'italic'}}>No hay archivos.</p>}
-              {recursos.map(r => {
-                 const url = getResourceUrl(r.imagen_url);
-                 return (
-                   <a key={r.id} href={url} target="_blank" rel="noreferrer" className="recurso-link">
-                     <span className="recurso-icon">{getFileIcon(r.imagen_url)}</span>
-                     <div className="recurso-info">
-                       <span className="recurso-name">Archivo Adjunto</span>
-                       <span className="recurso-meta">{new Date(r.fecha_creacion).toLocaleDateString()} - {r.autor}</span>
-                     </div>
-                   </a>
-                 )
-              })}
-            </div>
-          </div>
-        </div>
-
-        {/* 5. HISTORIAL DE CAMBIOS (Tabla) */}
+        {/* --- 4. HISTORIAL --- */}
         {canViewHistory && (
-          <div className="content-box">
-            <h3 className="box-header">Historial de Cambios</h3>
-            <div style={{overflowX: 'auto'}}>
-              <table className="historial-table">
-                <thead>
-                  <tr>
-                    <th>Fecha</th>
-                    <th>Acción</th>
-                    <th>Responsable</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {historial.length === 0 ? (
-                    <tr><td colSpan="3" style={{textAlign:'center'}}>Sin registros.</td></tr>
-                  ) : (
-                    historial.map((h) => (
+          <div className="caja-estilo">
+            <h3 className="caja-titulo">Historial de Auditoría</h3>
+            {historial.length === 0 ? (
+              <p style={{ textAlign: 'center', color: '#888' }}>Sin movimientos recientes.</p>
+            ) : (
+              <div style={{overflowX: 'auto'}}>
+                <table className="historial-tabla">
+                  <thead>
+                    <tr><th>Fecha</th><th>Detalle</th><th>Responsable</th></tr>
+                  </thead>
+                  <tbody>
+                    {historial.map((h) => (
                       <tr key={h.id_auditoria || Math.random()}>
                         <td>{new Date(h.fecha_cambio).toLocaleString()}</td>
-                        <td>
-                          <strong>{h.accion}</strong> 
-                          {h.detalles && <div style={{fontSize:'0.85em', color:'#666'}}>{h.detalles}</div>}
-                        </td>
+                        <td><strong>{h.accion}</strong> - {h.detalles}</td>
                         <td>{h.responsable_nombre || "Sistema"}</td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
 
-        {/* 6. BITÁCORA / COMENTARIOS */}
-        <div className="content-box">
-          <h3 className="box-header">Bitácora de Comentarios</h3>
-          
-          <ul className="comentarios-list">
-            {comentarios.length === 0 && <p style={{color:'#888'}}>Aún no hay comentarios en la bitácora.</p>}
+        {/* --- 5. COMENTARIOS --- */}
+        <div className="caja-estilo">
+          <h3 className="caja-titulo">Bitácora de Proyecto ({comentarios.length})</h3>
+
+          <ul className="comentarios-lista">
+            {comentarios.length === 0 && <p style={{ color: '#888', textAlign:'center' }}>No hay entradas en la bitácora.</p>}
             
             {comentarios.map((c) => {
               const esMio = String(c.usuarios_id) === String(userId);
@@ -259,76 +251,74 @@ export default function DetalleOT() {
               const isImg = url && (url.match(/\.(jpeg|jpg|gif|png|webp)/i) || url.includes("cloudinary"));
 
               return (
-                <li key={c.id} className="comentario-item">
+                <li key={c.id} className="comentario-fila">
                   <div className="comentario-header">
-                    <span><b>{c.autor}</b> • {new Date(c.fecha_creacion).toLocaleString()}</span>
+                    <span><b>{c.autor}</b> - {new Date(c.fecha_creacion).toLocaleString()} {c.fecha_edicion && "(Editado)"}</span>
                     {esMio && editandoId !== c.id && (
-                      <button onClick={() => iniciarEdicion(c)} style={{border:'none', background:'transparent', color:'#007bff', cursor:'pointer', fontWeight:'bold'}}>Editar</button>
+                      <button onClick={() => iniciarEdicion(c)} style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: '#007bff', fontWeight:'bold' }}>Editar</button>
                     )}
                   </div>
 
                   {editandoId === c.id ? (
                     <div>
                       <textarea 
-                        className="input-area" 
                         value={textoEditado} 
                         onChange={(e) => setTextoEditado(e.target.value)} 
+                        style={{ width: '100%', padding: '10px', border:'1px solid #ccc', borderRadius:'4px' }} 
                         maxLength={1000}
                       />
-                      <div style={{marginTop:'10px', display:'flex', gap:'10px', justifyContent:'flex-end'}}>
-                        <button onClick={cancelarEdicion} style={{padding:'5px 10px'}}>Cancelar</button>
-                        <button onClick={() => guardarEdicion(c.id)} style={{padding:'5px 10px', background:'#28a745', color:'white', border:'none', borderRadius:'4px'}}>Guardar</button>
+                      <div style={{ marginTop: '5px', textAlign: 'right', gap:'10px', display:'flex', justifyContent:'flex-end' }}>
+                        <button onClick={cancelarEdicion} style={{cursor:'pointer', padding:'5px 10px'}}>Cancelar</button>
+                        <button onClick={() => guardarEdicion(c.id)} style={{ background: '#28a745', color: 'white', border: 'none', padding: '5px 15px', borderRadius: '4px', cursor: 'pointer' }}>Guardar</button>
                       </div>
                     </div>
                   ) : (
-                    <div className="comentario-body">
-                      {c.texto}
+                    <div>
+                      <div className="comentario-texto">{c.texto}</div>
                       {c.imagen_url && (
-                        <div style={{marginTop:'10px'}}>
-                           {isImg ? (
-                             <a href={url} target="_blank" rel="noreferrer">
-                               <img src={url} alt="Adjunto" style={{maxWidth:'150px', borderRadius:'6px', border:'1px solid #ccc'}} />
-                             </a>
-                           ) : (
-                             <a href={url} target="_blank" rel="noreferrer" style={{color:'#007bff', textDecoration:'none', fontWeight:'bold'}}>
-                               📎 Ver Archivo Adjunto
-                             </a>
-                           )}
+                        <div style={{ marginTop: '10px' }}>
+                          {isImg ? (
+                            <a href={url} target="_blank" rel="noreferrer">
+                              <img src={url} alt="Adjunto" style={{ maxWidth: '150px', maxHeight: '150px', borderRadius: '4px', border: '1px solid #ccc' }} />
+                            </a>
+                          ) : (
+                            <a href={url} target="_blank" rel="noreferrer" style={{color:'#007bff', textDecoration:'none', fontWeight:'bold'}}>
+                                📎 Ver Archivo Adjunto
+                            </a>
+                          )}
                         </div>
                       )}
                     </div>
                   )}
                 </li>
-              )
+              );
             })}
           </ul>
 
-          {/* INPUT NUEVO COMENTARIO (Toggle) */}
           {mostrarInput ? (
-            <div className="nuevo-comentario-box">
-              <h4 style={{marginTop:0}}>Nuevo Comentario</h4>
+            <div className="nuevo-comentario-wrapper">
+              <h4 style={{marginTop:0, marginBottom:'10px', color:'#333'}}>Nueva Entrada</h4>
               <textarea
-                className="input-area"
                 value={nuevoComentario}
                 onChange={(e) => setNuevoComentario(e.target.value)}
-                placeholder="Escribe aquí..."
+                placeholder="Escribe un comentario..."
+                style={{ width: '100%', minHeight: '80px', padding: '10px', borderRadius: '4px', border: '1px solid #ccc', boxSizing:'border-box' }}
                 maxLength={1000}
               />
-              <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginTop:'10px'}}>
-                <input type="file" onChange={handleFileChange} />
-                <div style={{display:'flex', gap:'10px'}}>
-                  <button onClick={() => setMostrarInput(false)} style={{padding:'8px 15px', border:'none', borderRadius:'4px', cursor:'pointer'}}>Cancelar</button>
-                  <button onClick={handleEnviarComentario} style={{padding:'8px 15px', background:'#28a745', color:'white', border:'none', borderRadius:'4px', fontWeight:'bold', cursor:'pointer'}}>Publicar</button>
+              <div style={{ marginTop: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <input type="file" onChange={handleFileChange} style={{fontSize:'0.9rem'}}/>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button onClick={() => { setMostrarInput(false); setArchivoSeleccionado(null); }} style={{ padding: '8px 15px', borderRadius: '4px', border: 'none', cursor: 'pointer' }}>Cancelar</button>
+                  <button onClick={handleEnviarComentario} style={{ background: 'rgb(172, 5, 5)', color: 'white', padding: '8px 20px', borderRadius: '4px', border: 'none', cursor: 'pointer', fontWeight:'bold' }}>Publicar</button>
                 </div>
               </div>
             </div>
           ) : (
-            <button 
-              onClick={irAAgregarRecurso} 
-              style={{marginTop:'20px', width:'100%', padding:'12px', border:'2px dashed #ccc', background:'transparent', color:'#666', fontWeight:'bold', cursor:'pointer', borderRadius:'6px'}}
-            >
-              + Agregar Comentario a la Bitácora
-            </button>
+            <div style={{textAlign:'center', marginTop:'20px'}}>
+                <button className="btn-add-circle" onClick={irAAgregarRecurso} title="Agregar Comentario">
+                +
+                </button>
+            </div>
           )}
         </div>
 
