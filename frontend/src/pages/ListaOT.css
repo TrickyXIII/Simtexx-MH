@@ -16,11 +16,9 @@
 /* --- HEADER CONTROLS --- */
 .header-controls {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-end; /* Alineado a la derecha */
     align-items: center;
     margin-bottom: 20px;
-    flex-wrap: wrap;
-    gap: 15px;
 }
 
 .user-info-box {
@@ -31,27 +29,6 @@
   box-shadow: 0 2px 5px rgba(0,0,0,0.1);
   font-size: 1rem;
   color: #333;
-}
-
-/* Botón Principal (Verde) */
-.btn-crear-principal {
-  background-color: rgb(172, 5, 5);
-  color: white;
-  padding: 12px 25px;
-  border-radius: 6px;
-  text-decoration: none;
-  font-weight: bold;
-  font-size: 1.1rem;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.btn-crear-principal:hover {
-  background-color: #8a0404;
-  transform: translateY(-2px);
 }
 
 /* --- GRID LAYOUT --- */
@@ -163,7 +140,7 @@
 .panel-card.proceso { background-color: #17a2b8; }
 .panel-card.finalizada { background-color: #28a745; }
 
-/* --- BOTONES ACCIONES MASIVAS (AZUL) --- */
+/* --- BOTONES LATERALES --- */
 .panel-acciones-masivas {
   display: flex;
   flex-direction: column;
@@ -171,7 +148,9 @@
 }
 
 .btn-sidebar {
-  display: block;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   width: 100%;
   padding: 15px;
   border: none;
@@ -183,16 +162,26 @@
   transition: transform 0.2s, background 0.2s;
   font-size: 0.95rem;
   box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-  box-sizing: border-box; /* Asegura que el padding no desborde */
+  box-sizing: border-box;
+  text-decoration: none; /* Importante para el Link */
 }
 
+/* 1. Botón Crear (Rojo) */
+.btn-sidebar.crear {
+  background-color: rgb(172, 5, 5);
+  font-size: 1.1rem; /* Un poco más grande para destacar */
+}
+.btn-sidebar.crear:hover { background-color: #8a0404; }
+
+/* 2. Botón Exportar (Verde) */
 .btn-sidebar.exportar {
-  background-color: #28a745; /* Verde Excel */
+  background-color: #28a745; 
 }
 .btn-sidebar.exportar:hover { background-color: #218838; }
 
+/* 3. Botón Importar (Azul) */
 .btn-sidebar.importar {
-  background-color: #17a2b8; /* Azul Importar */
-  margin: 0; /* Reset margins */
+  background-color: #17a2b8;
+  margin: 0;
 }
 .btn-sidebar.importar:hover { background-color: #138496; }

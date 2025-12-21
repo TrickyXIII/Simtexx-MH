@@ -82,16 +82,11 @@ export default function ListaOT() {
         
         <h1 className="titulo">Gestión de OTs</h1>
 
-        {/* HEADER: Usuario + Botón Principal (Marcador Verde) */}
+        {/* HEADER: Solo info de usuario, el botón se fue al sidebar */}
         <div className="header-controls">
             <div className="user-info-box">
                Hola, <strong>{usuario.nombre}</strong> ({usuario.rol})
             </div>
-
-            {/* Botón Crear OT aislado aquí */}
-            <Link to="/crear-ot" className="btn-crear-principal">
-              + Nueva Orden de Trabajo
-            </Link>
         </div>
 
         {/* ESTRUCTURA GRID */}
@@ -202,12 +197,22 @@ export default function ListaOT() {
               </div>
             </div>
 
-            {/* 2. Botones de Acción Masiva (Marcador Azul) */}
+            {/* 2. Botones de Acción (Sidebar) */}
             <div className="panel-acciones-masivas">
-               <button onClick={handleExport} className="btn-sidebar exportar">
-                 📊 Exportar a Excel/CSV
-               </button>
                
+               {/* BOTÓN 1: CREAR OT (Movido aquí) */}
+               <Link to="/crear-ot" className="btn-sidebar crear">
+                 + Nueva Orden de Trabajo
+               </Link>
+
+               {/* BOTÓN 2: EXPORTAR (Oculto para Clientes) */}
+               {!isCliente && (
+                 <button onClick={handleExport} className="btn-sidebar exportar">
+                   📊 Exportar a Excel/CSV
+                 </button>
+               )}
+               
+               {/* BOTÓN 3: IMPORTAR (Oculto para Clientes) */}
                {!isCliente && (
                   <div className="upload-wrapper">
                       <input type="file" id="importar-csv" style={{display: 'none'}} accept=".csv" onChange={handleImport}/>
