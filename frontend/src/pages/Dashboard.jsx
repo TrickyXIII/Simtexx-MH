@@ -12,90 +12,148 @@ const Dashboard = () => {
     total: 0, pendientes: 0, en_proceso: 0, finalizadas: 0
   });
 
-  // Manejo seguro del usuario
+  // Estado para los filtros de fecha
+  const [filtros, setFiltros] = useState({
+    fechaInicio: "",
+    fechaFin: ""
+  });
+
   const usuario = getUserFromToken() || { nombre: "Usuario", rol: "Invitado", id: 0, rol_id: 0 };
   const isCliente = usuario.rol_id === 2;
 
-  useEffect(() => {
-    async function cargarDatos() {
-      try {
-        const estadisticas = await getDashboardStats();
-        if(estadisticas) setStats(estadisticas);
+  // Función para cargar datos (se usa al inicio y al filtrar)
+  async function cargarDatos() {
+    try {
+      const estadisticas = await getDashboardStats();
+      if(estadisticas) setStats(estadisticas);
 
-        const listaOts = await getOTs({});
-        if (Array.isArray(listaOts)) {
-          setOts(listaOts.slice(0, 5)); // Mostrar solo las últimas 5
-        }
-      } catch (error) {
-        console.error("Error cargando dashboard:", error);
+      // Pasamos los filtros actuales al servicio
+      const listaOts = await getOTs(filtros);
+      
+      if (Array.isArray(listaOts)) {
+        setOts(listaOts.slice(0, 10)); // Mostramos hasta 10 recientes
       }
+    } catch (error) {
+      console.error("Error cargando dashboard:", error);
     }
+  }
+
+  // Cargar al montar
+  useEffect(() => {
     cargarDatos();
   }, []);
+
+  // Manejador de cambios en inputs
+  const handleFilterChange = (e) => {
+    setFiltros({ ...filtros, [e.target.name]: e.target.value });
+  };
 
   return (
     <>
       <NavBar />
       <div className="container">
-        <h1 className="title">Panel de Control</h1>
-
-        <div className="subtittle">
-          Bienvenido, <b>{usuario.nombre}</b> <br/> 
-          <span style={{fontSize:'0.9em', color:'#555'}}>Perfil: {usuario.rol}</span>
-        </div>
-
-        <div className="cardContainer">
-          {/* CORRECCIÓN DE RUTAS AQUÍ */}
-          <Link to="/crear-ot" className="card">Nueva Solicitud (OT)</Link>
-          <Link to="/lista-ot" className="card">Ver Mis Órdenes</Link>
-          
-          {/* Solo administradores y mantenedores ven gestión de usuarios */}
-          {!isCliente && <Link to="/GestionUser" className="card">Gestionar Usuarios</Link>}
-        </div>
-
-        <div className="panel-resumen">
-          <h2 className="panel-title">Estado de Órdenes</h2>
-          <div className="panel-items">
-            <div className="panel-item" style={{borderColor: '#333'}}>Total <strong>{stats.total}</strong></div>
-            <div className="panel-item" style={{borderColor: '#ffc107'}}>Pendientes <strong>{stats.pendientes}</strong></div>
-            <div className="panel-item" style={{borderColor: '#17a2b8'}}>Proceso <strong>{stats.en_proceso}</strong></div>
-            <div className="panel-item" style={{borderColor: '#28a745'}}>Finalizadas <strong>{stats.finalizadas}</strong></div>
+        
+        {/* Encabezado */}
+        <div className="header-dashboard">
+          <h1 className="title">Panel de Control</h1>
+          <div className="subtittle">
+            Bienvenido, <b>{usuario.nombre}</b> <span className="rol-badge">{usuario.rol}</span>
           </div>
         </div>
 
-        <div className="table-container">
-          <h2 className="table-title">Actividad Reciente</h2>
-          <table>
-            <thead>
-              <tr>
-                <th>Código</th>
-                <th>Estado</th>
-                <th>Fecha Inicio</th>
-                <th>Responsable</th>
-              </tr>
-            </thead>
-            <tbody>
-              {ots.length === 0 ? (
-                <tr><td colSpan="4" style={{ textAlign: "center", padding: "15px" }}>No hay registros recientes</td></tr>
-              ) : (
-                ots.map((ot) => (
-                  <tr key={ot.id_ot}>
-                    <td><Link to={`/detalle/${ot.id_ot}`} style={{color:'#d60000', fontWeight:'bold'}}>{ot.codigo}</Link></td>
-                    <td>
-                      <span style={{
-                          padding:'4px 8px', borderRadius:'4px', fontSize:'12px', fontWeight:'bold',
-                          background: ot.estado === 'Finalizada' ? '#d4edda' : ot.estado === 'En Proceso' ? '#d1ecf1' : '#fff3cd'
-                      }}>
-                        {ot.estado}
-                      </span>
-                    </td>
-                    <td>{ot.fecha_inicio_contrato?.slice(0, 10) || "N/A"}</td>
-                    <td>{ot.responsable_nombre || "Sin Asignar"}</td>
+        {/* Accesos Rápidos */}
+        <div className="cardContainer">
+          <Link to="/crear-ot" className="card">Nueva Solicitud (OT)</Link>
+          <Link to="/lista-ot" className="card">Ver Mis Órdenes</Link>
+          {!isCliente && <Link to="/GestionUser" className="card">Gestionar Usuarios</Link>}
+        </div>
+
+        {/* LAYOUT NUEVO: Grid Tabla (Izquierda) + Resumen (Derecha) */}
+        <div className="dashboard-grid">
+          
+          {/* SECCIÓN IZQUIERDA: TABLA Y FILTROS */}
+          <div className="main-section">
+            <div className="table-header-row">
+              <h2 className="section-title">Últimas Órdenes</h2>
+              
+              {/* Filtros de Fecha Recuperados */}
+              <div className="date-filters">
+                <input 
+                  type="date" 
+                  name="fechaInicio" 
+                  value={filtros.fechaInicio} 
+                  onChange={handleFilterChange} 
+                  title="Fecha Desde"
+                />
+                <span style={{color:'#666'}}>-</span>
+                <input 
+                  type="date" 
+                  name="fechaFin" 
+                  value={filtros.fechaFin} 
+                  onChange={handleFilterChange} 
+                  title="Fecha Hasta"
+                />
+                <button onClick={cargarDatos} className="btn-filtrar">🔍</button>
+              </div>
+            </div>
+
+            <div className="table-responsive">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Código</th>
+                    <th>Estado</th>
+                    <th>Inicio</th>
+                    <th>Fin</th> {/* Columna Recuperada */}
+                    <th>Responsable</th> {/* Columna Recuperada */}
+                    <th>Ver</th>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                </thead>
+                <tbody>
+                  {ots.length === 0 ? (
+                    <tr><td colSpan="6" className="no-data">No hay registros recientes</td></tr>
+                  ) : (
+                    ots.map((ot) => (
+                      <tr key={ot.id_ot}>
+                        <td className="fw-bold">{ot.codigo}</td>
+                        <td>
+                          <span className={`status-badge ${ot.estado.toLowerCase().replace(" ", "-")}`}>
+                            {ot.estado}
+                          </span>
+                        </td>
+                        <td>{ot.fecha_inicio_contrato?.slice(0, 10) || "-"}</td>
+                        <td>{ot.fecha_fin_contrato?.slice(0, 10) || "-"}</td>
+                        <td>{ot.responsable_nombre || "Sin Asignar"}</td>
+                        <td>
+                          <Link to={`/detalle/${ot.id_ot}`} className="btn-icon">👁️</Link>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* SECCIÓN DERECHA: RESUMEN (Movido aquí) */}
+          <aside className="panel-resumen">
+            <h2 className="panel-title">Resumen Global</h2>
+            <div className="panel-list">
+              <div className="panel-row total">
+                <span>Total OTs</span> <strong>{stats.total}</strong>
+              </div>
+              <div className="panel-row pendiente">
+                <span>Pendientes</span> <strong>{stats.pendientes}</strong>
+              </div>
+              <div className="panel-row proceso">
+                <span>En Proceso</span> <strong>{stats.en_proceso}</strong>
+              </div>
+              <div className="panel-row finalizada">
+                <span>Finalizadas</span> <strong>{stats.finalizadas}</strong>
+              </div>
+            </div>
+          </aside>
+
         </div>
       </div>
       <Footer />

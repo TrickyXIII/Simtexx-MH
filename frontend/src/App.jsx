@@ -12,11 +12,21 @@ import CrearUser from "./pages/CrearUser";
 import ModificarUser from "./pages/ModificarUser";
 import AuditoriaGlobal from "./pages/AuditoriaGlobal";
 import ProtectedRoute from "./components/ProtectedRoute"; 
+
+// Importamos la imagen y estilos
+import bgImage from "./assets/fondo-C4YVKjzF.webp";
 import "./styles/global.css";
 
 function App() {
   return (
-    <div className="main-content">
+    // Aplicamos el fondo aquí con estilos en línea para asegurar la ruta
+    <div className="main-content" style={{ 
+      backgroundImage: `url(${bgImage})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundAttachment: 'fixed',
+      minHeight: '100vh'
+    }}>
       <Routes>
         {/* Rutas Públicas */}
         <Route path="/" element={<Login />} />
@@ -26,7 +36,6 @@ function App() {
         {/* Rutas Protegidas */}
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         
-        {/* NOTA: Las rutas deben coincidir con los Links del Dashboard */}
         <Route path="/lista-ot" element={<ProtectedRoute><ListaOT /></ProtectedRoute>} />
         <Route path="/crear-ot" element={<ProtectedRoute><CrearOT /></ProtectedRoute>} />
         
