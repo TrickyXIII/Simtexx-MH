@@ -10,7 +10,7 @@
 
 ## 🔗 Demo en Vivo
 Puedes acceder al dashboard del prototipo aquí:  
-👉 [Simtexx Frontend en Render](https://simtexx-frontend-lxf4.onrender.com/dashboard)
+👉 [Simtexx en Render](https://simtexx-frontend-lxf4.onrender.com/dashboard)
 
 ## 🚀 Características del Proyecto
 
