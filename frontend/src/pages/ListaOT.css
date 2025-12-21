@@ -1,213 +1,219 @@
-import { getOTs, deleteOTBackend, exportCSV, importCSV } from "../services/otService"; 
-import { Link, useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
-import NavBar from "../components/NavBar";
-import Footer from "../components/Footer";
-import { getUserFromToken } from "../utils/auth"; // <--- IMPORTANTE
-import "./ListaOT.css";
+/* frontend/src/pages/ListaOT.css */
 
-export default function ListaOT() {
-  const [ots, setOts] = useState([]);
-  
-  // Filtros
-  const [filtros, setFiltros] = useState({
-    busqueda: "",
-    estado: "Todos",
-    fechaInicio: "",
-    fechaFin: ""
-  });
+.listaot-container {
+  max-width: 1200px;
+  margin: 80px auto 40px auto; /* Margen superior para no chocar con el Navbar */
+  padding: 0 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
 
-  // --- FIX SEGURIDAD: Leer del token, no del localStorage editable ---
-  const usuario = getUserFromToken() || { nombre: "Sin Usuario", rol: "Invitado", id: 0, rol_id: 0 };
-  
-  const isAdmin = usuario.rol_id === 1;
-  const isCliente = usuario.rol_id === 2;
-  const isMantenedor = usuario.rol_id === 3;
+.titulo {
+  text-align: center;
+  color: #333;
+  margin-bottom: 20px;
+  font-size: 2.5rem;
+}
 
-  const { id } = useParams();
+/* --- Caja de Información de Usuario --- */
+.user-info-box {
+  background-color: #e3f2fd;
+  color: #0d47a1;
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: 1px solid #bbdefb;
+  display: inline-block;
+  margin-bottom: 20px;
+  font-size: 0.95rem;
+}
 
-  const cargarDatos = async () => {
-    try {
-      const data = await getOTs(filtros, usuario);
-      if (Array.isArray(data)) {
-        setOts(data);
-      } else {
-        setOts([]); 
-      }
-    } catch (error) {
-      console.error("Error cargando OTs:", error);
-      setOts([]);
-    }
-  };
+/* --- Barra de Botones Superiores --- */
+.btn-bar {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+}
 
-  useEffect(() => {
-    cargarDatos();
-  }, [filtros]);
+.btn-opcion {
+  text-decoration: none;
+  background-color: #333;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: 600;
+  transition: background-color 0.3s, transform 0.2s;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  font-size: 14px;
+}
 
-  const handleFiltro = (e) => {
-    setFiltros({ ...filtros, [e.target.name]: e.target.value });
-  };
+.btn-opcion:hover {
+  background-color: #000;
+  transform: translateY(-2px);
+}
 
-  const handleImportar = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+/* --- Layout Principal (Tabla + Panel Lateral) --- */
+.layout-grid {
+  display: grid;
+  grid-template-columns: 3fr 1fr; /* La tabla ocupa más espacio que el panel */
+  gap: 30px;
+  align-items: start;
+}
 
-    if (!window.confirm("¿Importar este archivo CSV? Asegúrate de que los correos de usuario existan.")) return;
+/* En móviles, poner una columna */
+@media (max-width: 900px) {
+  .layout-grid {
+    grid-template-columns: 1fr;
+  }
+}
 
-    try {
-        const resultado = await importCSV(file);
-        alert(`Importación Finalizada:\n- Creadas: ${resultado.creadas}\n- Errores: ${resultado.errores.length}\n\n${resultado.errores.join('\n')}`);
-        cargarDatos(); 
-    } catch (error) {
-        alert("Error al importar: " + error.message);
-    }
-    e.target.value = null; 
-  };
+/* --- Contenedor de la Tabla --- */
+.tabla-box {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  padding: 20px;
+  overflow-x: auto; /* Scroll horizontal si es necesario */
+}
 
-  const handleDelete = async (idOT) => {
-    if (window.confirm("¿Estás seguro de eliminar esta OT?")) {
-        try {
-          await deleteOTBackend(idOT);
-          alert("OT eliminada correctamente");
-          cargarDatos(); 
-        } catch (error) {
-          alert("No se pudo eliminar la OT");
-        }
-      }
-  };
+/* Filtros sobre la tabla */
+.tabla-header {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  align-items: center;
+}
 
-  const listaSegura = ots || [];
-  const pendientes = listaSegura.filter((o) => o?.estado === "Pendiente").length;
-  const enProceso = listaSegura.filter((o) => o?.estado === "En Proceso").length;
-  const finalizadas = listaSegura.filter((o) => o?.estado === "Finalizada").length;
+.input-buscar {
+  flex: 1; /* Ocupa el espacio restante */
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+}
 
-  return (
-    <>
-      <NavBar />
+.input-filtro {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background-color: white;
+  cursor: pointer;
+}
 
-      <div className="listaot-container">
-        <h1 className="titulo">Gestión de OTS</h1>
+/* Estilos de la Tabla */
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
 
-        <div className="user-info-box">
-          <div>Usuario: <b>{usuario.nombre}</b> &nbsp;&nbsp; Rol: <b>{usuario.rol}</b></div>
-        </div>
-        
-        <div className="btn-bar">
-          <Link to={`/crearot/${usuario.id || 0}`} className="btn-opcion">Crear OT</Link>
-          
-          {/* Botón Exportar CSV: Visible para Admin y Mantenedor, NO Cliente */}
-          {!isCliente && (
-            <button className="btn-opcion" onClick={() => exportCSV(filtros, usuario)}>Exportar CSV</button>
-          )}
-          
-          {/* Botón Importar CSV: Solo Visible para Admin */}
-          {isAdmin && (
-            <>
-              <input 
-                type="file" 
-                id="input-csv" 
-                accept=".csv" 
-                style={{ display: 'none' }} 
-                onChange={handleImportar} 
-              />
-              <label htmlFor="input-csv" className="btn-opcion" style={{cursor: 'pointer', backgroundColor: '#2e7d32'}}>
-                Importar CSV
-              </label>
-            </>
-          )}
+.tabla th {
+  background-color: #f8f9fa;
+  color: #495057;
+  font-weight: 700;
+  text-align: left;
+  padding: 12px;
+  border-bottom: 2px solid #dee2e6;
+}
 
-          <Link to="/dashboard" className="btn-opcion">Inicio</Link>
-        </div>
+.tabla td {
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+  color: #333;
+}
 
-        <div className="layout-grid">
-          
-          <div className="tabla-box">
-            
-            <div className="tabla-header" style={{gap:'10px', flexWrap:'wrap'}}>
-              <input
-                className="input-buscar"
-                type="text"
-                name="busqueda"
-                placeholder="Buscar por Título, Código o Responsable..."
-                value={filtros.busqueda}
-                onChange={handleFiltro}
-              />
-              <input type="date" name="fechaInicio" className="input-filtro" style={{width:'auto'}} onChange={handleFiltro} />
-              <input type="date" name="fechaFin" className="input-filtro" style={{width:'auto'}} onChange={handleFiltro} />
-              <select className="input-filtro" name="estado" onChange={handleFiltro} value={filtros.estado}>
-                <option value="Todos">Todos</option>
-                <option value="Pendiente">Pendiente</option>
-                <option value="En Proceso">En Proceso</option>
-                <option value="Finalizada">Finalizada</option>
-              </select>
-            </div>
+.tabla tr:hover {
+  background-color: #f1f1f1;
+}
 
-            {listaSegura.length === 0 ? (
-                <div style={{padding:'20px', textAlign:'center', color: '#666'}}>
-                    No hay datos disponibles.
-                </div>
-            ) : (
-                <table className="tabla">
-                <thead>
-                    <tr>
-                    <th>Código</th>
-                    <th>Título</th>
-                    <th>Inicio</th>
-                    <th>Fin</th>
-                    <th>Responsable</th>
-                    <th>Estado</th>
-                    <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {listaSegura.map((ot) => (
-                    <tr key={ot.id_ot || Math.random()}> 
-                        <td>{ot.codigo}</td>
-                        <td>{ot.titulo}</td>
-                        <td>{ot.fecha_inicio_contrato ? ot.fecha_inicio_contrato.slice(0,10) : '-'}</td>
-                        <td>{ot.fecha_fin_contrato ? ot.fecha_fin_contrato.slice(0,10) : '-'}</td>
-                        <td>{ot.responsable_nombre || 'Sin asignar'}</td>
-                        <td>{ot.estado}</td>
-                        <td className="acciones-ot">
-                        <Link className="btn-ver" to={`/detalle/${ot.id_ot}`}>
-                            Ver
-                        </Link>
-                        {!isCliente && (
-                            <button className="btn-eliminar" onClick={() => handleDelete(ot.id_ot)}>
-                                Eliminar
-                            </button>
-                        )}
-                        </td>
-                    </tr>
-                    ))}
-                </tbody>
-                </table>
-            )}
-          </div>
+/* Botones de acción dentro de la tabla */
+.acciones-ot {
+  display: flex;
+  gap: 8px;
+}
 
-          <div className="panel-registros">
-            <h3>Registros</h3>
-            <div className="panel-card total">
-              <span>Total OT</span>
-              <b>{listaSegura.length}</b>
-            </div>
-            <div className="panel-card pendiente">
-              <span>Pendientes</span>
-              <b>{pendientes}</b>
-            </div>
-            <div className="panel-card proceso">
-              <span>En proceso</span>
-              <b>{enProceso}</b>
-            </div>
-            <div className="panel-card finalizada">
-              <span>Finalizadas</span>
-              <b>{finalizadas}</b>
-            </div>
-          </div>
+.btn-ver {
+  background-color: #007bff;
+  color: white;
+  text-decoration: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+}
 
-        </div>
-      </div>
-      <Footer />
-    </>
-  );
+.btn-ver:hover {
+  background-color: #0056b3;
+}
+
+.btn-eliminar {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.btn-eliminar:hover {
+  background-color: #bd2130;
+}
+
+/* --- Panel Lateral de Estadísticas --- */
+.panel-registros {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.panel-registros h3 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  color: #333;
+  text-align: center;
+  font-size: 1.2rem;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 10px;
+}
+
+.panel-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  border-radius: 8px;
+  color: white;
+  font-weight: bold;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+}
+
+.panel-card b {
+  font-size: 1.4rem;
+}
+
+/* Colores específicos para las tarjetas */
+.panel-card.total {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.panel-card.pendiente {
+  background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+  color: #333; /* Texto oscuro para contraste con amarillo */
+}
+
+.panel-card.proceso {
+  background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+  color: #005cbf;
+}
+
+.panel-card.finalizada {
+  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+  color: #155724;
 }
