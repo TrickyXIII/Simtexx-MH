@@ -5,6 +5,7 @@
   padding: 0 20px;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   padding-bottom: 60px;
+  min-height: 80vh; /* Asegura que el contenedor ocupe buen alto de pantalla */
 }
 
 /* --- TÍTULO Y BOTÓN VOLVER --- */
@@ -24,26 +25,28 @@
   margin: 0;
 }
 
+/* Botón Volver - Estilo ListaOT (Sólido) */
 .btn-volver {
   position: absolute;
   left: 0;
-  background-color: transparent;
-  border: 2px solid #333;
-  color: #333;
-  padding: 8px 20px;
-  border-radius: 6px;
+  background-color: #333; /* Fondo sólido oscuro */
+  color: white;           /* Texto blanco */
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;     /* Bordes levemente redondeados como en ListaOT */
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background-color 0.2s;
   display: flex;
   align-items: center;
   gap: 8px;
-  text-decoration: none; /* Por si se cambia a Link */
+  text-decoration: none;
+  font-size: 0.95rem;
 }
 
 .btn-volver:hover {
-  background-color: #333;
-  color: white;
+  background-color: #000; /* Más oscuro al hover */
+  transform: translateY(-1px);
 }
 
 /* --- ESTILO BASE PARA CAJAS (Estilo ListaOT) --- */
@@ -54,6 +57,11 @@
   padding: 25px;
   border-top: 4px solid rgb(172, 5, 5); /* Rojo Simtexx */
   margin-bottom: 30px;
+  
+  /* CORRECCIÓN: Altura mínima para evitar que se vea vacío con poca info */
+  min-height: 250px; 
+  display: flex;
+  flex-direction: column;
 }
 
 .caja-titulo {
@@ -71,12 +79,13 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 20px;
+  min-height: auto; /* El encabezado no necesita ser tan alto */
 }
 
 .detalle-item {
   text-align: left;
   padding: 10px;
-  border-bottom: 1px solid #f0f0f0; /* Línea sutil para guiar la vista */
+  border-bottom: 1px solid #f0f0f0; 
 }
 
 .detalle-item label {
@@ -100,14 +109,15 @@
   display: grid;
   grid-template-columns: 60% 1fr; /* 1fr toma el resto (aprox 40% menos gap) */
   gap: 30px;
-  align-items: start; /* Alinea al inicio para evitar estiramientos feos */
+  align-items: stretch; /* Estirar para que ambas columnas tengan la misma altura */
 }
 
-/* Ajustes específicos Datos y Recursos */
+/* Datos */
 .datos-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
+  flex-grow: 1; /* Ocupa el espacio disponible en la caja flex */
 }
 
 .datos-grid label {
@@ -128,7 +138,9 @@
   display: flex;
   flex-wrap: wrap;
   gap: 15px;
-  justify-content: center; /* Centrado para mejor distribución */
+  justify-content: center;
+  flex-grow: 1; /* Empuja el footer hacia abajo */
+  align-content: flex-start; /* Evita espacios grandes entre filas si hay pocos */
 }
 
 .recurso-item {
@@ -136,13 +148,14 @@
   border: 1px solid #eee;
   border-radius: 8px;
   padding: 10px;
-  width: 90px; /* Ancho fijo para cuadrar */
+  width: 90px;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-decoration: none;
   color: #333;
   transition: transform 0.2s, box-shadow 0.2s;
+  height: fit-content;
 }
 
 .recurso-item:hover {
@@ -152,7 +165,7 @@
 }
 
 .recursos-footer {
-  margin-top: 20px;
+  margin-top: auto; /* Se pega al fondo gracias a flex-direction column en caja-estilo */
   padding-top: 15px;
   border-top: 1px solid #eee;
   display: flex;
@@ -162,7 +175,7 @@
 
 .rcard {
   background: #f4f4f4;
-  padding: 10px 20px;
+  padding: 5px 15px;
   border-radius: 6px;
   text-align: center;
   font-size: 0.9rem;
@@ -275,7 +288,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto; /* Centrado */
+  margin: 0 auto; 
   transition: transform 0.2s;
   box-shadow: 0 4px 10px rgba(172, 5, 5, 0.3);
 }
