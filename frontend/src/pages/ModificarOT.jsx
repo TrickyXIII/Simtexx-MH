@@ -30,11 +30,9 @@ export default function ModificarOT() {
   // Función auxiliar para formatear fechas de forma segura
   const formatearFecha = (fecha) => {
     if (!fecha) return "";
-    // Si ya viene como string YYYY-MM-DD, lo dejamos
     if (typeof fecha === "string" && fecha.includes("T")) {
         return fecha.split("T")[0];
     }
-    // Si es un objeto Date o un string raro, lo convertimos
     try {
         return new Date(fecha).toISOString().split("T")[0];
     } catch (e) {
@@ -42,10 +40,18 @@ export default function ModificarOT() {
     }
   };
 
+  // --- OBTENER FECHA ACTUAL EN FORMATO YYYY-MM-DD (LOCAL) ---
+  const getTodayString = () => {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
   useEffect(() => {
     async function loadData() {
       try {
-        // Cargar todo en paralelo para que sea más rápido
         const [otData, clientesData, responsablesData] = await Promise.all([
           getOTById(id),
           getClientes(),
@@ -58,10 +64,8 @@ export default function ModificarOT() {
             titulo: otData.titulo || "",
             descripcion: otData.descripcion || "",
             estado: otData.estado || "Pendiente",
-            // Aseguramos que los IDs sean strings para que el <select> los reconozca
             cliente_id: otData.cliente_id ? String(otData.cliente_id) : "",
             responsable_id: otData.responsable_id ? String(otData.responsable_id) : "",
-            // Usamos la función segura para las fechas
             fecha_inicio_contrato: formatearFecha(otData.fecha_inicio_contrato),
             fecha_fin_contrato: formatearFecha(otData.fecha_fin_contrato),
             activo: otData.activo
@@ -86,10 +90,17 @@ export default function ModificarOT() {
 
   async function handleSubmit(e) {
     e.preventDefault();
+
+    // Validación de fecha fin (solo si se ingresó)
+    if (form.fecha_fin_contrato && form.fecha_fin_contrato < getTodayString()) {
+      alert("La fecha fin no puede ser anterior a la fecha actual.");
+      return;
+    }
+
     try {
       await updateOT(id, form);
       alert("OT modificada exitosamente ✔");
-      navigate(`/detalle/${id}`); // Volver al detalle para ver los cambios
+      navigate(`/detalle/${id}`); 
     } catch (error) {
       console.error("❌ Error al modificar la OT:", error);
       alert("Hubo un error al intentar modificar la OT. Revisa la consola.");
@@ -190,7 +201,13 @@ export default function ModificarOT() {
 
                 <div className="form-group">
                     <label>Fecha Fin</label>
-                    <input type="date" name="fecha_fin_contrato" value={form.fecha_fin_contrato} onChange={handleChange} />
+                    <input 
+                        type="date" 
+                        name="fecha_fin_contrato" 
+                        value={form.fecha_fin_contrato} 
+                        onChange={handleChange} 
+                        min={getTodayString()} // Restricción en UI
+                    />
                 </div>
             </div>
 

@@ -13,7 +13,6 @@ export default function CrearOT() {
   const usuarioActual = JSON.parse(localStorage.getItem("usuarioActual") || "{}");
   const isCliente = usuarioActual.rol_id === 2; // 2 = Cliente
 
-  // 🔴 CORRECCIÓN CLAVE: Detectar el ID correcto
   const userId = usuarioActual.id_usuarios || usuarioActual.id;
 
   // 2. Estado Inicial
@@ -39,8 +38,6 @@ export default function CrearOT() {
           const c = await getClientes();
           const m = await getMantenedores();
           
-          // CORRECCIÓN: La API devuelve un array directo, no un objeto { usuarios: [...] }
-          // Pero dejamos un fallback por seguridad
           const listaClientes = Array.isArray(c) ? c : (c.usuarios || []);
           const listaMantenedores = Array.isArray(m) ? m : (m.usuarios || []);
 
@@ -58,11 +55,26 @@ export default function CrearOT() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  // --- OBTENER FECHA ACTUAL EN FORMATO YYYY-MM-DD (LOCAL) ---
+  const getTodayString = () => {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       if (isCliente && !userId) {
         alert("Error de sesión: No se pudo identificar tu usuario. Por favor cierra sesión y vuelve a entrar.");
+        return;
+      }
+
+      // Validación de fecha fin
+      if (form.fecha_fin && form.fecha_fin < getTodayString()) {
+        alert("La fecha fin no puede ser anterior a la fecha actual.");
         return;
       }
 
@@ -130,6 +142,7 @@ export default function CrearOT() {
                     name="fecha_fin"
                     value={form.fecha_fin}
                     onChange={handleChange}
+                    min={getTodayString()} // Restricción en UI
                   />
                 </div>
               </div>

@@ -29,7 +29,7 @@ export default function DetalleOT() {
 
   // Estados para imagen y comentarios
   const [nuevoComentario, setNuevoComentario] = useState("");
-  const [archivoSeleccionado, setArchivoSeleccionado] = useState(null); // Antes imagenSeleccionada
+  const [archivoSeleccionado, setArchivoSeleccionado] = useState(null); 
   const [mostrarInput, setMostrarInput] = useState(false);
 
   // Estados para EDICIÓN
@@ -67,10 +67,25 @@ export default function DetalleOT() {
     if (ot) exportPDFById(ot.id_ot, ot.codigo, usuario);
   };
 
+  // --- VALIDACIÓN DE PESO DE ARCHIVO (Máx 10MB) ---
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const maxSize = 10 * 1024 * 1024; // 10 MB en bytes
+      if (file.size > maxSize) {
+        alert("El archivo excede el tamaño máximo permitido de 10MB.");
+        e.target.value = null; // Limpiar input
+        setArchivoSeleccionado(null);
+        return;
+      }
+      setArchivoSeleccionado(file);
+    }
+  };
+
   const handleEnviarComentario = async () => {
     if (!nuevoComentario.trim() && !archivoSeleccionado) return;
 
-    // Usamos crearComentario que ya envía FormData con 'imagen' (que ahora acepta todo)
+    // Usamos crearComentario que ya envía FormData con 'imagen'
     const res = await crearComentario(id, userId, nuevoComentario, archivoSeleccionado);
 
     if (res) {
@@ -156,7 +171,6 @@ export default function DetalleOT() {
           <div className="recursos-box">
             <h3>Recursos Adjuntos</h3>
             
-            {/* NUEVA VISTA DE RECURSOS (ICONOS) */}
             <div className="recursos-lista" style={{display:'flex', flexWrap:'wrap', gap:'15px', marginTop:'15px', justifyContent:'center'}}>
                 {recursos.length === 0 && <p style={{fontSize:'13px', color:'#777'}}>Sin recursos adjuntos.</p>}
                 
@@ -305,7 +319,7 @@ export default function DetalleOT() {
                   type="file"
                   // Acepta documentos e imágenes
                   accept="image/*, .pdf, .doc, .docx, .xls, .xlsx, .txt, .csv"
-                  onChange={(e) => setArchivoSeleccionado(e.target.files[0])}
+                  onChange={handleFileChange}
                   style={{ display: 'none' }}
                 />
                 {archivoSeleccionado && (
