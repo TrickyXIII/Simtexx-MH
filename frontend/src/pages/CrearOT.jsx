@@ -4,20 +4,18 @@ import { createOT } from "../services/otService";
 import { getClientes, getMantenedores } from "../services/usuariosService";
 import NavBar from "../components/NavBar";
 import Footer from "../components/Footer";
+import { getUserFromToken } from "../utils/auth"; // <--- IMPORTANTE: Importar utilidad de auth
 import "./CrearOT.css";
 
 export default function CrearOT() {
   const navigate = useNavigate();
   
-  // 1. Detectar Rol y Usuario
-  const usuarioActual = JSON.parse(localStorage.getItem("usuarioActual") || "{}");
+  // 1. Detectar Rol y Usuario desde el TOKEN (Corrección del error)
+  const usuarioActual = getUserFromToken() || { nombre: "Invitado", rol: "Invitado", id: 0, rol_id: 0 };
   const isCliente = usuarioActual.rol_id === 2; // 2 = Cliente
-
-  // El ID debe venir preferentemente del token si está disponible, pero usamos fallback
-  const userId = usuarioActual.id_usuarios || usuarioActual.id;
+  const userId = usuarioActual.id; 
 
   // 2. Estado Inicial
-  // Si es cliente, pre-llenamos valores por defecto
   const [form, setForm] = useState({
     titulo: "",
     descripcion: "",
@@ -42,8 +40,9 @@ export default function CrearOT() {
           const c = await getClientes();
           const m = await getMantenedores();
           
-          const listaClientes = Array.isArray(c) ? c : (c.usuarios || []);
-          const listaMantenedores = Array.isArray(m) ? m : (m.usuarios || []);
+          // Manejo seguro de la respuesta de la API (array o objeto)
+          const listaClientes = c.usuarios || (Array.isArray(c) ? c : []);
+          const listaMantenedores = m.usuarios || (Array.isArray(m) ? m : []);
 
           setClientes(listaClientes); 
           setMantenedores(listaMantenedores);
@@ -52,8 +51,11 @@ export default function CrearOT() {
         }
       }
       loadData();
+    } else {
+        // Si es cliente, aseguramos que el ID del cliente esté en el formulario
+        setForm(prev => ({ ...prev, cliente_id: userId }));
     }
-  }, [isCliente]);
+  }, [isCliente, userId]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -125,7 +127,7 @@ export default function CrearOT() {
             placeholder="Detalles del trabajo a realizar..."
           />
 
-          {/* CAMPOS OCULTOS PARA CLIENTE */}
+          {/* SECCIÓN SOLO PARA ADMIN / MANTENEDOR (Oculta para Cliente) */}
           {!isCliente && (
             <>
               <div className="form-row">
