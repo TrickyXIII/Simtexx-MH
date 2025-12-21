@@ -19,6 +19,15 @@ const getFileIcon = (filename) => {
     return '📎'; 
 };
 
+// Helper para URLs de recursos (Cloudinary vs Local)
+const getResourceUrl = (url) => {
+    if (!url) return "";
+    // Si ya viene con http/https (Cloudinary), lo usamos directo
+    if (url.startsWith("http")) return url;
+    // Si no, asumimos local (fallback)
+    return `${BASE_URL}/${url}`;
+};
+
 export default function DetalleOT() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -85,7 +94,11 @@ export default function DetalleOT() {
   const handleEnviarComentario = async () => {
     if (!nuevoComentario.trim() && !archivoSeleccionado) return;
 
-    // Usamos crearComentario que ya envía FormData con 'imagen'
+    if (nuevoComentario.length > 1000) {
+        alert("El comentario no puede exceder los 1000 caracteres.");
+        return;
+    }
+
     const res = await crearComentario(id, userId, nuevoComentario, archivoSeleccionado);
 
     if (res) {
@@ -111,6 +124,12 @@ export default function DetalleOT() {
 
   const guardarEdicion = async (comentarioId) => {
     if (!textoEditado.trim()) return;
+    
+    if (textoEditado.length > 1000) {
+        alert("El comentario no puede exceder los 1000 caracteres.");
+        return;
+    }
+
     const res = await updateComentario(comentarioId, userId, textoEditado);
     if (res) {
       setEditandoId(null);
@@ -131,7 +150,6 @@ export default function DetalleOT() {
 
   if (!ot) return <h2 style={{ textAlign: 'center', marginTop: '50px' }}>Cargando OT...</h2>;
 
-  // Filtramos recursos (comentarios con adjuntos)
   const recursos = comentarios.filter(c => c.imagen_url);
 
   return (
@@ -175,23 +193,24 @@ export default function DetalleOT() {
                 {recursos.length === 0 && <p style={{fontSize:'13px', color:'#777'}}>Sin recursos adjuntos.</p>}
                 
                 {recursos.map((r) => {
-                    const isImg = r.imagen_url.match(/\.(jpeg|jpg|gif|png|webp)$/i);
-                    const fileName = r.imagen_url.split('/').pop().split('-').slice(1).join('-'); // Limpiar nombre
+                    const url = getResourceUrl(r.imagen_url);
+                    const isImg = url.match(/\.(jpeg|jpg|gif|png|webp)/i) || url.includes("cloudinary.com"); // Cloudinary suele ser imagen
+                    const fileName = r.imagen_url.split('/').pop().split('.')[0].slice(0,15); // Nombre corto
 
                     return (
-                        <a key={r.id} href={`${BASE_URL}/${r.imagen_url}`} target="_blank" rel="noreferrer" 
+                        <a key={r.id} href={url} target="_blank" rel="noreferrer" 
                            className="recurso-item"
                            title={`Subido por: ${r.autor}\nFecha: ${new Date(r.fecha_creacion).toLocaleDateString()}`}
                            style={{display:'flex', flexDirection:'column', alignItems:'center', width:'80px', textDecoration:'none', color:'#333', fontSize:'11px', padding:'5px', borderRadius:'8px', transition:'0.2s'}}>
                             {isImg ? (
-                                <img src={`${BASE_URL}/${r.imagen_url}`} style={{width:'60px', height:'60px', objectFit:'cover', borderRadius:'8px', border:'1px solid #ddd'}} />
+                                <img src={url} style={{width:'60px', height:'60px', objectFit:'cover', borderRadius:'8px', border:'1px solid #ddd'}} />
                             ) : (
                                 <div style={{width:'60px', height:'60px', background:'#e3f2fd', color:'#1565c0', borderRadius:'8px', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'24px', border:'1px solid #bbdefb'}}>
                                     {getFileIcon(r.imagen_url)}
                                 </div>
                             )}
                             <span style={{marginTop:'5px', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', width:'100%', textAlign:'center'}}>
-                                {fileName || 'Archivo'}
+                                Archivo
                             </span>
                         </a>
                     )
@@ -246,7 +265,8 @@ export default function DetalleOT() {
               <ul style={{ listStyle: 'none', padding: 0 }}>
                 {comentarios.map((c) => {
                   const esMio = String(c.usuarios_id) === String(userId);
-                  const isImg = c.imagen_url && c.imagen_url.match(/\.(jpeg|jpg|gif|png|webp)$/i);
+                  const url = getResourceUrl(c.imagen_url);
+                  const isImg = url && (url.match(/\.(jpeg|jpg|gif|png|webp)/i) || url.includes("cloudinary"));
 
                   return (
                     <li key={c.id} style={{
@@ -265,10 +285,18 @@ export default function DetalleOT() {
 
                       {editandoId === c.id ? (
                         <div style={{ marginTop: '5px' }}>
-                          <textarea value={textoEditado} onChange={(e) => setTextoEditado(e.target.value)} style={{ width: '100%', padding: '5px' }} />
-                          <div style={{ marginTop: '5px', textAlign: 'right' }}>
-                            <button onClick={cancelarEdicion} style={{ marginRight: '5px', cursor: 'pointer' }}>Cancelar</button>
-                            <button onClick={() => guardarEdicion(c.id)} style={{ background: '#2e7d32', color: 'white', border: 'none', padding: '4px 10px', borderRadius: '4px', cursor: 'pointer' }}>Guardar</button>
+                          <textarea 
+                            value={textoEditado} 
+                            onChange={(e) => setTextoEditado(e.target.value)} 
+                            style={{ width: '100%', padding: '5px' }} 
+                            maxLength={1000}
+                          />
+                          <div style={{display:'flex', justifyContent:'space-between', fontSize:'11px', color:'#666'}}>
+                             <span>{textoEditado.length}/1000</span>
+                             <div style={{ marginTop: '5px', textAlign: 'right' }}>
+                                <button onClick={cancelarEdicion} style={{ marginRight: '5px', cursor: 'pointer' }}>Cancelar</button>
+                                <button onClick={() => guardarEdicion(c.id)} style={{ background: '#2e7d32', color: 'white', border: 'none', padding: '4px 10px', borderRadius: '4px', cursor: 'pointer' }}>Guardar</button>
+                             </div>
                           </div>
                         </div>
                       ) : (
@@ -277,15 +305,15 @@ export default function DetalleOT() {
                           {c.imagen_url && (
                             <div style={{ marginTop: '10px' }}>
                               {isImg ? (
-                                <a href={`${BASE_URL}/${c.imagen_url}`} target="_blank" rel="noreferrer">
+                                <a href={url} target="_blank" rel="noreferrer">
                                   <img
-                                    src={`${BASE_URL}/${c.imagen_url}`}
+                                    src={url}
                                     alt="Evidencia"
                                     style={{ maxWidth: '200px', maxHeight: '200px', borderRadius: '8px', border: '1px solid #ccc', cursor: 'pointer' }}
                                   />
                                 </a>
                               ) : (
-                                <a href={`${BASE_URL}/${c.imagen_url}`} target="_blank" rel="noreferrer" style={{color:'#007bff', textDecoration:'none', fontWeight:'bold', display:'flex', alignItems:'center', gap:'5px', background:'#f0f8ff', padding:'8px', borderRadius:'5px', width:'fit-content'}}>
+                                <a href={url} target="_blank" rel="noreferrer" style={{color:'#007bff', textDecoration:'none', fontWeight:'bold', display:'flex', alignItems:'center', gap:'5px', background:'#f0f8ff', padding:'8px', borderRadius:'5px', width:'fit-content'}}>
                                     <span style={{fontSize:'18px'}}>{getFileIcon(c.imagen_url)}</span>
                                     <span>Descargar Archivo Adjunto</span>
                                 </a>
@@ -309,15 +337,19 @@ export default function DetalleOT() {
                 onChange={(e) => setNuevoComentario(e.target.value)}
                 placeholder="Escribe tu comentario o descripción del archivo..."
                 style={{ width: '100%', minHeight: '60px', padding: '10px', borderRadius: '6px' }}
+                maxLength={1000}
               />
-              <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{textAlign:'right', fontSize:'11px', color:'#666', marginBottom:'10px'}}>
+                {nuevoComentario.length}/1000
+              </div>
+
+              <div style={{ marginTop: '5px', display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <label htmlFor="file-upload" style={{ cursor: 'pointer', background: '#333', color:'white', padding: '8px 15px', borderRadius: '5px', fontSize: '13px', display: 'flex', alignItems: 'center', gap:'5px' }}>
                   📎 Adjuntar Archivo
                 </label>
                 <input
                   id="file-upload"
                   type="file"
-                  // Acepta documentos e imágenes
                   accept="image/*, .pdf, .doc, .docx, .xls, .xlsx, .txt, .csv"
                   onChange={handleFileChange}
                   style={{ display: 'none' }}

@@ -2,25 +2,28 @@ import { Router } from "express";
 import { pool } from "../db.js";
 import { verifyToken } from "../middlewares/auth.middleware.js";
 import multer from "multer";
-import path from "path";
-import fs from "fs";
+import { v2 as cloudinary } from "cloudinary";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const router = Router();
 
-// --- CONFIGURACIÓN MULTER (Subida de imágenes) ---
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    const uploadPath = "uploads/";
-    // Crear carpeta si no existe
-    if (!fs.existsSync(uploadPath)) {
-      fs.mkdirSync(uploadPath, { recursive: true });
-    }
-    cb(null, uploadPath);
-  },
-  filename: function (req, file, cb) {
-    // Nombre único: fecha + random + extensión original
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'comentario-' + uniqueSuffix + path.extname(file.originalname));
+// --- CONFIGURACIÓN CLOUDINARY (Persistencia real) ---
+// Asegúrate de tener CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY y CLOUDINARY_API_SECRET en tu .env
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'simtexx_uploads', // Carpeta en tu Cloudinary
+    allowed_formats: ['jpg', 'png', 'jpeg', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt'],
+    resource_type: 'auto' // Detecta si es imagen o archivo raw (pdf, doc)
   }
 });
 
@@ -30,7 +33,6 @@ const upload = multer({ storage: storage });
 router.get("/:otId", verifyToken, async (req, res) => {
   const { otId } = req.params;
   try {
-    // Agregamos c.imagen_url al SELECT
     const result = await pool.query(
       `SELECT c.id_comentarios AS id, c.texto, c.imagen_url, c.fecha_creacion, c.fecha_edicion, c.editado, c.usuarios_id, u.nombre AS autor
        FROM comentarios c
@@ -46,13 +48,18 @@ router.get("/:otId", verifyToken, async (req, res) => {
   }
 });
 
-// CREAR COMENTARIO (Con Imagen)
+// CREAR COMENTARIO (Con Imagen/Archivo y Validación 1000 caracteres)
 router.post("/", verifyToken, upload.single("imagen"), async (req, res) => {
   const { ot_id, texto } = req.body;
   const userIdReal = req.user.id;
 
-  // Si Multer procesó un archivo, guardamos la ruta relativa
-  const imagenUrl = req.file ? `uploads/${req.file.filename}` : null;
+  // 1. Validación de longitud (Backend)
+  if (texto && texto.length > 1000) {
+      return res.status(400).json({ error: "El comentario excede los 1000 caracteres permitidos." });
+  }
+
+  // Cloudinary devuelve la URL absoluta en file.path
+  const imagenUrl = req.file ? req.file.path : null;
 
   try {
     const result = await pool.query(
@@ -63,7 +70,7 @@ router.post("/", verifyToken, upload.single("imagen"), async (req, res) => {
     );
 
     const nuevoComentario = result.rows[0];
-    nuevoComentario.autor = req.user.rol; 
+    nuevoComentario.autor = req.user.rol; // O el nombre si está disponible en req.user
 
     res.json(nuevoComentario);
   } catch (error) {
@@ -72,11 +79,16 @@ router.post("/", verifyToken, upload.single("imagen"), async (req, res) => {
   }
 });
 
-// EDITAR COMENTARIO (Solo texto)
+// EDITAR COMENTARIO (Solo texto, con validación)
 router.put("/:id", verifyToken, async (req, res) => {
   const { id } = req.params;
   const { texto } = req.body;
   const userIdReal = req.user.id;
+
+  // 1. Validación de longitud (Backend)
+  if (texto && texto.length > 1000) {
+      return res.status(400).json({ error: "El comentario excede los 1000 caracteres permitidos." });
+  }
 
   try {
     const result = await pool.query(
