@@ -12,11 +12,13 @@ const getAuthHeaders = () => {
   };
 };
 
+// Headers para blobs (archivos) que no llevan Content-Type json
 const getAuthHeadersBlob = () => {
   const token = localStorage.getItem("token");
   return { "Authorization": `Bearer ${token}` };
 };
 
+// Helper para descargar archivos desde un Blob
 const downloadBlob = (blob, filename) => {
   const url = window.URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -28,12 +30,16 @@ const downloadBlob = (blob, filename) => {
   window.URL.revokeObjectURL(url);
 };
 
+// Manejo centralizado de respuestas y errores de sesión
 const handleResponse = async (response) => {
   if (response.status === 401 || response.status === 403) {
-    alert("Sesión expirada o inválida. Por favor inicie sesión nuevamente.");
-    localStorage.removeItem("token");
-    localStorage.removeItem("usuarioActual");
-    window.location.href = "/";
+    // Evitamos bucles de alertas si ya estamos redirigiendo
+    if (window.location.pathname !== "/") {
+        alert("Sesión expirada o inválida. Por favor inicie sesión nuevamente.");
+        localStorage.removeItem("token");
+        localStorage.removeItem("usuarioActual");
+        window.location.href = "/";
+    }
     throw new Error("Sesión expirada");
   }
   if (!response.ok) {
@@ -276,7 +282,7 @@ export async function getHistorial(otId) {
   }
 }
 
-// --- NUEVO: AUDITORÍA GLOBAL (Solo Admin) ---
+// --- AUDITORÍA GLOBAL (Esta era la función que posiblemente faltaba) ---
 export async function getAuditoriaGlobal() {
   try {
     const response = await fetch(`${BASE_URL}/api/auditorias`, {
@@ -284,6 +290,7 @@ export async function getAuditoriaGlobal() {
       headers: getAuthHeaders(),
     });
     
+    // Manejo específico si no es admin
     if (response.status === 403) {
       alert("Acceso Denegado. Solo Administradores.");
       return [];
