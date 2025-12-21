@@ -3,7 +3,7 @@ import NavBar from "../components/NavBar";
 import Footer from "../components/Footer";
 import { getAuditoriaGlobal } from "../services/otService";
 import { useNavigate } from "react-router-dom";
-import "./Dashboard.css"; // Reutilizamos estilos del dashboard para coherencia
+import "./AuditoriaGlobal.css";
 
 export default function AuditoriaGlobal() {
   const [logs, setLogs] = useState([]);
@@ -22,53 +22,43 @@ export default function AuditoriaGlobal() {
   return (
     <>
       <NavBar />
-      <div className="container" style={{ padding: "20px", maxWidth: "1200px", margin: "0 auto", minHeight: "80vh" }}>
+      <div className="auditoria-container">
         
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-            <h1 style={{ color: "#333", fontSize: "24px" }}>Registro de Auditoría Global</h1>
-            <button 
-              onClick={() => navigate(-1)} 
-              style={{ 
-                padding: "8px 16px", 
-                cursor: "pointer", 
-                background: "#6c757d", 
-                color: "white", 
-                border: "none", 
-                borderRadius: "5px" 
-              }}
-            >
-              Volver
+        <div className="auditoria-header">
+            <button onClick={() => navigate(-1)} className="btn-volver-audit">
+              ⬅ Volver
             </button>
+            <h1 className="titulo-auditoria">Auditoría Global</h1>
+            <div style={{width: '80px'}}></div> {/* Spacer para centrar título */}
         </div>
 
         {cargando ? (
           <p style={{ textAlign: "center", marginTop: "40px" }}>Cargando registros...</p>
         ) : (
-          <div style={{ overflowX: "auto", boxShadow: "0 0 10px rgba(0,0,0,0.1)", borderRadius: "8px", background: "white" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "800px" }}>
-              <thead style={{ background: "#333", color: "white" }}>
+          <div className="tabla-audit-box">
+            <table className="tabla-audit">
+              <thead>
                 <tr>
-                  <th style={{ padding: "12px", textAlign: "left" }}>Fecha</th>
-                  <th style={{ padding: "12px", textAlign: "left" }}>Usuario (Autor)</th>
-                  <th style={{ padding: "12px", textAlign: "left" }}>Acción</th>
-                  <th style={{ padding: "12px", textAlign: "left" }}>Descripción / Detalle</th>
+                  <th>Fecha</th>
+                  <th>Usuario</th>
+                  <th>Acción</th>
+                  <th>Descripción</th>
                 </tr>
               </thead>
               <tbody>
                 {logs.length === 0 ? (
-                  <tr><td colSpan="4" style={{ padding: "20px", textAlign: "center" }}>No hay registros disponibles.</td></tr>
+                  <tr><td colSpan="4" style={{ padding: "20px", textAlign: "center" }}>No hay registros.</td></tr>
                 ) : (
                   logs.map((log) => (
-                    <tr key={log.id_auditoria} style={{ borderBottom: "1px solid #ddd" }}>
-                      <td style={{ padding: "10px", fontSize: "14px" }}>
+                    <tr key={log.id_auditoria}>
+                      <td>
                         {log.fecha_formateada || new Date(log.fecha_creacion).toLocaleString()}
                       </td>
-                      <td style={{ padding: "10px", fontWeight: "bold", color: "#444" }}>
+                      <td style={{fontWeight: "bold"}}>
                         {log.autor || "Sistema"}
                       </td>
-                      <td style={{ padding: "10px" }}>
-                        <span style={{ 
-                            padding: "4px 8px", borderRadius: "4px", fontSize: "12px", fontWeight: "bold",
+                      <td>
+                        <span className="accion-badge" style={{
                             background: log.accion.includes("ELIMINAR") || log.accion.includes("DESACTIVAR") ? "#ffebee" : 
                                         log.accion.includes("CREAR") ? "#e8f5e9" : "#e3f2fd",
                             color: log.accion.includes("ELIMINAR") || log.accion.includes("DESACTIVAR") ? "#c62828" : 
@@ -77,7 +67,7 @@ export default function AuditoriaGlobal() {
                             {log.accion}
                         </span>
                       </td>
-                      <td style={{ padding: "10px", maxWidth: "400px", fontSize: "14px", color: "#555" }}>
+                      <td style={{ maxWidth: "400px" }}>
                         {log.descripcion}
                       </td>
                     </tr>

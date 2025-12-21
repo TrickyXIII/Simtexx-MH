@@ -1,0 +1,71 @@
+/* Similar a GestionUser */
+.auditoria-container {
+  max-width: 1100px;
+  margin: 40px auto;
+  padding: 0 20px;
+  font-family: 'Segoe UI', sans-serif;
+  min-height: 80vh;
+}
+
+.auditoria-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.titulo-auditoria {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #333;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.btn-volver-audit {
+  padding: 8px 16px;
+  background: transparent;
+  border: 2px solid #333;
+  color: #333;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.btn-volver-audit:hover { background: #333; color: white; }
+
+.tabla-audit-box {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+  border-top: 4px solid rgb(172, 5, 5);
+  overflow-x: auto;
+}
+
+.tabla-audit {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tabla-audit th {
+  background: #333;
+  color: white;
+  padding: 15px;
+  text-align: left;
+  border-bottom: 3px solid rgb(172, 5, 5);
+}
+
+.tabla-audit td {
+  padding: 12px 15px;
+  border-bottom: 1px solid #eee;
+  color: #444;
+  font-size: 0.9rem;
+}
+
+.accion-badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  text-transform: uppercase;
+}

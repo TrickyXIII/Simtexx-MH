@@ -1,0 +1,96 @@
+.gestion-user-container {
+  max-width: 1000px;
+  margin: 40px auto;
+  padding: 0 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.gestion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.titulo-gestion {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #333;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.btn-crear {
+  padding: 10px 20px;
+  background: rgb(172, 5, 5);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+
+.btn-crear:hover {
+  background: #8a0404;
+}
+
+.btn-volver-outline {
+  padding: 8px 16px;
+  background: transparent;
+  border: 2px solid #333;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  color: #333;
+  transition: all 0.2s;
+}
+
+.btn-volver-outline:hover {
+  background: #333;
+  color: white;
+}
+
+/* Tabla Estilo Simtexx */
+.tabla-container {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+  border-top: 4px solid rgb(172, 5, 5);
+  overflow-x: auto;
+  padding: 0; /* Full width inside box */
+}
+
+.tabla-users {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tabla-users th {
+  background-color: #333;
+  color: white;
+  text-align: left;
+  padding: 15px;
+  border-bottom: 3px solid rgb(172, 5, 5);
+  font-size: 0.95rem;
+}
+
+.tabla-users td {
+  padding: 12px 15px;
+  border-bottom: 1px solid #eee;
+  color: #333;
+}
+
+.tabla-users tr:hover {
+  background-color: #f9f9f9;
+}
+
+/* Badges de estado */
+.badge-activo { background: #d4edda; color: #155724; padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 0.85rem; }
+.badge-inactivo { background: #f8d7da; color: #721c24; padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 0.85rem; }
+
+/* Botones de acción en tabla */
+.btn-accion-azul { padding: 5px 10px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem; margin-right: 5px; }
+.btn-accion-rojo { padding: 5px 10px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem; }
+.btn-accion-verde { padding: 5px 10px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem; }

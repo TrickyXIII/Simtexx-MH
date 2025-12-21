@@ -1,32 +1,35 @@
-/* Contenedor principal centrado */
+/* Reutiliza la lógica visual de ListaOT */
 .crear-ot-container {
-  max-width: 600px;
-  margin: 40px auto;
-  padding: 30px;
-  background-color: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  max-width: 700px;
+  margin: 60px auto;
+  padding: 0 20px;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  min-height: 80vh;
 }
 
 .crear-ot-container h2 {
   text-align: center;
   color: #333;
-  margin-bottom: 25px;
-  font-size: 1.8rem;
-  border-bottom: 2px solid #f0f0f0;
-  padding-bottom: 15px;
+  margin-bottom: 40px;
+  font-size: 2rem;
+  text-transform: uppercase;
+  font-weight: 700;
 }
 
-/* Estilos del formulario */
+/* Caja tipo tarjeta */
 .crear-ot-form {
+  background: white;
+  padding: 40px;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border-top: 4px solid rgb(172, 5, 5); /* Borde rojo superior */
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 20px;
 }
 
 .crear-ot-form label {
-  font-weight: 600;
+  font-weight: 700;
   color: #555;
   margin-bottom: 5px;
   display: block;
@@ -37,19 +40,17 @@
 .crear-ot-form textarea {
   width: 100%;
   padding: 12px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
   font-size: 1rem;
-  transition: border-color 0.3s ease;
   box-sizing: border-box;
 }
 
 .crear-ot-form input:focus,
 .crear-ot-form select:focus,
 .crear-ot-form textarea:focus {
-  border-color: #007bff;
   outline: none;
-  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+  border-color: rgb(172, 5, 5);
 }
 
 .crear-ot-form textarea {
@@ -57,7 +58,6 @@
   resize: vertical;
 }
 
-/* Filas para agrupar inputs */
 .form-row {
   display: flex;
   gap: 20px;
@@ -67,56 +67,49 @@
   flex: 1;
 }
 
-/* Botones de acción */
 .form-actions {
   display: flex;
-  gap: 15px;
-  margin-top: 10px;
+  gap: 20px;
+  margin-top: 20px;
 }
 
+/* Botones estilo ListaOT */
 .btn-save {
   flex: 1;
-  padding: 12px;
-  background-color: #28a745; /* Verde para guardar */
+  padding: 14px;
+  background-color: #333; /* Negro Simtexx */
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 4px;
   font-size: 1rem;
   font-weight: bold;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: background 0.2s;
 }
 
 .btn-save:hover {
-  background-color: #218838;
+  background-color: #000;
 }
 
 .btn-cancel {
   flex: 1;
-  padding: 12px;
-  background-color: #6c757d; /* Gris para cancelar */
-  color: white;
-  border: none;
-  border-radius: 8px;
+  padding: 14px;
+  background-color: transparent;
+  color: #666;
+  border: 2px solid #ccc;
+  border-radius: 4px;
   font-size: 1rem;
   font-weight: bold;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: all 0.2s;
 }
 
 .btn-cancel:hover {
-  background-color: #5a6268;
+  background-color: #f4f4f4;
+  color: #333;
+  border-color: #999;
 }
 
-/* Responsividad */
-@media (max-width: 480px) {
-  .crear-ot-container {
-    margin: 20px;
-    padding: 20px;
-  }
-
-  .form-row {
-    flex-direction: column;
-    gap: 15px;
-  }
+@media (max-width: 600px) {
+  .form-row { flex-direction: column; }
 }
