@@ -13,15 +13,15 @@ const Dashboard = () => {
   });
 
   const usuario = getUserFromToken() || { nombre: "Invitado", rol: "Invitado", id: 0, rol_id: 0 };
-  const isCliente = usuario.rol_id === 2; // Cliente no ve botón usuarios
+  const isCliente = usuario.rol_id === 2;
 
   useEffect(() => {
     async function cargarDatos() {
-      // 1. Cargar Estadísticas
+      // 1. Estadísticas
       const estadisticas = await getDashboardStats();
       if(estadisticas) setStats(estadisticas);
 
-      // 2. Cargar lista de OTs (Solo las últimas 5 para la tabla)
+      // 2. OTs (Solo las últimas 5)
       const listaOts = await getOTs({});
       if (Array.isArray(listaOts)) {
         setOts(listaOts.slice(0, 5)); 
@@ -35,7 +35,7 @@ const Dashboard = () => {
       <NavBar />
       <div className="dashboard-wrapper">
         
-        {/* --- SECCIÓN 1: BOTONES DE ACCIÓN SUPERIOR --- */}
+        {/* --- 1. BOTONES SUPERIORES (GRISES) --- */}
         <div className="action-buttons-container">
           <Link to="/crear-ot" className="big-action-btn">
             Crear OT
@@ -52,30 +52,26 @@ const Dashboard = () => {
           )}
         </div>
 
-        {/* --- SECCIÓN 2: PANEL RESUMEN DE OT (TARJETAS) --- */}
+        {/* --- 2. PANEL RESUMEN (ESTILO LISTA OT) --- */}
         <div className="stats-section-container">
           <h2 className="section-title">Panel Resumen de OT</h2>
           
           <div className="cards-row">
-            {/* Total (Negro) */}
             <div className="stat-card card-total">
               <span className="stat-label">Total</span>
               <span className="stat-number">{stats.total}</span>
             </div>
 
-            {/* Pendiente (Amarillo) */}
             <div className="stat-card card-pendiente">
               <span className="stat-label">Pendientes</span>
               <span className="stat-number">{stats.pendientes}</span>
             </div>
 
-            {/* En Proceso (Azul) */}
             <div className="stat-card card-proceso">
               <span className="stat-label">En Proceso</span>
               <span className="stat-number">{stats.en_proceso}</span>
             </div>
 
-            {/* Finalizada (Verde) */}
             <div className="stat-card card-finalizada">
               <span className="stat-label">Finalizadas</span>
               <span className="stat-number">{stats.finalizadas}</span>
@@ -83,7 +79,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* --- SECCIÓN 3: ÚLTIMAS ÓRDENES (FONDO ROJO) --- */}
+        {/* --- 3. ÚLTIMAS ÓRDENES (FONDO ROJO) --- */}
         <div className="recent-orders-container">
           <div className="red-header-strip">
             <h3>Últimas Órdenes Registradas</h3>
@@ -109,13 +105,18 @@ const Dashboard = () => {
                       <td><strong>{ot.codigo}</strong></td>
                       <td>{ot.titulo}</td>
                       <td>
-                        <span className={`badge-estado ${ot.estado.toLowerCase().replace(' ', '-')}`}>
+                        {/* Reutilizamos los estilos de badge si existen globalmente o inline */}
+                        <span style={{
+                          padding: "4px 8px", borderRadius: "12px", fontSize: "11px", fontWeight: "bold",
+                          background: ot.estado === "Pendiente" ? "#fff3cd" : ot.estado === "En Proceso" ? "#d1ecf1" : "#d4edda",
+                          color: ot.estado === "Pendiente" ? "#856404" : ot.estado === "En Proceso" ? "#0c5460" : "#155724"
+                        }}>
                           {ot.estado}
                         </span>
                       </td>
                       <td>{ot.responsable_nombre || "Sin Asignar"}</td>
                       <td>
-                         <Link to={`/detalle/${ot.id_ot}`} className="btn-ver-link">Ver Detalle</Link>
+                         <Link to={`/detalle/${ot.id_ot}`} className="btn-ver-link">Ver</Link>
                       </td>
                     </tr>
                   ))
