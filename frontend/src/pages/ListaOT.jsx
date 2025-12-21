@@ -155,7 +155,7 @@ export default function ListaOT() {
                         <td className="acciones-ot">
                             <Link to={`/detalle/${ot.id_ot}`} className="btn-ver">Ver</Link>
                             {!isCliente && !isMantenedor && (
-                            <button className="btn-eliminar" onClick={() => handleDelete(ot.id_ot)}>🗑</button>
+                            <button className="btn-eliminar" onClick={() => handleDelete(ot.id_ot)}>Eliminar</button>
                             )}
                         </td>
                         </tr>
