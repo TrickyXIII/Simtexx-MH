@@ -44,10 +44,11 @@ El proyecto ha pasado por una fase de optimización detallada:
 
 1. **Clonar:** `git clone https://github.com/TrickyXIII/Simtexx-MH.git`
 2. **Backend:** Instalar dependencias con `npm install` y configurar el `.env` con las credenciales de PostgreSQL.
-3. **Frontend:** ```bash
+3. **Frontend:**
+   ```bash
    cd frontend
    npm install
-   npm run dev´´´
+   npm run dev
 
 
 
