@@ -167,3 +167,24 @@ export async function desactivarUser(id) {
         return false;
     }
 }
+
+export async function login(credentials) {
+  try {
+    const res = await fetch(`${API_URL}/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(credentials),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || "Error al iniciar sesión");
+    }
+    return data;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+}
