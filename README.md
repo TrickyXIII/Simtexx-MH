@@ -12,6 +12,8 @@
 El proyecto se encuentra desplegado y funcional en Render:
 🔗 **[Acceder a Simtexx](https://simtexx-frontend-lxf4.onrender.com/)**
 
+🔗 **[Backend](https://simtexx-backend.onrender.com/)**
+
 ---
 
 ## ✨ Características Principales
@@ -94,7 +96,7 @@ Si deseas ejecutar el proyecto en tu máquina local:
 
 1.  **Clonar el repositorio:**
     ```bash
-    git clone [https://github.com/TrickyXIII/Simtexx-MH.git](https://github.com/TrickyXIII/Simtexx-MH.git)
+    git clone (https://github.com/TrickyXIII/Simtexx-MH.git)
     ```
 
 2.  **Configurar Backend:**
