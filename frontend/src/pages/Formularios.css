@@ -4,7 +4,6 @@
   flex-direction: column;
   align-items: center;
   margin-top: 40px;
-  /* CAMBIO: Altura ajustada y padding inferior para separar del footer */
   min-height: calc(100vh - 160px);
   padding-bottom: 80px; 
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -24,10 +23,10 @@
   background: white;
   width: 100%;
   max-width: 450px;
-  padding: 40px; /* Más espaciado interno */
+  padding: 40px;
   border-radius: 8px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-  border-top: 4px solid rgb(172, 5, 5); /* Identidad Simtexx */
+  border-top: 4px solid rgb(172, 5, 5);
   display: flex;
   flex-direction: column;
   gap: 20px;

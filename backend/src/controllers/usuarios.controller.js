@@ -319,7 +319,7 @@ export async function loginUsuario(req, res) {
       );
     }
     
-    // --- CORRECCIÓN AQUÍ: SE AGREGA 'nombre' AL PAYLOAD DEL TOKEN ---
+    //SE AGREGA 'nombre' AL PAYLOAD DEL TOKEN ---
     const token = jwt.sign(
       { 
         id: user.id_usuarios, 

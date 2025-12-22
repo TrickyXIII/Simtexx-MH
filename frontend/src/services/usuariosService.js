@@ -2,7 +2,7 @@
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
 const API_URL = `${BASE_URL}/api/usuarios`;
 
-// --- NUEVO: Registro Público ---
+// --- Registro Público ---
 export async function registerPublic(userData) {
   try {
     const res = await fetch(`${API_URL}/registro`, {

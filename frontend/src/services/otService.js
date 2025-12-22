@@ -282,7 +282,7 @@ export async function getHistorial(otId) {
   }
 }
 
-// --- AUDITORÍA GLOBAL (Esta era la función que posiblemente faltaba) ---
+// --- AUDITORÍA GLOBAL ---
 export async function getAuditoriaGlobal() {
   try {
     const response = await fetch(`${BASE_URL}/api/auditorias`, {

@@ -81,7 +81,6 @@ export const exportPdfOT = async (req, res) => {
     comentarios.forEach((c) => {
       doc.fontSize(12).text(`Autor: ${c.autor}`);
       doc.fontSize(10).text(`Fecha: ${formatDateGMT3(c.fecha_creacion)}`);
-      // CORRECCIÓN: Usar c.texto, no c.comentario
       doc.fontSize(12).text(`Comentario: ${c.texto}`);
       doc.moveDown();
     });

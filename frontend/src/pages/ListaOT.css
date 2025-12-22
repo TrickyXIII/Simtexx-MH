@@ -7,7 +7,6 @@
 .titulo {
   text-align: center;
   color: #333;
-  /* CAMBIO: Usamos padding-bottom para asegurar la separación visual */
   padding-bottom: 60px; 
   margin-bottom: 0;
   font-size: 2.2rem;
@@ -134,15 +133,14 @@
   transform: translateY(-2px);
 }
 
-/* CAMBIO: Botón Eliminar ahora es sólido (Rojo relleno) */
 .btn-eliminar { 
-  background-color: #dc3545; /* Fondo rojo */
-  color: white;              /* Texto blanco */
+  background-color: #dc3545; 
+  color: white;              
   border: 1px solid #dc3545;
 }
 
 .btn-eliminar:hover { 
-  background-color: #c82333; /* Rojo más oscuro */
+  background-color: #c82333; 
   border-color: #bd2130;
   transform: translateY(-2px);
 }

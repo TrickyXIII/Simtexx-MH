@@ -10,12 +10,10 @@
 .gestion-header {
   display: flex;
   align-items: center;
-  /* Usamos padding en lugar de margin para evitar colapsos, como en ListaOT */
   padding-bottom: 40px; 
   margin-bottom: 0;
 }
 
-/* Contenedores flexibles para equilibrar el header y centrar el título */
 .header-spacer-left, .header-spacer-right {
     flex: 1;
     display: flex;
@@ -25,7 +23,7 @@
 }
 
 .titulo-gestion {
-  flex: 2; /* El título ocupa más espacio central */
+  flex: 2;
   text-align: center;
   font-size: 2rem;
   font-weight: 700;
@@ -34,7 +32,6 @@
   margin: 0;
 }
 
-/* Nuevo estilo para el botón Volver (más limpio) */
 .btn-volver-simple {
   background: none;
   border: none;
@@ -107,29 +104,26 @@
 }
 
 .tabla-users tr:hover {
-  background-color: #fff0f0; /* Mismo hover suave que ListaOT */
+  background-color: #fff0f0; 
 }
 
 /* Badges de estado */
 .badge-activo { background: #d4edda; color: #155724; padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 0.85rem; }
 .badge-inactivo { background: #f8d7da; color: #721c24; padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 0.85rem; }
 
-/* --- CORRECCIÓN BOTONES DE ACCIÓN --- */
 
-/* Contenedor Flex para la celda de acciones */
 .acciones-cell {
     display: flex;
-    gap: 10px; /* Espacio entre botones */
+    gap: 10px;
     justify-content: center;
     align-items: center;
 }
 
-/* Estilos base unificados para los botones pequeños */
 .btn-accion-azul, .btn-accion-rojo, .btn-accion-verde {
-    display: inline-flex; /* Importante para alinear icono/texto verticalmente */
+    display: inline-flex; 
     align-items: center;
     justify-content: center;
-    height: 32px; /* Altura fija para uniformidad */
+    height: 32px; 
     padding: 0 14px;
     border: none;
     border-radius: 4px;
@@ -144,7 +138,7 @@
     transform: translateY(-1px);
 }
 
-.btn-accion-azul { background: #333; color: white; } /* Azul cambiado a Negro/Gris oscuro para consistencia */
+.btn-accion-azul { background: #333; color: white; } 
 .btn-accion-azul:hover { background: #000; }
 
 .btn-accion-rojo { background: #dc3545; color: white; }

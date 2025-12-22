@@ -129,7 +129,7 @@ export default function DetalleOT() {
 
       <div className="detalle-container">
 
-        {/* --- TÍTULO SUPERIOR (Con Botón Estandarizado) --- */}
+        {/* --- TÍTULO SUPERIOR --- */}
         <div className="titulo-header">
           <button className="btn-volver-std" onClick={() => navigate(-1)}>
             ⬅ Volver

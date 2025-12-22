@@ -57,7 +57,6 @@ export default function ListaOT() {
     exportCSV({ busqueda, estado: filtroEstado, fechaInicio, fechaFin });
   };
 
-  // --- MODIFICACIÓN AQUÍ: Mejor manejo de reporte de errores ---
   const handleImport = async (e) => {
     const file = e.target.files[0];
     if (!file) return;

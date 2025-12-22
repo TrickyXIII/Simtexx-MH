@@ -5,7 +5,7 @@ import Footer from "../components/Footer";
 import { activateUser, desactivarUser } from "../services/usuariosService";
 import { getUserFromToken } from "../utils/auth";
 import "./GestionUser.css";
-import "./DetalleOT.css"; // IMPORTANTE: Reutilizamos el estilo del botón volver
+import "./DetalleOT.css"; 
 
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
 

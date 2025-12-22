@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { getOTById, updateOT, deleteOTBackend } from "../services/otService";
-import { getClientes, getMantenedores } from "../services/usuariosService"; // Importamos el nuevo servicio
+import { getClientes, getMantenedores } from "../services/usuariosService"; 
 import { useState, useEffect } from "react";
 import NavBar from "../components/NavBar";
 import Footer from "../components/Footer";

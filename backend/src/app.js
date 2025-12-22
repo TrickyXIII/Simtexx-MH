@@ -25,7 +25,7 @@ app.use(cors());
 
 app.use(express.json());
 
-// --- NUEVO: Servir carpeta uploads de forma estática ---
+// --- Servir carpeta uploads de forma estática ---
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 // Rutas
