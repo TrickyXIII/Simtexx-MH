@@ -1,70 +1,83 @@
-# Documentación Técnica - Proyecto Simtexx
+# Documentación Técnica - Simtexx
+
+Este documento detalla la arquitectura, decisiones de diseño y flujo de datos del sistema Simtexx.
 
 ## 1. Arquitectura del Sistema
-El sistema utiliza una arquitectura **Cliente-Servidor (REST API)** desacoplada:
 
-* **Frontend:** Aplicación de Página Única (SPA) construida con **React 19** y empaquetada con **Vite**. Consume la API mediante `fetch` y gestiona el estado con Hooks de React.
-* **Backend:** API RESTful construida con **Node.js** y **Express**. Gestiona la lógica de negocio, autenticación y comunicación con la base de datos.
-* **Base de Datos:** **PostgreSQL** relacional. Utiliza Triggers para la auditoría de fechas.
-* **Servicios Externos:**
-    * **Cloudinary:** Para el almacenamiento de archivos adjuntos (imágenes/documentos) en los comentarios.
-    * **Render (Target de Despliegue):** Configuración de base de datos preparada para SSL en producción.
+Simtexx utiliza una arquitectura **Cliente-Servidor desacoplada (REST API)**.
+
+* **Frontend (SPA):** Construido en React, se encarga de la interfaz de usuario, validaciones visuales y consumo de la API. Se comunica con el backend mediante `fetch` asíncrono utilizando JWT para la autorización.
+* **Backend (API REST):** Node.js con Express. Actúa como capa lógica, protegiendo la base de datos y gestionando la integración con servicios de terceros (Cloudinary).
+* **Base de Datos:** PostgreSQL relacional. Utiliza procedimientos almacenados (Triggers) para garantizar la integridad de las fechas de auditoría.
 
 ---
 
-## 2. Backend (`/backend`)
+## 2. Base de Datos y Modelo de Datos
 
-### 2.1 Estructura de Directorios y Archivos Clave
-* **`src/app.js`**: Punto de entrada. Configura CORS, parseo JSON, rutas base (`/api`) y sirve estáticos de `/uploads`.
-* **`src/db.js`**: Módulo de conexión a base de datos usando `pg`. Detecta el entorno (`NODE_ENV`) para habilitar SSL (`rejectUnauthorized: false`) requerido en Render.
-* **`src/routes/`**: Define los endpoints de la API.
-    * `ot.routes.js`: Rutas CRUD para Órdenes de Trabajo, estadísticas y exportación.
-    * `usuarios.routes.js`: Rutas para gestión de usuarios, login y registro público.
-    * `comentarios.routes.js`: Manejo de bitácora con subida de archivos (Multer + Cloudinary).
-* **`src/controllers/`**: Lógica de negocio.
-    * `ot.controller.js`: Contiene lógica compleja como la importación masiva desde CSV (`importOTs`) y el borrado lógico (`deleteOT`) que actualiza `activo = FALSE`.
-    * `usuarios.controller.js`: Maneja el hash de contraseñas (`bcryptjs`) y la generación de tokens (`jsonwebtoken`).
+El esquema se encuentra definido en `base-de-datos/creacion con triggers.sql`.
 
-### 2.2 Seguridad y Autenticación
-* **JWT (JSON Web Token):** Se utiliza para proteger rutas privadas. El middleware `auth.middleware.js` verifica el token en el header `Authorization: Bearer <token>`.
-* **Roles:** El sistema implementa autorización basada en roles (Middleware `verifyAdmin` para rutas sensibles).
-    * Rol 1: Administrador.
-    * Rol 2: Cliente.
-    * Rol 3: Mantenedor.
+### Tablas Principales
+1.  **`roles`**: Define los niveles de acceso (1: Admin, 2: Cliente, 3: Mantenedor).
+2.  **`usuarios`**: Almacena credenciales (`password_hash`), datos personales y estado (`activo`).
+3.  **`ot` (Orden de Trabajo)**: Tabla central.
+    * `codigo`: Identificador único generado por algoritmo (Ej: OT-123456).
+    * `responsable_id`: FK a usuario técnico.
+    * `cliente_id`: FK a usuario cliente.
+    * `activo`: Booleano para Soft Delete (Borrado lógico).
+4.  **`comentarios`**: Bitácora de la OT.
+    * Relación 1:N con `ot`.
+    * `imagen_url`: Almacena el link seguro provisto por Cloudinary.
+5.  **`auditorias`**: Tabla de logs inmutables. Registra `quién`, `qué`, `cuándo` y `desde dónde (IP)` se realizó una acción crítica.
 
----
-
-## 3. Frontend (`/frontend`)
-
-### 3.1 Tecnologías y Estructura
-* **Vite:** Herramienta de construcción y servidor de desarrollo.
-* **React Router v7:** Maneja el enrutamiento (`src/routes.jsx`). Incluye rutas protegidas mediante `ProtectedRoute.jsx` que verifica la existencia y validez del token.
-* **Estilos:** Uso de CSS modular y global (`global.css`, `Formularios.css`).
-
-### 3.2 Comunicación con la API (`src/services/`)
-* `otService.js`: Centraliza las peticiones a `/api/ot`. Maneja la descarga de archivos (Blobs) para reportes PDF/CSV y la inyección automática de headers de autenticación.
-* `usuariosService.js`: Gestiona login, registro y CRUD de usuarios.
-
-### 3.3 Funcionalidades Clave
-* **Dashboard (`Dashboard.jsx`):** Muestra estadísticas (calculadas en backend) y un resumen de las últimas OTs.
-* **Detalle de OT (`DetalleOT.jsx`):** Vista integral que permite:
-    * Ver información del contrato.
-    * Descargar reportes PDF.
-    * Visualizar historial de auditoría (tabla `auditorias`).
-    * Gestionar la bitácora de comentarios con soporte para adjuntos.
+### Automatización (Triggers)
+Se implementaron triggers en PostgreSQL (`update_usuarios`, `update_ot`, `update_comentarios`) que actualizan automáticamente el campo `fecha_actualizacion` o `fecha_edicion` al modificar un registro, garantizando precisión temporal sin depender del backend.
 
 ---
 
-## 4. Base de Datos
+## 3. Backend (`/backend`)
 
-### 4.1 Esquema Relacional
-El sistema se basa en 5 tablas principales definidas en `creacion con triggers.sql`:
-1.  **`roles`**: Definición de perfiles.
-2.  **`usuarios`**: Credenciales y datos de perfil.
-3.  **`ot`**: Órdenes de trabajo (Cabecera).
-4.  **`comentarios`**: Detalle/Bitácora asociada a una OT.
-5.  **`auditorias`**: Registro de acciones del sistema.
+### 3.1 Seguridad y Autenticación
+* **JWT:** El sistema no utiliza sesiones de servidor. Al hacer login (`auth.controller.js`), se firma un token que contiene `{id, rol, nombre}`.
+* **Middleware (`auth.middleware.js`):**
+    * `verifyToken`: Intercepta cada petición protegida, valida la firma del token y decodifica el usuario en `req.user`.
+    * `verifyAdmin`: Middleware adicional para rutas sensibles (crear usuarios, borrar OTs) que verifica `req.user.rol_id === 1`.
+* **CORS:** Configurado para aceptar peticiones desde el Frontend (Local y Producción).
 
-### 4.2 Automatización (Triggers y Funciones)
-* **Actualización de Fechas:** Triggers `update_usuarios`, `update_ot` y `update_comentarios` mantienen actualizados los campos `fecha_actualizacion` y `fecha_edicion` automáticamente.
-* **Desactivación Lógica:** Función `desactivar_ot` para manejo de soft-delete y registro en auditoría.
+### 3.2 Gestión de Archivos (Cloudinary)
+En `src/controllers/comentarios.routes.js` y `src/app.js`:
+* Se utiliza `multer` para procesar `multipart/form-data`.
+* `multer-storage-cloudinary` sube el archivo directamente a la nube y retorna la URL segura, evitando almacenar archivos en el sistema de archivos del servidor (lo cual es efímero en Render).
+
+### 3.3 Generación de Reportes
+* **PDF (`pdf.controller.js`):** Utiliza `pdfkit` para dibujar un documento vectorial on-the-fly con los datos de la OT y su historial de comentarios. Ajusta manualmente las zonas horarias a GMT-3.
+* **Excel (`excel.controller.js`):** Utiliza `exceljs` para crear hojas de cálculo con estilos y formato tabular.
+
+---
+
+## 4. Frontend (`/frontend`)
+
+### 4.1 Estructura y Enrutamiento
+* **`routes.jsx`**: Define las rutas públicas (`/login`, `/registro`) y privadas.
+* **`ProtectedRoute.jsx`**: Componente de orden superior que verifica la existencia y validez (fecha de expiración) del token en `localStorage` antes de renderizar el contenido.
+
+### 4.2 Servicios (`src/services/`)
+Para mantener el código limpio, toda la lógica de `fetch` se centraliza aquí:
+* **Inyección de Headers:** Funciones auxiliares añaden automáticamente `Authorization: Bearer <token>` a cada petición.
+* **Manejo de Errores:** Si la API retorna 401/403, el servicio puede forzar el cierre de sesión local.
+
+### 4.3 Componentes Clave
+* **`Dashboard.jsx`**: Muestra estadísticas calculadas en tiempo real por el endpoint `/api/ot/stats`, filtrando según el rol del usuario (un Cliente solo ve sus estadísticas).
+* **`DetalleOT.jsx`**: Vista compleja que combina:
+    * Datos de la OT.
+    * Lista de adjuntos (filtrando por extensión para mostrar iconos o imágenes).
+    * Bitácora de comentarios.
+    * Historial de auditoría (visible solo para Admin/Mantenedor).
+
+---
+
+## 5. Decisiones de Despliegue (Render)
+
+### Adaptaciones para Producción
+1.  **SSL en Base de Datos:** En `src/db.js`, se detecta `process.env.NODE_ENV === 'production'` para habilitar `ssl: { rejectUnauthorized: false }`, requisito obligatorio para conectar Node.js con Postgres en Render.
+2.  **Variables de Entorno:** Se eliminaron todas las credenciales *hardcodeadas*, dependiendo estrictamente de `process.env`.
+3.  **SPA Rewrite:** Se configuró el servidor estático de Render para redirigir todas las rutas a `index.html`, permitiendo que React Router maneje la navegación (evita errores 404 al recargar).
