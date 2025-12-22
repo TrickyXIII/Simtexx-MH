@@ -54,7 +54,7 @@ Este proyecto está configurado para desplegarse en Render separando el Backend 
 ### Paso 1: Base de Datos (PostgreSQL)
 1.  En Render, crea un nuevo **PostgreSQL**.
 2.  Copia la `Internal Database URL` (para uso interno del backend).
-3.  Conéctate a la DB (usando DBeaver o pgAdmin con la URL externa) y ejecuta el script `base-de-datos/creacion con triggers.sql` incluido en el repositorio para crear las tablas.
+3.  Conéctate a la DB (usando DBeaver o pgAdmin con la URL externa) y ejecuta el script `base-de-datos/base_de_datos.sql` incluido en el repositorio para crear las tablas.
 
 ### Paso 2: Backend (Web Service)
 1.  Crea un **Web Service** en Render conectado a este repositorio.
