@@ -14,7 +14,7 @@ Simtexx utiliza una arquitectura **Cliente-Servidor desacoplada (REST API)**.
 
 ## 2. Base de Datos y Modelo de Datos
 
-El esquema se encuentra definido en `base-de-datos/creacion con triggers.sql`.
+El esquema se encuentra definido en `bases de datos/base_de_datos.sql`.
 
 ### Tablas Principales
 1.  **`roles`**: Define los niveles de acceso (1: Admin, 2: Cliente, 3: Mantenedor).
